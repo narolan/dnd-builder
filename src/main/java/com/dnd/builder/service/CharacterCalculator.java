@@ -4,7 +4,6 @@ import com.dnd.builder.model.*;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Pure computation: given a CharacterDraft + registry data, produce DerivedStats.
@@ -16,7 +15,6 @@ public class CharacterCalculator {
     private final RaceRegistry    raceRegistry;
     private final ClassRegistry   classRegistry;
     private final BackgroundRegistry bgRegistry;
-    private final SpellRegistry   spellRegistry;
     private final EquipmentRegistry equipmentRegistry;
 
     // All skills and their governing ability
@@ -56,7 +54,6 @@ public class CharacterCalculator {
         this.raceRegistry      = r;
         this.classRegistry     = c;
         this.bgRegistry        = b;
-        this.spellRegistry     = sp;
         this.equipmentRegistry = eq;
     }
 
@@ -232,7 +229,6 @@ public class CharacterCalculator {
     }
 
     public static int modifier(int score) { return (score - 10) / 2; }
-    public static String fmtMod(int mod)   { return (mod >= 0 ? "+" : "") + mod; }
 
     private String ordinal(int n) {
         return switch (n) {

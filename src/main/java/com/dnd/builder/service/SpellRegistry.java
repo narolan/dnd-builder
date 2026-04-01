@@ -158,7 +158,7 @@ public class SpellRegistry {
             "sorcerer","wizard"));
         list.add(s("charm_person","Charm Person",1,"Enchantment","1 action","30 ft","1 hour",false,false,"V,S",
             "WIS save or charmed by you for 1 hour. Advantage if in combat.",
-            "bard","druid","sorcerer","warlock","wizard"));
+            "bard","sorcerer","warlock","wizard"));
         list.add(s("chromatic_orb","Chromatic Orb",1,"Evocation","1 action","90 ft","Instantaneous",false,false,"V,S,M",
             "Ranged spell attack; 3d8 of chosen damage type (acid, cold, fire, lightning, poison, or thunder).",
             "sorcerer","wizard"));
@@ -257,7 +257,7 @@ public class SpellRegistry {
             "sorcerer","wizard"));
         list.add(s("protection_evil_good","Protection from Evil and Good",1,"Abjuration","1 action","Touch","Up to 10 min",true,false,"V,S,M",
             "Protected creature can't be charmed/frightened/possessed by: aberrations, celestials, elementals, fey, fiends, undead.",
-            "cleric","druid","paladin","warlock","wizard"));
+            "cleric","paladin","warlock","wizard"));
         list.add(s("ray_of_sickness","Ray of Sickness",1,"Necromancy","1 action","60 ft","Instantaneous",false,false,"V,S",
             "Ranged spell attack; 2d8 poison damage. CON save or poisoned until end of your next turn.",
             "sorcerer","wizard"));
@@ -284,7 +284,7 @@ public class SpellRegistry {
             "bard","wizard"));
         list.add(s("thunderwave","Thunderwave",1,"Evocation","1 action","Self (15-ft cube)","Instantaneous",false,false,"V,S",
             "CON save or take 2d8 thunder and pushed 10 ft (half damage no push on save).",
-            "bard","cleric","druid","sorcerer","wizard"));
+            "bard","druid","sorcerer","wizard"));
         list.add(s("unseen_servant","Unseen Servant",1,"Conjuration","1 action","60 ft","1 hour",false,true,"V,S,M",
             "Invisible mindless force performs simple tasks within 60 ft.",
             "bard","warlock","wizard"));
