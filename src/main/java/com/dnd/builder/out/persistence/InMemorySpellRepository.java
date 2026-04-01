@@ -134,6 +134,61 @@ public class InMemorySpellRepository implements com.dnd.builder.core.port.out.Sp
             "WIS save or take 1d4 psychic damage and disadvantage on next attack roll.",
             "bard"));
 
+        // ── XGtE Cantrips ────────────────────────────────────────────────────
+        list.add(s("create_bonfire","Create Bonfire",0,"Conjuration","1 action","60 ft","Up to 1 min",true,false,"V,S",
+            "Create a 5-ft cube of fire. DEX save or 1d8 fire damage when entering or starting turn there.",
+            "druid","sorcerer","warlock","wizard"));
+        list.add(s("control_flames","Control Flames",0,"Transmutation","1 action","60 ft","Instantaneous or 1 hour",false,false,"S",
+            "Control nonmagical fire: expand, extinguish, double/halve light, or create simple shapes.",
+            "druid","sorcerer","wizard"));
+        list.add(s("frostbite","Frostbite",0,"Evocation","1 action","60 ft","Instantaneous",false,false,"V,S",
+            "CON save or 1d6 cold damage and disadvantage on next weapon attack roll.",
+            "druid","sorcerer","warlock","wizard"));
+        list.add(s("gust","Gust",0,"Transmutation","1 action","30 ft","Instantaneous",false,false,"V,S",
+            "Push creature 5 ft (STR save), push object 10 ft, or create harmless sensory effect.",
+            "druid","sorcerer","wizard"));
+        list.add(s("infestation","Infestation",0,"Conjuration","1 action","30 ft","Instantaneous",false,false,"V,S,M",
+            "CON save or 1d6 poison damage and move 5 ft in random direction.",
+            "druid","sorcerer","warlock","wizard"));
+        list.add(s("magic_stone","Magic Stone",0,"Transmutation","1 bonus action","Touch","1 minute",false,false,"V,S",
+            "Imbue up to 3 pebbles; ranged spell attack 1d6 + spellcasting mod bludgeoning.",
+            "druid","warlock"));
+        list.add(s("mold_earth","Mold Earth",0,"Transmutation","1 action","30 ft","Instantaneous or 1 hour",false,false,"S",
+            "Excavate 5-ft cube of loose earth, create shapes, or change terrain difficulty.",
+            "druid","sorcerer","wizard"));
+        list.add(s("shape_water","Shape Water",0,"Transmutation","1 action","30 ft","Instantaneous or 1 hour",false,false,"S",
+            "Move/animate water, change color/opacity, or freeze for 1 hour.",
+            "druid","sorcerer","wizard"));
+        list.add(s("thunderclap","Thunderclap",0,"Evocation","1 action","5 ft","Instantaneous",false,false,"S",
+            "All creatures within 5 ft: CON save or 1d6 thunder damage. Audible 100 ft.",
+            "bard","druid","sorcerer","warlock","wizard"));
+        list.add(s("toll_the_dead","Toll the Dead",0,"Necromancy","1 action","60 ft","Instantaneous",false,false,"V,S",
+            "WIS save or 1d8 necrotic (1d12 if missing HP). Scales with level.",
+            "cleric","warlock","wizard"));
+        list.add(s("word_of_radiance","Word of Radiance",0,"Evocation","1 action","5 ft","Instantaneous",false,false,"V,M",
+            "Each creature of choice within 5 ft: CON save or 1d6 radiant damage.",
+            "cleric"));
+        list.add(s("primal_savagery","Primal Savagery",0,"Transmutation","1 action","Self","Instantaneous",false,false,"S",
+            "Teeth/nails sharpen; melee spell attack for 1d10 acid damage.",
+            "druid"));
+
+        // ── SCAG/TCoE Cantrips ───────────────────────────────────────────────
+        list.add(s("booming_blade","Booming Blade",0,"Evocation","1 action","Self (5-ft radius)","1 round",false,false,"S,M",
+            "Melee attack with weapon; if target moves before your next turn, 1d8 thunder damage.",
+            "sorcerer","warlock","wizard"));
+        list.add(s("green_flame_blade","Green-Flame Blade",0,"Evocation","1 action","Self (5-ft radius)","Instantaneous",false,false,"S,M",
+            "Melee attack with weapon; fire leaps to adjacent creature for spellcasting mod fire damage.",
+            "sorcerer","warlock","wizard"));
+        list.add(s("lightning_lure","Lightning Lure",0,"Evocation","1 action","Self (15-ft radius)","Instantaneous",false,false,"V",
+            "STR save or pulled 10 ft toward you; if within 5 ft, 1d8 lightning damage.",
+            "sorcerer","warlock","wizard"));
+        list.add(s("mind_sliver","Mind Sliver",0,"Enchantment","1 action","60 ft","1 round",false,false,"V",
+            "INT save or 1d6 psychic and subtract 1d4 from next saving throw before end of your next turn.",
+            "sorcerer","warlock","wizard"));
+        list.add(s("sword_burst","Sword Burst",0,"Conjuration","1 action","Self (5-ft radius)","Instantaneous",false,false,"V",
+            "All creatures within 5 ft: DEX save or 1d6 force damage.",
+            "sorcerer","warlock","wizard"));
+
         // ══ LEVEL 1 SPELLS ═══════════════════════════════════════════════════
         list.add(s("alarm","Alarm",1,"Abjuration","1 minute","30 ft","8 hours",false,true,"V,S,M",
             "Set a ward on an area 20-ft cube; mental or audible alarm when a tiny or larger creature enters.",
@@ -299,7 +354,40 @@ public class InMemorySpellRepository implements com.dnd.builder.core.port.out.Sp
             "ranger"));
         list.add(s("absorb_elements","Absorb Elements",1,"Abjuration","1 reaction","Self","1 round",false,false,"S",
             "Reaction to elemental damage; gain resistance, then add 1d6 of that type to next melee hit.",
+            "druid","ranger","sorcerer","wizard"));
+
+        // ── XGtE Level 1 ─────────────────────────────────────────────────────
+        list.add(s("catapult","Catapult",1,"Transmutation","1 action","60 ft","Instantaneous",false,false,"S",
+            "Hurl object 1-5 lbs up to 90 ft. DEX save or 3d8 bludgeoning damage.",
+            "sorcerer","wizard"));
+        list.add(s("cause_fear","Cause Fear",1,"Necromancy","1 action","60 ft","Up to 1 min",true,false,"V",
+            "WIS save or frightened. Can't move toward you. Save each turn to end.",
+            "warlock","wizard"));
+        list.add(s("chaos_bolt","Chaos Bolt",1,"Evocation","1 action","120 ft","Instantaneous",false,false,"V,S",
+            "Ranged spell attack; 2d8+1d6 damage of random type. Doubles on d8s mean it bounces.",
+            "sorcerer"));
+        list.add(s("ceremony","Ceremony",1,"Abjuration","1 hour","Touch","Instantaneous",false,true,"V,S,M",
+            "Perform religious ceremony: Atonement, Bless Water, Coming of Age, Dedication, Funeral Rite, Wedding.",
+            "cleric","paladin"));
+        list.add(s("earth_tremor","Earth Tremor",1,"Evocation","1 action","10 ft","Instantaneous",false,false,"V,S",
+            "All creatures in 10 ft: DEX save or 1d6 bludgeoning and prone. Difficult terrain.",
+            "bard","druid","sorcerer","wizard"));
+        list.add(s("snare","Snare",1,"Abjuration","1 minute","Touch","8 hours",false,false,"S,M",
+            "Create 5-ft radius magical trap. DEX save or hoisted into the air and restrained.",
             "druid","ranger","wizard"));
+        list.add(s("zephyr_strike","Zephyr Strike",1,"Transmutation","1 bonus action","Self","Up to 1 min",true,false,"V",
+            "Movement doesn't provoke OA. Once: advantage on attack, +1d8 force, +30 ft speed.",
+            "ranger"));
+
+        // ── TCoE Level 1 ─────────────────────────────────────────────────────
+        list.add(s("tashas_caustic_brew","Tasha's Caustic Brew",1,"Evocation","1 action","Self (30-ft line)","Up to 1 min",true,false,"V,S,M",
+            "30-ft line; DEX save or 2d4 acid at start of each turn until action used to remove.",
+            "sorcerer","wizard"));
+
+        // ── Strixhaven Level 1 ───────────────────────────────────────────────
+        list.add(s("silvery_barbs","Silvery Barbs",1,"Enchantment","1 reaction","60 ft","Instantaneous",false,false,"V",
+            "When creature succeeds on attack/check/save, force reroll and take lower. Grant advantage to another.",
+            "bard","sorcerer","wizard"));
 
         // ══ LEVEL 2 SPELLS ═══════════════════════════════════════════════════
         list.add(s("aid","Aid",2,"Abjuration","1 action","30 ft","8 hours",false,false,"V,S,M",
@@ -389,6 +477,40 @@ public class InMemorySpellRepository implements com.dnd.builder.core.port.out.Sp
         list.add(s("web","Web",2,"Conjuration","1 action","60 ft","Up to 1 hour",true,false,"V,S,M",
             "20-ft cube of sticky webs; DEX save or restrained. Flammable.",
             "sorcerer","wizard"));
+
+        // ── XGtE Level 2 ─────────────────────────────────────────────────────
+        list.add(s("aganazzars_scorcher","Aganazzar's Scorcher",2,"Evocation","1 action","30 ft","Instantaneous",false,false,"V,S,M",
+            "30-ft line of fire; DEX save or 3d8 fire damage (half on save).",
+            "sorcerer","wizard"));
+        list.add(s("dragons_breath","Dragon's Breath",2,"Transmutation","1 bonus action","Touch","Up to 1 min",true,false,"V,S,M",
+            "Willing creature can use action to exhale 15-ft cone; 3d6 damage (acid/cold/fire/lightning/poison).",
+            "sorcerer","wizard"));
+        list.add(s("dust_devil","Dust Devil",2,"Conjuration","1 action","60 ft","Up to 1 min",true,false,"V,S,M",
+            "5-ft cube dust devil; creatures entering: STR save or 1d8 bludgeoning and pushed 10 ft.",
+            "druid","sorcerer","wizard"));
+        list.add(s("earthbind","Earthbind",2,"Transmutation","1 action","300 ft","Up to 1 min",true,false,"V",
+            "STR save or flying creature's speed becomes 0 and descends 60 ft/round.",
+            "druid","sorcerer","warlock","wizard"));
+        list.add(s("healing_spirit","Healing Spirit",2,"Conjuration","1 bonus action","60 ft","Up to 1 min",true,false,"V,S",
+            "Intangible spirit heals 1d6 when creature moves through its space (1+mod times max).",
+            "druid","ranger"));
+        list.add(s("mind_spike","Mind Spike",2,"Divination","1 action","60 ft","Up to 1 hour",true,false,"S",
+            "3d8 psychic; WIS save for half. You know target's location while concentrating.",
+            "sorcerer","warlock","wizard"));
+        list.add(s("shadow_blade","Shadow Blade",2,"Illusion","1 bonus action","Self","Up to 1 min",true,false,"V,S",
+            "Create sword of shadow; 2d8 psychic, finesse, light, thrown. Advantage in dim light/darkness.",
+            "sorcerer","warlock","wizard"));
+        list.add(s("warding_wind","Warding Wind",2,"Evocation","1 action","Self","Up to 10 min",true,false,"V",
+            "Strong wind in 10-ft radius; difficult terrain, deafens, extinguishes flames, disperses gas.",
+            "bard","druid","sorcerer","wizard"));
+
+        // ── TCoE Level 2 ─────────────────────────────────────────────────────
+        list.add(s("tashas_mind_whip","Tasha's Mind Whip",2,"Enchantment","1 action","90 ft","1 round",false,false,"V",
+            "INT save or 3d6 psychic and can only move OR action (not both) on next turn.",
+            "sorcerer","wizard"));
+        list.add(s("summon_beast","Summon Beast",2,"Conjuration","1 action","90 ft","Up to 1 hour",true,false,"V,S,M",
+            "Summon bestial spirit (air, land, or water). HP and attacks scale with slot level.",
+            "druid","ranger"));
 
         return list;
     }
