@@ -35,7 +35,7 @@ public class SpellRegistry {
     public List<SpellDefinition> level1For(String classId)   { return forClass(classId, 1); }
     public List<SpellDefinition> level2For(String classId)   { return forClass(classId, 2); }
 
-    // ── Spell builder shorthand ───────────────────────────────────────────────
+    // ── Spell com.dnd.builder shorthand ───────────────────────────────────────────────
     private static SpellDefinition s(String id, String name, int lvl, String school,
                                       String ct, String range, String dur, boolean conc,
                                       boolean ritual, String comp, String desc,

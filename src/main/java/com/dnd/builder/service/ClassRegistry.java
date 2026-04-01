@@ -236,7 +236,7 @@ public class ClassRegistry {
         c.setToolProficiencies(List.of());
         c.setSkillChoiceCount(2);
         c.setSkillList(List.of("Athletics","Insight","Intimidation","Medicine","Persuasion","Religion"));
-        // Paladins get spell slots at level 2; casting info still useful for the builder
+        // Paladins get spell slots at level 2; casting info still useful for the com.dnd.builder
         c.setSpellcasting(castingHalf("CHA",true));
         c.setSubclassLevel(3); c.setSubclassNote("Sacred Oath chosen at level 3");
         c.setStartingGold(200);
