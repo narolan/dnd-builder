@@ -43,7 +43,7 @@ public class RaceRegistry {
     public RaceRegistry() {
         races = buildRaces();
         byId  = new HashMap<>();
-        races.forEach(r -> byId.put(r.getId(), r));
+        races.forEach(r -> byId.put(r.id(), r));
     }
 
     public List<Race> getAllRaces()         { return Collections.unmodifiableList(races); }

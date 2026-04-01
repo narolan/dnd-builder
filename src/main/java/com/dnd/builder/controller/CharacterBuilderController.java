@@ -261,14 +261,14 @@ public class CharacterBuilderController {
         // Each equipment slot param starts with slotId
         var slots = equipRegistry.forClass(draft.getCharacterClass());
         for (var slot : slots) {
-            String chosen = allParams.get(slot.getSlotId());
+            String chosen = allParams.get(slot.slotId());
             if (chosen != null && !chosen.isBlank()) {
                 // Store the label for display, find it from slot choices
                 final String chosenFinal = chosen;
-                slot.getChoices().stream()
-                    .filter(c -> c.getOptionId().equals(chosenFinal))
+                slot.choices().stream()
+                    .filter(c -> c.optionId().equals(chosenFinal))
                     .findFirst()
-                    .ifPresent(c -> choices.put(slot.getSlotId(), c.getOptionId()));
+                    .ifPresent(c -> choices.put(slot.slotId(), c.optionId()));
             }
         }
         draft.setEquipmentChoices(choices);

@@ -192,11 +192,11 @@ public class CharacterCalculator {
         var eqSummary = new ArrayList<String>();
         var slots = classDef != null ? equipmentRegistry.forClass(classDef.getId()) : List.<EquipmentSlot>of();
         for (var slot : slots) {
-            String chosen = draft.getEquipmentChoices().get(slot.getSlotId());
+            String chosen = draft.getEquipmentChoices().get(slot.slotId());
             if (chosen != null) {
-                slot.getChoices().stream()
-                    .filter(c -> c.getOptionId().equals(chosen))
-                    .map(EquipmentChoice::getLabel)
+                slot.choices().stream()
+                    .filter(c -> c.optionId().equals(chosen))
+                    .map(EquipmentChoice::label)
                     .findFirst()
                     .ifPresent(eqSummary::add);
             }
@@ -212,15 +212,15 @@ public class CharacterCalculator {
     public int getRacialBonus(CharacterDraft draft, String statKey) {
         var race = raceRegistry.getById(draft.getRaceId());
         if (race == null) return 0;
-        int bonus = Optional.ofNullable(race.getFixedBonuses())
+        int bonus = Optional.ofNullable(race.fixedBonuses())
                             .map(m -> m.getOrDefault(statKey, 0)).orElse(0);
-        if (race.getFlexibleBonuses() != null) {
-            for (int fbIdx = 0; fbIdx < race.getFlexibleBonuses().size(); fbIdx++) {
-                var fb = race.getFlexibleBonuses().get(fbIdx);
-                for (int pi = 0; pi < fb.getCount(); pi++) {
+        if (race.flexibleBonuses() != null) {
+            for (int fbIdx = 0; fbIdx < race.flexibleBonuses().size(); fbIdx++) {
+                var fb = race.flexibleBonuses().get(fbIdx);
+                for (int pi = 0; pi < fb.count(); pi++) {
                     String key = "flex_" + fbIdx + "_" + pi;
                     if (statKey.equals(draft.getFlexPicks().get(key))) {
-                        bonus += fb.getAmount();
+                        bonus += fb.amount();
                     }
                 }
             }
@@ -260,11 +260,11 @@ public class CharacterCalculator {
     private int resolveArmorAC(CharacterDraft draft, int dexMod, int defaultAC) {
         var slots = equipmentRegistry.forClass(draft.getCharacterClass());
         for (var slot : slots) {
-            String chosenOptionId = draft.getEquipmentChoices().get(slot.getSlotId());
+            String chosenOptionId = draft.getEquipmentChoices().get(slot.slotId());
             if (chosenOptionId == null) continue;
-            String label = slot.getChoices().stream()
-                    .filter(c -> c.getOptionId().equals(chosenOptionId))
-                    .map(EquipmentChoice::getLabel)
+            String label = slot.choices().stream()
+                    .filter(c -> c.optionId().equals(chosenOptionId))
+                    .map(EquipmentChoice::label)
                     .findFirst()
                     .orElse("");
             if (label.contains("Chain mail"))      return 16;

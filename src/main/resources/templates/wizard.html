@@ -367,6 +367,223 @@ if (document.querySelector('.cantrip-cb'))  countSpells('cantrip-cb','cantrip-co
 if (document.querySelector('.spell1-cb'))   countSpells('spell1-cb','spell-count');
 if (document.querySelector('.spellbook-cb'))countSpells('spellbook-cb','spellbook-count');
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// PREMIUM MICRO-INTERACTIONS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ─── Toast Notification System ─────────────────────────────────────────────────
+const Toast = {
+    container: null,
+    init() {
+        if (this.container) return;
+        this.container = document.createElement('div');
+        this.container.id = 'toast-container';
+        this.container.style.cssText = `
+            position: fixed; bottom: 20px; right: 20px; z-index: 9999;
+            display: flex; flex-direction: column; gap: 10px; pointer-events: none;
+        `;
+        document.body.appendChild(this.container);
+    },
+    show(message, type = 'info', duration = 3000) {
+        this.init();
+        const toast = document.createElement('div');
+        toast.style.cssText = `
+            padding: 12px 20px; border-radius: 4px; font-family: 'Cinzel', serif;
+            font-size: .75rem; letter-spacing: .1em; pointer-events: auto;
+            box-shadow: 0 4px 20px rgba(0,0,0,.5); transform: translateX(120%);
+            transition: transform .3s cubic-bezier(.4,0,.2,1), opacity .3s ease;
+            border: 1px solid; backdrop-filter: blur(10px);
+        `;
+        const colors = {
+            success: { bg: 'rgba(42,92,42,.9)', border: '#4a9c4a', color: '#7fcc7f' },
+            error:   { bg: 'rgba(139,32,32,.9)', border: '#c43030', color: '#ff8080' },
+            info:    { bg: 'rgba(37,29,14,.95)', border: '#c9a440', color: '#e8c870' }
+        };
+        const c = colors[type] || colors.info;
+        toast.style.background = c.bg;
+        toast.style.borderColor = c.border;
+        toast.style.color = c.color;
+        toast.textContent = message;
+        this.container.appendChild(toast);
+        requestAnimationFrame(() => toast.style.transform = 'translateX(0)');
+        setTimeout(() => {
+            toast.style.transform = 'translateX(120%)';
+            toast.style.opacity = '0';
+            setTimeout(() => toast.remove(), 300);
+        }, duration);
+    },
+    success(msg) { this.show(msg, 'success'); },
+    error(msg)   { this.show(msg, 'error'); },
+    info(msg)    { this.show(msg, 'info'); }
+};
+
+// ─── Animated Number Counter ───────────────────────────────────────────────────
+function animateValue(el, start, end, duration = 300) {
+    if (!el || start === end) return;
+    const range = end - start;
+    const startTime = performance.now();
+    const easeOut = t => 1 - Math.pow(1 - t, 3);
+
+    function update(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const value = Math.round(start + range * easeOut(progress));
+        el.textContent = value;
+        if (progress < 1) requestAnimationFrame(update);
+    }
+    requestAnimationFrame(update);
+}
+
+// Enhanced budget update with animation
+const origRefreshScores = typeof refreshScores === 'function' ? refreshScores : null;
+if (origRefreshScores) {
+    let lastRemaining = remaining();
+    window.refreshScores = function() {
+        const prevRem = lastRemaining;
+        origRefreshScores();
+        const newRem = remaining();
+        if (prevRem !== newRem) {
+            const numEl = document.getElementById('pts-remaining');
+            if (numEl) animateValue(numEl, prevRem, newRem, 250);
+        }
+        lastRemaining = newRem;
+    };
+}
+
+// ─── Smooth Scroll to Errors ───────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+    const alert = document.querySelector('.alert-error');
+    if (alert) {
+        alert.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        alert.style.animation = 'none';
+        requestAnimationFrame(() => {
+            alert.style.animation = 'slideInLeft .4s ease-out, borderGlow 1s ease-in-out 3';
+        });
+    }
+});
+
+// ─── Card Selection Feedback ───────────────────────────────────────────────────
+document.querySelectorAll('.card-option input, .spell-card input, .feat-card input').forEach(input => {
+    input.addEventListener('change', function() {
+        if (this.checked) {
+            const label = this.nextElementSibling;
+            if (label) {
+                label.style.transform = 'scale(.95)';
+                setTimeout(() => label.style.transform = '', 150);
+            }
+        }
+    });
+});
+
+// ─── Keyboard Navigation Enhancement ───────────────────────────────────────────
+document.addEventListener('keydown', (e) => {
+    // Arrow key navigation for card grids
+    if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+        const focused = document.activeElement;
+        const grid = focused?.closest('.card-grid, .stat-grid, .spell-grid');
+        if (!grid) return;
+
+        const items = [...grid.querySelectorAll('input[type="radio"], input[type="checkbox"], button')];
+        const idx = items.indexOf(focused);
+        if (idx === -1) return;
+
+        let nextIdx = idx;
+        const cols = Math.floor(grid.offsetWidth / (items[0]?.closest('div')?.offsetWidth || 200)) || 3;
+
+        switch (e.key) {
+            case 'ArrowRight': nextIdx = Math.min(idx + 1, items.length - 1); break;
+            case 'ArrowLeft':  nextIdx = Math.max(idx - 1, 0); break;
+            case 'ArrowDown':  nextIdx = Math.min(idx + cols, items.length - 1); break;
+            case 'ArrowUp':    nextIdx = Math.max(idx - cols, 0); break;
+        }
+
+        if (nextIdx !== idx) {
+            e.preventDefault();
+            items[nextIdx].focus();
+        }
+    }
+
+    // Quick submit with Ctrl+Enter
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+        const form = document.querySelector('form');
+        const submitBtn = form?.querySelector('.btn-next, button[type="submit"]');
+        if (submitBtn && !submitBtn.disabled) {
+            e.preventDefault();
+            submitBtn.click();
+            Toast.info('Advancing to next step...');
+        }
+    }
+});
+
+// ─── Form Submit Feedback ──────────────────────────────────────────────────────
+document.querySelectorAll('form').forEach(form => {
+    form.addEventListener('submit', function(e) {
+        const btn = this.querySelector('.btn-next, button[type="submit"]');
+        if (btn) {
+            btn.style.pointerEvents = 'none';
+            btn.innerHTML = '<span style="display:inline-block;animation:pulse 1s infinite">◆</span> Saving...';
+        }
+    });
+});
+
+// ─── Stepper Button Ripple Effect ──────────────────────────────────────────────
+document.querySelectorAll('.stepper button').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+        if (this.disabled) return;
+        const ripple = document.createElement('span');
+        ripple.style.cssText = `
+            position: absolute; border-radius: 50%; background: rgba(201,164,64,.4);
+            width: 50px; height: 50px; transform: translate(-50%, -50%) scale(0);
+            animation: ripple .4s ease-out; pointer-events: none;
+        `;
+        const rect = this.getBoundingClientRect();
+        ripple.style.left = (e.clientX - rect.left) + 'px';
+        ripple.style.top = (e.clientY - rect.top) + 'px';
+        this.appendChild(ripple);
+        setTimeout(() => ripple.remove(), 400);
+    });
+});
+
+// Add ripple animation style
+const rippleStyle = document.createElement('style');
+rippleStyle.textContent = `
+    @keyframes ripple {
+        to { transform: translate(-50%, -50%) scale(2); opacity: 0; }
+    }
+`;
+document.head.appendChild(rippleStyle);
+
+// ─── Auto-save Indicator (visual only) ─────────────────────────────────────────
+let saveIndicator = null;
+function showSaveIndicator() {
+    if (!saveIndicator) {
+        saveIndicator = document.createElement('div');
+        saveIndicator.style.cssText = `
+            position: fixed; top: 15px; right: 15px; padding: 6px 12px;
+            background: rgba(37,29,14,.9); border: 1px solid var(--gold-dim);
+            border-radius: 3px; font-family: 'Cinzel', serif; font-size: .55rem;
+            letter-spacing: .15em; color: var(--gold); opacity: 0;
+            transition: opacity .3s ease; z-index: 100;
+        `;
+        saveIndicator.textContent = '◆ SAVED';
+        document.body.appendChild(saveIndicator);
+    }
+    saveIndicator.style.opacity = '1';
+    setTimeout(() => saveIndicator.style.opacity = '0', 1500);
+}
+
+// Trigger save indicator on significant changes
+document.querySelectorAll('input[type="radio"], input[type="checkbox"], select').forEach(el => {
+    el.addEventListener('change', () => setTimeout(showSaveIndicator, 200));
+});
+
+// ─── Progress Dot Tooltips ─────────────────────────────────────────────────────
+const stepNames = ['Race', 'Class', 'Background', 'Scores', 'Skills', 'Feats', 'Spells', 'Equipment', 'Review'];
+document.querySelectorAll('.step-dot').forEach((dot, i) => {
+    dot.title = stepNames[i] || `Step ${i + 1}`;
+    dot.style.cursor = dot.classList.contains('done') || dot.classList.contains('active') ? 'pointer' : 'default';
+});
+
 /*]]>*/
 </script>
 </body>

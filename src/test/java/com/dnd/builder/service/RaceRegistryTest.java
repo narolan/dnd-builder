@@ -29,13 +29,13 @@ class RaceRegistryTest {
         void humanStandard() {
             Race human = registry.getById("human_standard");
             assertNotNull(human);
-            assertEquals("Human", human.getName());
-            assertEquals(1, human.getFixedBonuses().get("STR"));
-            assertEquals(1, human.getFixedBonuses().get("DEX"));
-            assertEquals(1, human.getFixedBonuses().get("CON"));
-            assertEquals(1, human.getFixedBonuses().get("INT"));
-            assertEquals(1, human.getFixedBonuses().get("WIS"));
-            assertEquals(1, human.getFixedBonuses().get("CHA"));
+            assertEquals("Human", human.name());
+            assertEquals(1, human.fixedBonuses().get("STR"));
+            assertEquals(1, human.fixedBonuses().get("DEX"));
+            assertEquals(1, human.fixedBonuses().get("CON"));
+            assertEquals(1, human.fixedBonuses().get("INT"));
+            assertEquals(1, human.fixedBonuses().get("WIS"));
+            assertEquals(1, human.fixedBonuses().get("CHA"));
         }
 
         @Test
@@ -49,8 +49,8 @@ class RaceRegistryTest {
         void hillDwarf() {
             Race dwarf = registry.getById("dwarf_hill");
             assertNotNull(dwarf);
-            assertEquals(2, dwarf.getFixedBonuses().get("CON"));
-            assertEquals(1, dwarf.getFixedBonuses().get("WIS"));
+            assertEquals(2, dwarf.fixedBonuses().get("CON"));
+            assertEquals(1, dwarf.fixedBonuses().get("WIS"));
         }
 
         @Test
@@ -58,8 +58,8 @@ class RaceRegistryTest {
         void mountainDwarf() {
             Race dwarf = registry.getById("dwarf_mountain");
             assertNotNull(dwarf);
-            assertEquals(2, dwarf.getFixedBonuses().get("STR"));
-            assertEquals(2, dwarf.getFixedBonuses().get("CON"));
+            assertEquals(2, dwarf.fixedBonuses().get("STR"));
+            assertEquals(2, dwarf.fixedBonuses().get("CON"));
         }
 
         @Test
@@ -67,8 +67,8 @@ class RaceRegistryTest {
         void highElf() {
             Race elf = registry.getById("elf_high");
             assertNotNull(elf);
-            assertEquals(2, elf.getFixedBonuses().get("DEX"));
-            assertEquals(1, elf.getFixedBonuses().get("INT"));
+            assertEquals(2, elf.fixedBonuses().get("DEX"));
+            assertEquals(1, elf.fixedBonuses().get("INT"));
         }
 
         @Test
@@ -76,8 +76,8 @@ class RaceRegistryTest {
         void woodElf() {
             Race elf = registry.getById("elf_wood");
             assertNotNull(elf);
-            assertEquals(2, elf.getFixedBonuses().get("DEX"));
-            assertEquals(1, elf.getFixedBonuses().get("WIS"));
+            assertEquals(2, elf.fixedBonuses().get("DEX"));
+            assertEquals(1, elf.fixedBonuses().get("WIS"));
         }
 
         @Test
@@ -85,8 +85,8 @@ class RaceRegistryTest {
         void drow() {
             Race elf = registry.getById("elf_drow");
             assertNotNull(elf);
-            assertEquals(2, elf.getFixedBonuses().get("DEX"));
-            assertEquals(1, elf.getFixedBonuses().get("CHA"));
+            assertEquals(2, elf.fixedBonuses().get("DEX"));
+            assertEquals(1, elf.fixedBonuses().get("CHA"));
         }
 
         @Test
@@ -94,8 +94,8 @@ class RaceRegistryTest {
         void lightfootHalfling() {
             Race halfling = registry.getById("halfling_lightfoot");
             assertNotNull(halfling);
-            assertEquals(2, halfling.getFixedBonuses().get("DEX"));
-            assertEquals(1, halfling.getFixedBonuses().get("CHA"));
+            assertEquals(2, halfling.fixedBonuses().get("DEX"));
+            assertEquals(1, halfling.fixedBonuses().get("CHA"));
         }
 
         @Test
@@ -103,8 +103,8 @@ class RaceRegistryTest {
         void stoutHalfling() {
             Race halfling = registry.getById("halfling_stout");
             assertNotNull(halfling);
-            assertEquals(2, halfling.getFixedBonuses().get("DEX"));
-            assertEquals(1, halfling.getFixedBonuses().get("CON"));
+            assertEquals(2, halfling.fixedBonuses().get("DEX"));
+            assertEquals(1, halfling.fixedBonuses().get("CON"));
         }
 
         @Test
@@ -112,8 +112,8 @@ class RaceRegistryTest {
         void dragonborn() {
             Race db = registry.getById("dragonborn");
             assertNotNull(db);
-            assertEquals(2, db.getFixedBonuses().get("STR"));
-            assertEquals(1, db.getFixedBonuses().get("CHA"));
+            assertEquals(2, db.fixedBonuses().get("STR"));
+            assertEquals(1, db.fixedBonuses().get("CHA"));
         }
 
         @Test
@@ -121,8 +121,8 @@ class RaceRegistryTest {
         void forestGnome() {
             Race gnome = registry.getById("gnome_forest");
             assertNotNull(gnome);
-            assertEquals(2, gnome.getFixedBonuses().get("INT"));
-            assertEquals(1, gnome.getFixedBonuses().get("DEX"));
+            assertEquals(2, gnome.fixedBonuses().get("INT"));
+            assertEquals(1, gnome.fixedBonuses().get("DEX"));
         }
 
         @Test
@@ -130,8 +130,8 @@ class RaceRegistryTest {
         void rockGnome() {
             Race gnome = registry.getById("gnome_rock");
             assertNotNull(gnome);
-            assertEquals(2, gnome.getFixedBonuses().get("INT"));
-            assertEquals(1, gnome.getFixedBonuses().get("CON"));
+            assertEquals(2, gnome.fixedBonuses().get("INT"));
+            assertEquals(1, gnome.fixedBonuses().get("CON"));
         }
 
         @Test
@@ -139,12 +139,12 @@ class RaceRegistryTest {
         void halfElf() {
             Race he = registry.getById("half_elf");
             assertNotNull(he);
-            assertEquals(2, he.getFixedBonuses().get("CHA"));
-            assertNotNull(he.getFlexibleBonuses());
-            assertEquals(1, he.getFlexibleBonuses().size());
-            assertEquals(2, he.getFlexibleBonuses().get(0).getCount());
-            assertEquals(1, he.getFlexibleBonuses().get(0).getAmount());
-            assertTrue(he.getFlexibleBonuses().get(0).getExcludedStats().contains("CHA"));
+            assertEquals(2, he.fixedBonuses().get("CHA"));
+            assertNotNull(he.flexibleBonuses());
+            assertEquals(1, he.flexibleBonuses().size());
+            assertEquals(2, he.flexibleBonuses().get(0).count());
+            assertEquals(1, he.flexibleBonuses().get(0).amount());
+            assertTrue(he.flexibleBonuses().get(0).excludedStats().contains("CHA"));
         }
 
         @Test
@@ -152,8 +152,8 @@ class RaceRegistryTest {
         void halfOrc() {
             Race ho = registry.getById("half_orc");
             assertNotNull(ho);
-            assertEquals(2, ho.getFixedBonuses().get("STR"));
-            assertEquals(1, ho.getFixedBonuses().get("CON"));
+            assertEquals(2, ho.fixedBonuses().get("STR"));
+            assertEquals(1, ho.fixedBonuses().get("CON"));
         }
 
         @Test
@@ -161,8 +161,8 @@ class RaceRegistryTest {
         void tiefling() {
             Race t = registry.getById("tiefling");
             assertNotNull(t);
-            assertEquals(1, t.getFixedBonuses().get("INT"));
-            assertEquals(2, t.getFixedBonuses().get("CHA"));
+            assertEquals(1, t.fixedBonuses().get("INT"));
+            assertEquals(2, t.fixedBonuses().get("CHA"));
         }
     }
 
@@ -175,9 +175,9 @@ class RaceRegistryTest {
         void githzerai() {
             Race g = registry.getById("githzerai");
             assertNotNull(g);
-            assertEquals("MToF", g.getSource());
-            assertEquals(1, g.getFixedBonuses().get("INT"));
-            assertEquals(2, g.getFixedBonuses().get("WIS"));
+            assertEquals("MToF", g.source());
+            assertEquals(1, g.fixedBonuses().get("INT"));
+            assertEquals(2, g.fixedBonuses().get("WIS"));
         }
 
         @Test
@@ -185,9 +185,9 @@ class RaceRegistryTest {
         void githyanki() {
             Race g = registry.getById("githyanki");
             assertNotNull(g);
-            assertEquals("MToF", g.getSource());
-            assertEquals(2, g.getFixedBonuses().get("STR"));
-            assertEquals(1, g.getFixedBonuses().get("INT"));
+            assertEquals("MToF", g.source());
+            assertEquals(2, g.fixedBonuses().get("STR"));
+            assertEquals(1, g.fixedBonuses().get("INT"));
         }
 
         @Test
@@ -195,8 +195,8 @@ class RaceRegistryTest {
         void eladrin() {
             Race e = registry.getById("elf_eladrin");
             assertNotNull(e);
-            assertEquals(2, e.getFixedBonuses().get("DEX"));
-            assertEquals(1, e.getFixedBonuses().get("CHA"));
+            assertEquals(2, e.fixedBonuses().get("DEX"));
+            assertEquals(1, e.fixedBonuses().get("CHA"));
         }
 
         @Test
@@ -204,8 +204,8 @@ class RaceRegistryTest {
         void seaElf() {
             Race se = registry.getById("elf_sea");
             assertNotNull(se);
-            assertEquals(2, se.getFixedBonuses().get("DEX"));
-            assertEquals(1, se.getFixedBonuses().get("CON"));
+            assertEquals(2, se.fixedBonuses().get("DEX"));
+            assertEquals(1, se.fixedBonuses().get("CON"));
         }
 
         @Test
@@ -213,8 +213,8 @@ class RaceRegistryTest {
         void shadarKai() {
             Race sk = registry.getById("elf_shadarkai");
             assertNotNull(sk);
-            assertEquals(2, sk.getFixedBonuses().get("DEX"));
-            assertEquals(1, sk.getFixedBonuses().get("CON"));
+            assertEquals(2, sk.fixedBonuses().get("DEX"));
+            assertEquals(1, sk.fixedBonuses().get("CON"));
         }
 
         @Test
@@ -222,8 +222,8 @@ class RaceRegistryTest {
         void duergar() {
             Race d = registry.getById("dwarf_duergar");
             assertNotNull(d);
-            assertEquals(2, d.getFixedBonuses().get("CON"));
-            assertEquals(1, d.getFixedBonuses().get("STR"));
+            assertEquals(2, d.fixedBonuses().get("CON"));
+            assertEquals(1, d.fixedBonuses().get("STR"));
         }
     }
 
@@ -236,8 +236,8 @@ class RaceRegistryTest {
         void aasimar() {
             Race a = registry.getById("aasimar");
             assertNotNull(a);
-            assertEquals("VGtM", a.getSource());
-            assertEquals(2, a.getFixedBonuses().get("CHA"));
+            assertEquals("VGtM", a.source());
+            assertEquals(2, a.fixedBonuses().get("CHA"));
         }
 
         @Test
@@ -245,8 +245,8 @@ class RaceRegistryTest {
         void firbolg() {
             Race f = registry.getById("firbolg");
             assertNotNull(f);
-            assertEquals(2, f.getFixedBonuses().get("WIS"));
-            assertEquals(1, f.getFixedBonuses().get("STR"));
+            assertEquals(2, f.fixedBonuses().get("WIS"));
+            assertEquals(1, f.fixedBonuses().get("STR"));
         }
 
         @Test
@@ -254,8 +254,8 @@ class RaceRegistryTest {
         void goliath() {
             Race g = registry.getById("goliath");
             assertNotNull(g);
-            assertEquals(2, g.getFixedBonuses().get("STR"));
-            assertEquals(1, g.getFixedBonuses().get("CON"));
+            assertEquals(2, g.fixedBonuses().get("STR"));
+            assertEquals(1, g.fixedBonuses().get("CON"));
         }
 
         @Test
@@ -263,8 +263,8 @@ class RaceRegistryTest {
         void kenku() {
             Race k = registry.getById("kenku");
             assertNotNull(k);
-            assertEquals(2, k.getFixedBonuses().get("DEX"));
-            assertEquals(1, k.getFixedBonuses().get("WIS"));
+            assertEquals(2, k.fixedBonuses().get("DEX"));
+            assertEquals(1, k.fixedBonuses().get("WIS"));
         }
 
         @Test
@@ -272,8 +272,8 @@ class RaceRegistryTest {
         void lizardfolk() {
             Race l = registry.getById("lizardfolk");
             assertNotNull(l);
-            assertEquals(2, l.getFixedBonuses().get("CON"));
-            assertEquals(1, l.getFixedBonuses().get("WIS"));
+            assertEquals(2, l.fixedBonuses().get("CON"));
+            assertEquals(1, l.fixedBonuses().get("WIS"));
         }
 
         @Test
@@ -281,8 +281,8 @@ class RaceRegistryTest {
         void tabaxi() {
             Race t = registry.getById("tabaxi");
             assertNotNull(t);
-            assertEquals(2, t.getFixedBonuses().get("DEX"));
-            assertEquals(1, t.getFixedBonuses().get("CHA"));
+            assertEquals(2, t.fixedBonuses().get("DEX"));
+            assertEquals(1, t.fixedBonuses().get("CHA"));
         }
 
         @Test
@@ -290,9 +290,9 @@ class RaceRegistryTest {
         void triton() {
             Race t = registry.getById("triton");
             assertNotNull(t);
-            assertEquals(1, t.getFixedBonuses().get("STR"));
-            assertEquals(1, t.getFixedBonuses().get("CON"));
-            assertEquals(1, t.getFixedBonuses().get("CHA"));
+            assertEquals(1, t.fixedBonuses().get("STR"));
+            assertEquals(1, t.fixedBonuses().get("CON"));
+            assertEquals(1, t.fixedBonuses().get("CHA"));
         }
 
         @Test
@@ -300,8 +300,8 @@ class RaceRegistryTest {
         void yuanTi() {
             Race y = registry.getById("yuanti");
             assertNotNull(y);
-            assertEquals(2, y.getFixedBonuses().get("CHA"));
-            assertEquals(1, y.getFixedBonuses().get("INT"));
+            assertEquals(2, y.fixedBonuses().get("CHA"));
+            assertEquals(1, y.fixedBonuses().get("INT"));
         }
 
         @Test
@@ -309,8 +309,8 @@ class RaceRegistryTest {
         void bugbear() {
             Race b = registry.getById("bugbear");
             assertNotNull(b);
-            assertEquals(2, b.getFixedBonuses().get("STR"));
-            assertEquals(1, b.getFixedBonuses().get("DEX"));
+            assertEquals(2, b.fixedBonuses().get("STR"));
+            assertEquals(1, b.fixedBonuses().get("DEX"));
         }
 
         @Test
@@ -318,8 +318,8 @@ class RaceRegistryTest {
         void goblin() {
             Race g = registry.getById("goblin");
             assertNotNull(g);
-            assertEquals(2, g.getFixedBonuses().get("DEX"));
-            assertEquals(1, g.getFixedBonuses().get("CON"));
+            assertEquals(2, g.fixedBonuses().get("DEX"));
+            assertEquals(1, g.fixedBonuses().get("CON"));
         }
 
         @Test
@@ -327,8 +327,8 @@ class RaceRegistryTest {
         void hobgoblin() {
             Race h = registry.getById("hobgoblin");
             assertNotNull(h);
-            assertEquals(2, h.getFixedBonuses().get("CON"));
-            assertEquals(1, h.getFixedBonuses().get("INT"));
+            assertEquals(2, h.fixedBonuses().get("CON"));
+            assertEquals(1, h.fixedBonuses().get("INT"));
         }
 
         @Test
@@ -336,8 +336,8 @@ class RaceRegistryTest {
         void kobold() {
             Race k = registry.getById("kobold");
             assertNotNull(k);
-            assertEquals(2, k.getFixedBonuses().get("DEX"));
-            assertEquals(-2, k.getFixedBonuses().get("STR"));
+            assertEquals(2, k.fixedBonuses().get("DEX"));
+            assertEquals(-2, k.fixedBonuses().get("STR"));
         }
 
         @Test
@@ -345,9 +345,9 @@ class RaceRegistryTest {
         void orc() {
             Race o = registry.getById("orc");
             assertNotNull(o);
-            assertEquals(2, o.getFixedBonuses().get("STR"));
-            assertEquals(1, o.getFixedBonuses().get("CON"));
-            assertEquals(-2, o.getFixedBonuses().get("INT"));
+            assertEquals(2, o.fixedBonuses().get("STR"));
+            assertEquals(1, o.fixedBonuses().get("CON"));
+            assertEquals(-2, o.fixedBonuses().get("INT"));
         }
     }
 

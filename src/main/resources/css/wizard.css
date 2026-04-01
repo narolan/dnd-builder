@@ -237,3 +237,421 @@ input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-
 /* ── Import form ──────────────────────────────────────────────────────────── */
 .import-area{border:1px dashed var(--border);border-radius:4px;padding:20px;text-align:center;margin-bottom:14px}
 .import-area input[type=file]{color:var(--cream-dim);font-size:.85rem}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   PREMIUM MODERNIZATION — Animations, Glass-morphism & Micro-interactions
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Keyframe Animations ─────────────────────────────────────────────────────── */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-30px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(201,164,64,.3); }
+  50%      { box-shadow: 0 0 20px rgba(201,164,64,.6); }
+}
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes glow {
+  0%, 100% { filter: drop-shadow(0 0 3px var(--gold)); }
+  50%      { filter: drop-shadow(0 0 10px var(--gold-lite)); }
+}
+@keyframes checkPop {
+  0%   { transform: scale(0); }
+  50%  { transform: scale(1.3); }
+  100% { transform: scale(1); }
+}
+@keyframes borderGlow {
+  0%, 100% { border-color: var(--gold-dim); }
+  50%      { border-color: var(--gold-lite); }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-4px); }
+}
+
+/* ── Glass-morphism Panel Effect ─────────────────────────────────────────────── */
+.panel {
+  background: linear-gradient(135deg, rgba(37,29,14,.95) 0%, rgba(28,21,9,.98) 100%);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow:
+    0 8px 32px rgba(0,0,0,.5),
+    inset 0 1px 0 rgba(201,164,64,.1),
+    inset 0 -1px 0 rgba(0,0,0,.3);
+  animation: fadeInUp .5s ease-out;
+}
+.panel-title {
+  background: linear-gradient(90deg, rgba(0,0,0,.3) 0%, rgba(0,0,0,.15) 50%, rgba(0,0,0,.3) 100%);
+  text-shadow: 0 0 30px rgba(201,164,64,.5);
+}
+
+/* ── Header Enhancement ──────────────────────────────────────────────────────── */
+.site-title {
+  animation: fadeIn .6s ease-out, glow 3s ease-in-out infinite;
+  background: linear-gradient(135deg, var(--gold) 0%, var(--gold-lite) 50%, var(--gold) 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-size: 200% auto;
+}
+.site-title:hover {
+  animation: shimmer 2s linear infinite, glow 3s ease-in-out infinite;
+}
+header::after {
+  background: linear-gradient(90deg, transparent, var(--gold-dim), var(--gold), var(--gold-dim), transparent);
+  animation: fadeIn .8s ease-out;
+}
+
+/* ── Progress Bar Glow ───────────────────────────────────────────────────────── */
+.progress-fill {
+  box-shadow: 0 0 12px rgba(201,164,64,.5), inset 0 1px 0 rgba(255,255,255,.2);
+  animation: pulse 2s ease-in-out infinite;
+  background: linear-gradient(90deg, var(--gold-dim), var(--gold), var(--gold-lite), var(--gold));
+  background-size: 300% 100%;
+}
+.progress-track {
+  box-shadow: inset 0 2px 6px rgba(0,0,0,.5);
+}
+.step-dot {
+  transition: all .3s cubic-bezier(.4,0,.2,1);
+}
+.step-dot.active {
+  animation: pulse 1.5s ease-in-out infinite;
+  transform: scale(1.2);
+}
+.step-dot:hover:not(.active) {
+  transform: scale(1.15);
+  border-color: var(--gold);
+  background: rgba(201,164,64,.3);
+}
+.step-label {
+  transition: color .3s ease, transform .2s ease;
+}
+.step-label.active {
+  text-shadow: 0 0 10px rgba(201,164,64,.4);
+}
+
+/* ── Card Hover Effects ──────────────────────────────────────────────────────── */
+.card-option {
+  animation: fadeInUp .4s ease-out backwards;
+}
+.card-option:nth-child(1) { animation-delay: .05s; }
+.card-option:nth-child(2) { animation-delay: .1s; }
+.card-option:nth-child(3) { animation-delay: .15s; }
+.card-option:nth-child(4) { animation-delay: .2s; }
+.card-option:nth-child(5) { animation-delay: .25s; }
+.card-option:nth-child(6) { animation-delay: .3s; }
+.card-option label {
+  transition: all .25s cubic-bezier(.4,0,.2,1);
+  transform-origin: center;
+}
+.card-option label:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(0,0,0,.4), 0 0 15px rgba(201,164,64,.1);
+}
+.card-option input:checked + label {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0,0,0,.3), 0 0 20px rgba(201,164,64,.15);
+  animation: borderGlow 2s ease-in-out infinite;
+}
+.card-option input:checked + label::after {
+  content: '✓';
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  font-size: .7rem;
+  color: var(--gold);
+  animation: checkPop .3s ease-out;
+}
+.card-option {
+  position: relative;
+}
+
+/* ── Stat Card Premium Styling ───────────────────────────────────────────────── */
+.stat-card {
+  transition: all .3s cubic-bezier(.4,0,.2,1);
+  animation: fadeInUp .5s ease-out backwards;
+  background: linear-gradient(145deg, var(--parch-mid) 0%, rgba(0,0,0,.2) 100%);
+}
+.stat-card:nth-child(1) { animation-delay: .1s; }
+.stat-card:nth-child(2) { animation-delay: .15s; }
+.stat-card:nth-child(3) { animation-delay: .2s; }
+.stat-card:nth-child(4) { animation-delay: .25s; }
+.stat-card:nth-child(5) { animation-delay: .3s; }
+.stat-card:nth-child(6) { animation-delay: .35s; }
+.stat-card:hover {
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 0 12px 30px rgba(0,0,0,.5), 0 0 20px rgba(201,164,64,.1);
+  border-color: var(--gold);
+}
+.stat-final {
+  transition: transform .2s ease, text-shadow .3s ease;
+}
+.stat-card:hover .stat-final {
+  transform: scale(1.05);
+  text-shadow: 0 0 20px rgba(248,240,220,.3);
+}
+.mod-badge {
+  transition: all .3s ease;
+}
+.stat-card:hover .mod-badge {
+  transform: scale(1.1);
+  box-shadow: 0 0 10px rgba(201,164,64,.3);
+}
+
+/* ── Stepper Button Premium Effects ──────────────────────────────────────────── */
+.stepper button {
+  transition: all .15s cubic-bezier(.4,0,.2,1);
+  position: relative;
+  overflow: hidden;
+}
+.stepper button::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(201,164,64,.3) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity .2s ease;
+}
+.stepper button:hover:not(:disabled)::before {
+  opacity: 1;
+}
+.stepper button:active:not(:disabled) {
+  transform: scale(.95);
+}
+
+/* ── Button Premium Effects ──────────────────────────────────────────────────── */
+.btn {
+  transition: all .25s cubic-bezier(.4,0,.2,1);
+  position: relative;
+  overflow: hidden;
+}
+.btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(201,164,64,.2);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width .4s ease, height .4s ease;
+}
+.btn:hover::before {
+  width: 300px;
+  height: 300px;
+}
+.btn-next {
+  box-shadow: 0 4px 15px rgba(201,164,64,.2);
+}
+.btn-next:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(201,164,64,.35);
+}
+.btn-next:active {
+  transform: translateY(0);
+}
+.btn-prev:hover {
+  transform: translateX(-3px);
+}
+.btn-export {
+  box-shadow: 0 4px 15px rgba(42,92,42,.2);
+}
+.btn-export:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(42,92,42,.35);
+}
+
+/* ── Spell Card Animations ───────────────────────────────────────────────────── */
+.spell-card {
+  animation: fadeInUp .4s ease-out backwards;
+}
+.spell-card label {
+  transition: all .2s cubic-bezier(.4,0,.2,1);
+}
+.spell-card label:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0,0,0,.4);
+}
+.spell-card input:checked + label {
+  box-shadow: 0 0 15px rgba(201,164,64,.2);
+}
+
+/* ── Feat Card Animations ────────────────────────────────────────────────────── */
+.feat-card {
+  animation: fadeInUp .4s ease-out backwards;
+}
+.feat-card label {
+  transition: all .2s cubic-bezier(.4,0,.2,1);
+}
+.feat-card label:hover {
+  transform: translateY(-2px) scale(1.01);
+}
+
+/* ── Subclass Card Animations ────────────────────────────────────────────────── */
+.subclass-opt {
+  animation: slideInLeft .4s ease-out backwards;
+}
+.subclass-opt:nth-child(1) { animation-delay: .05s; }
+.subclass-opt:nth-child(2) { animation-delay: .1s; }
+.subclass-opt:nth-child(3) { animation-delay: .15s; }
+.subclass-opt:nth-child(4) { animation-delay: .2s; }
+.subclass-opt label {
+  transition: all .2s cubic-bezier(.4,0,.2,1);
+}
+.subclass-opt label:hover {
+  transform: translateX(4px);
+  border-left: 3px solid var(--gold);
+}
+
+/* ── Equipment Option Animations ─────────────────────────────────────────────── */
+.equip-option label {
+  transition: all .2s ease;
+}
+.equip-option label:hover {
+  transform: translateX(5px);
+  border-left-width: 3px;
+  border-left-color: var(--gold);
+}
+
+/* ── Skill Check Animations ──────────────────────────────────────────────────── */
+.skill-check-item {
+  transition: all .2s ease;
+}
+.skill-check-item:hover {
+  transform: translateX(4px);
+}
+.skill-check-box {
+  transition: all .2s cubic-bezier(.4,0,.2,1);
+}
+.skill-check-item input:checked ~ .skill-check-box {
+  animation: checkPop .25s ease-out;
+}
+
+/* ── Budget Bar Animation ────────────────────────────────────────────────────── */
+.budget-num {
+  transition: all .3s cubic-bezier(.4,0,.2,1);
+}
+#budget-bar-fill {
+  transition: width .35s cubic-bezier(.4,0,.2,1), background .35s ease;
+  box-shadow: 0 0 10px rgba(201,164,64,.4);
+}
+
+/* ── Alert Animations ────────────────────────────────────────────────────────── */
+.alert {
+  animation: slideInLeft .4s ease-out;
+}
+.alert-error {
+  animation: slideInLeft .4s ease-out, borderGlow 1s ease-in-out 3;
+  border-color: var(--red);
+}
+
+/* ── Info Box Enhancement ────────────────────────────────────────────────────── */
+.info-box {
+  transition: all .3s ease;
+  animation: fadeIn .4s ease-out;
+}
+.info-box:hover {
+  border-color: var(--gold-dim);
+  box-shadow: 0 4px 15px rgba(0,0,0,.3);
+}
+
+/* ── Nav Strip Enhancement ───────────────────────────────────────────────────── */
+.nav-strip {
+  animation: fadeIn .5s ease-out .2s backwards;
+}
+.nav-link {
+  transition: all .2s cubic-bezier(.4,0,.2,1);
+}
+.nav-link:hover {
+  transform: translateY(-2px);
+}
+.nav-link.active {
+  box-shadow: 0 0 10px rgba(201,164,64,.3);
+}
+
+/* ── Sheet Review Enhancement ────────────────────────────────────────────────── */
+.sheet-stat {
+  transition: all .3s ease;
+  animation: fadeInUp .4s ease-out backwards;
+}
+.sheet-stat:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(0,0,0,.4);
+  border-color: var(--gold-dim);
+}
+.sheet-detail {
+  animation: fadeIn .5s ease-out;
+}
+.core-chip {
+  transition: all .2s ease;
+}
+.core-chip:hover {
+  transform: translateY(-2px);
+  border-color: var(--gold);
+}
+
+/* ── Select Item Enhancement ─────────────────────────────────────────────────── */
+.select-item label {
+  transition: all .2s cubic-bezier(.4,0,.2,1);
+}
+.select-item label:hover {
+  transform: translateX(4px);
+}
+.select-item label::before {
+  transition: all .2s cubic-bezier(.4,0,.2,1);
+}
+.select-item input:checked + label::before {
+  animation: checkPop .25s ease-out;
+}
+
+/* ── ASI Tag Enhancement ─────────────────────────────────────────────────────── */
+.asi-tag {
+  transition: all .2s ease;
+  animation: fadeIn .3s ease-out backwards;
+}
+.asi-tag:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 3px 10px rgba(0,0,0,.3);
+}
+
+/* ── Loading Shimmer Utility ─────────────────────────────────────────────────── */
+.shimmer {
+  background: linear-gradient(90deg,
+    rgba(201,164,64,.05) 25%,
+    rgba(201,164,64,.15) 50%,
+    rgba(201,164,64,.05) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* ── Focus States Enhancement ────────────────────────────────────────────────── */
+input[type=text]:focus,
+input[type=number]:focus,
+select:focus,
+textarea:focus {
+  box-shadow: 0 0 0 3px rgba(201,164,64,.15), 0 0 15px rgba(201,164,64,.1);
+  transform: translateY(-1px);
+}
+
+/* ── Reduced Motion Support ──────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
