@@ -4,7 +4,6 @@ import com.dnd.builder.core.model.ClassDefinition;
 import com.dnd.builder.core.model.ClassDefinition.SpellcastingInfo;
 import com.dnd.builder.core.model.SubclassDefinition;
 import org.springframework.stereotype.Repository;
-import org.springframework.stereotype.Repository;
 
 import java.util.*;
 
@@ -99,7 +98,11 @@ public class InMemoryClassRepository implements com.dnd.builder.core.port.out.Cl
             sub("berserker",     "Path of the Berserker","Berserkers harness their rage into single-minded violence."),
             sub("totem_warrior", "Path of the Totem Warrior","Seekers of spiritual power; bear, eagle, or wolf."),
             sub("battlerager",   "Path of the Battlerager","Spiky armor style focused on grappling and bleeding. (SCAG)"),
-            sub("ancestral",     "Path of the Ancestral Guardian","Ancestors shield your allies. (XGtE)")
+            sub("ancestral",     "Path of the Ancestral Guardian","Ancestors shield your allies. (XGtE)"),
+            sub("storm_herald",  "Path of the Storm Herald","Auras of desert, sea, or tundra. (XGtE)"),
+            sub("zealot",        "Path of the Zealot","Divine fury, hard to kill, kept fighting. (XGtE)"),
+            sub("beast",         "Path of the Beast","Natural weapons manifest in rage. (TCoE)"),
+            sub("wild_magic_barb","Path of Wild Magic","Chaotic surges fuel your rage. (TCoE)")
         ));
         return c;
     }
@@ -121,10 +124,13 @@ public class InMemoryClassRepository implements com.dnd.builder.core.port.out.Cl
         c.setSubclassLevel(3); c.setSubclassNote("Bard College chosen at level 3");
         c.setStartingGold(125);
         c.setSubclasses(List.of(
-            sub("lore",  "College of Lore","Additional skills, Cutting Words, and extra spells."),
-            sub("valor", "College of Valor","Armor proficiency, combat inspiration, extra attack."),
-            sub("glamour","College of Glamour","Fey-touched magic and charm. (XGtE)"),
-            sub("swords","College of Swords","Blade flourishes and Mobile-style mobility. (XGtE)")
+            sub("lore",     "College of Lore","Additional skills, Cutting Words, and extra spells."),
+            sub("valor",    "College of Valor","Armor proficiency, combat inspiration, extra attack."),
+            sub("glamour",  "College of Glamour","Fey-touched magic and charm. (XGtE)"),
+            sub("swords",   "College of Swords","Blade flourishes and Mobile-style mobility. (XGtE)"),
+            sub("whispers", "College of Whispers","Psychic Blades and Words of Terror. (XGtE)"),
+            sub("eloquence","College of Eloquence","Silver Tongue and Unfailing Inspiration. (TCoE)"),
+            sub("creation", "College of Creation","Song of Creation and Performance of Creation. (TCoE)")
         ));
         return c;
     }
@@ -150,7 +156,14 @@ public class InMemoryClassRepository implements com.dnd.builder.core.port.out.Cl
             sub("nature",   "Nature Domain","Wild shaping light, heavy armor."),
             sub("tempest",  "Tempest Domain","Thunder/lightning, heavy armor, wrath of storms."),
             sub("trickery", "Trickery Domain","Deception and illusion spells, Invoke Duplicity."),
-            sub("war",      "War Domain","Heavy armor, extra attack, War Priest bonus attacks.")
+            sub("war",      "War Domain","Heavy armor, extra attack, War Priest bonus attacks."),
+            sub("death",    "Death Domain","Necrotic damage and Reaper cantrips. (DMG)"),
+            sub("arcana",   "Arcana Domain","Arcane magic merged with divine power. (SCAG)"),
+            sub("forge",    "Forge Domain","Artisan abilities and fire resistance. (XGtE)"),
+            sub("grave",    "Grave Domain","Spare the dying, prevent death, smite undead. (XGtE)"),
+            sub("order",    "Order Domain","Voice of Authority and lawful magic. (TCoE)"),
+            sub("peace",    "Peace Domain","Emboldening Bond and protective balm. (TCoE)"),
+            sub("twilight", "Twilight Domain","Darkvision sharing and Twilight Sanctuary. (TCoE)")
         ));
         return c;
     }
@@ -170,10 +183,13 @@ public class InMemoryClassRepository implements com.dnd.builder.core.port.out.Cl
         c.setSubclassLevel(2); c.setSubclassNote("Druid Circle chosen at level 2");
         c.setStartingGold(50);
         c.setSubclasses(List.of(
-            sub("land",  "Circle of the Land","Expanded spells by terrain, extra spells."),
-            sub("moon",  "Circle of the Moon","Wild Shape into stronger beasts, combat forms."),
-            sub("spores","Circle of Spores","Death and decay, Symbiotic Entity. (TCoE)"),
-            sub("stars", "Circle of Stars","Constellation forms and cosmic power. (TCoE)")
+            sub("land",     "Circle of the Land","Expanded spells by terrain, extra spells."),
+            sub("moon",     "Circle of the Moon","Wild Shape into stronger beasts, combat forms."),
+            sub("dreams",   "Circle of Dreams","Balm of the Summer Court and fey connections. (XGtE)"),
+            sub("shepherd", "Circle of the Shepherd","Spirit Totem auras and enhanced summoning. (XGtE)"),
+            sub("spores",   "Circle of Spores","Death and decay, Symbiotic Entity. (TCoE)"),
+            sub("stars",    "Circle of Stars","Constellation forms and cosmic power. (TCoE)"),
+            sub("wildfire", "Circle of Wildfire","Wildfire Spirit companion and fire magic. (TCoE)")
         ));
         return c;
     }
@@ -196,8 +212,13 @@ public class InMemoryClassRepository implements com.dnd.builder.core.port.out.Cl
             sub("champion",        "Champion","Critical hits on 19–20, improved critical."),
             sub("battle_master",   "Battle Master","Maneuvers fueled by Superiority Dice."),
             sub("eldritch_knight", "Eldritch Knight","Abjuration & evocation spells added to repertoire."),
+            sub("purple_dragon",   "Purple Dragon Knight","Banneret, inspiring allies in battle. (SCAG)"),
+            sub("arcane_archer",   "Arcane Archer","Magical arrows with various effects. (XGtE)"),
+            sub("cavalier",        "Cavalier","Mounted combat mastery and marking foes. (XGtE)"),
             sub("samurai",         "Samurai","Fighting Spirit for advantage, extra proficiencies. (XGtE)"),
-            sub("psi_warrior",     "Psi Warrior","Telekinetic force and psionic powers. (TCoE)")
+            sub("echo_knight",     "Echo Knight","Manifest echoes of yourself in combat. (EGtW)"),
+            sub("psi_warrior",     "Psi Warrior","Telekinetic force and psionic powers. (TCoE)"),
+            sub("rune_knight",     "Rune Knight","Giant runes grant magical abilities. (TCoE)")
         ));
         return c;
     }
@@ -221,6 +242,10 @@ public class InMemoryClassRepository implements com.dnd.builder.core.port.out.Cl
             sub("shadow",          "Way of Shadow","Ki for darkness, stealth, and shadow teleport."),
             sub("four_elements",   "Way of the Four Elements","Elemental disciplines powered by ki."),
             sub("long_death",      "Way of the Long Death","Fear, necrotic touch, undying HP. (SCAG)"),
+            sub("sun_soul",        "Way of the Sun Soul","Radiant ki bolts and Searing Sunburst. (SCAG/XGtE)"),
+            sub("drunken_master",  "Way of the Drunken Master","Unpredictable movement and redirects. (XGtE)"),
+            sub("kensei",          "Way of the Kensei","Weapon mastery with chosen kensei weapons. (XGtE)"),
+            sub("astral_self",     "Way of the Astral Self","Manifest astral arms and visage. (TCoE)"),
             sub("mercy",           "Way of Mercy","Healing and harm with Implements of Mercy. (TCoE)")
         ));
         return c;
@@ -242,11 +267,14 @@ public class InMemoryClassRepository implements com.dnd.builder.core.port.out.Cl
         c.setSubclassLevel(3); c.setSubclassNote("Sacred Oath chosen at level 3");
         c.setStartingGold(200);
         c.setSubclasses(List.of(
-            sub("devotion",  "Oath of Devotion","Radiant smites, Sacred Weapon, holy aura."),
-            sub("ancients",  "Oath of the Ancients","Nature and light vs. darkness, Aura of Warding."),
-            sub("vengeance", "Oath of Vengeance","Vow of Enmity advantage, Relentless Avenger."),
-            sub("glory",     "Oath of Glory","Athletic inspiration, peerless athlete. (TCoE)"),
-            sub("conquest",  "Oath of Conquest","Fear and domination themed smites. (XGtE)")
+            sub("devotion",   "Oath of Devotion","Radiant smites, Sacred Weapon, holy aura."),
+            sub("ancients",   "Oath of the Ancients","Nature and light vs. darkness, Aura of Warding."),
+            sub("vengeance",  "Oath of Vengeance","Vow of Enmity advantage, Relentless Avenger."),
+            sub("crown",      "Oath of the Crown","Champion of law, civilization, and order. (SCAG)"),
+            sub("conquest",   "Oath of Conquest","Fear and domination themed smites. (XGtE)"),
+            sub("redemption", "Oath of Redemption","Peaceful resolution and protective rebuke. (XGtE)"),
+            sub("glory",      "Oath of Glory","Athletic inspiration, peerless athlete. (TCoE)"),
+            sub("watchers",   "Oath of the Watchers","Hunt extraplanar threats, Abjure Enemy. (TCoE)")
         ));
         return c;
     }
@@ -266,10 +294,14 @@ public class InMemoryClassRepository implements com.dnd.builder.core.port.out.Cl
         c.setSubclassLevel(3); c.setSubclassNote("Ranger Archetype chosen at level 3");
         c.setStartingGold(125);
         c.setSubclasses(List.of(
-            sub("hunter",      "Hunter","Colossus Slayer, Giant Killer, or Horde Breaker."),
-            sub("beastmaster", "Beast Master","Animal companion that fights alongside you."),
-            sub("gloom_stalker","Gloom Stalker","Dark ambush mastery, Dread Ambusher. (XGtE)"),
-            sub("fey_wanderer","Fey Wanderer","Beguiling Twist and otherworldly grace. (TCoE)")
+            sub("hunter",         "Hunter","Colossus Slayer, Giant Killer, or Horde Breaker."),
+            sub("beastmaster",    "Beast Master","Animal companion that fights alongside you."),
+            sub("gloom_stalker",  "Gloom Stalker","Dark ambush mastery, Dread Ambusher. (XGtE)"),
+            sub("horizon_walker", "Horizon Walker","Planar Warrior and portal detection. (XGtE)"),
+            sub("monster_slayer","Monster Slayer","Slayer's Prey, supernatural defense. (XGtE)"),
+            sub("fey_wanderer",   "Fey Wanderer","Beguiling Twist and otherworldly grace. (TCoE)"),
+            sub("swarmkeeper",    "Swarmkeeper","Swarm of spirits aids attacks and movement. (TCoE)"),
+            sub("drakewarden",    "Drakewarden","Drake companion that grows with you. (FToD)")
         ));
         return c;
     }
@@ -289,11 +321,15 @@ public class InMemoryClassRepository implements com.dnd.builder.core.port.out.Cl
         c.setSubclassLevel(3); c.setSubclassNote("Roguish Archetype chosen at level 3");
         c.setStartingGold(100);
         c.setSubclasses(List.of(
-            sub("thief",          "Thief","Fast Hands, Second-Story Work, use magic devices."),
-            sub("assassin",       "Assassin","Infiltrate, disguise, auto-crit on surprised foes."),
+            sub("thief",           "Thief","Fast Hands, Second-Story Work, use magic devices."),
+            sub("assassin",        "Assassin","Infiltrate, disguise, auto-crit on surprised foes."),
             sub("arcane_trickster","Arcane Trickster","Enchantment/illusion spells, Mage Hand Legerdemain."),
-            sub("inquisitive",    "Inquisitive","Insight, Ear for Deceit, Eye for Detail. (XGtE)"),
-            sub("phantom",        "Phantom","Soul trinkets and necrotic Wails. (TCoE)")
+            sub("mastermind",      "Mastermind","Master of Tactics bonus Help, infiltration. (SCAG/XGtE)"),
+            sub("swashbuckler",    "Swashbuckler","Rakish Audacity, Fancy Footwork. (SCAG/XGtE)"),
+            sub("inquisitive",     "Inquisitive","Insight, Ear for Deceit, Eye for Detail. (XGtE)"),
+            sub("scout",           "Scout","Survivalist, Skirmisher mobility. (XGtE)"),
+            sub("phantom",         "Phantom","Soul trinkets and necrotic Wails. (TCoE)"),
+            sub("soulknife",       "Soulknife","Psionic blades and psychic powers. (TCoE)")
         ));
         return c;
     }
@@ -313,10 +349,13 @@ public class InMemoryClassRepository implements com.dnd.builder.core.port.out.Cl
         c.setSubclassLevel(1); c.setSubclassNote("Sorcerous Origin chosen at level 1");
         c.setStartingGold(75);
         c.setSubclasses(List.of(
-            sub("draconic","Draconic Bloodline","Draconic ancestry; AC bonus, wings at level 14."),
-            sub("wild",    "Wild Magic","Surges of uncontrolled magic and Tides of Chaos."),
-            sub("shadow",  "Shadow Magic","Hound of Ill Omen, strength of the Shadowfell. (XGtE)"),
-            sub("storm",   "Storm Sorcery","Wind Speaker, Tempestuous Magic. (XGtE)")
+            sub("draconic",      "Draconic Bloodline","Draconic ancestry; AC bonus, wings at level 14."),
+            sub("wild",          "Wild Magic","Surges of uncontrolled magic and Tides of Chaos."),
+            sub("divine_soul",   "Divine Soul","Access to cleric spells, favored by the gods. (XGtE)"),
+            sub("shadow",        "Shadow Magic","Hound of Ill Omen, strength of the Shadowfell. (XGtE)"),
+            sub("storm",         "Storm Sorcery","Wind Speaker, Tempestuous Magic. (XGtE/SCAG)"),
+            sub("aberrant_mind", "Aberrant Mind","Psionic spells and telepathy. (TCoE)"),
+            sub("clockwork_soul","Clockwork Soul","Order of Mechanus, restore balance. (TCoE)")
         ));
         return c;
     }
@@ -337,11 +376,14 @@ public class InMemoryClassRepository implements com.dnd.builder.core.port.out.Cl
         c.setSubclassLevel(1); c.setSubclassNote("Otherworldly Patron chosen at level 1");
         c.setStartingGold(100);
         c.setSubclasses(List.of(
-            sub("archfey",    "The Archfey","Fey Presence, Misty Escape, Beguiling Defenses."),
-            sub("fiend",      "The Fiend","Dark One's Blessing HP, Fiend spell list."),
-            sub("great_old",  "The Great Old One","Awakened Mind telepathy, Entropic Ward."),
-            sub("hexblade",   "The Hexblade","Hexblade's Curse, Hex Warrior (melee CHA). (XGtE)"),
-            sub("undead",     "The Undead","Form of Dread and necrotic empowerment. (TCoE)")
+            sub("archfey",   "The Archfey","Fey Presence, Misty Escape, Beguiling Defenses."),
+            sub("fiend",     "The Fiend","Dark One's Blessing HP, Fiend spell list."),
+            sub("great_old", "The Great Old One","Awakened Mind telepathy, Entropic Ward."),
+            sub("celestial", "The Celestial","Healing Light, sacred flame, radiant soul. (XGtE)"),
+            sub("hexblade",  "The Hexblade","Hexblade's Curse, Hex Warrior (melee CHA). (XGtE)"),
+            sub("fathomless","The Fathomless","Tentacle of the Deeps, oceanic powers. (TCoE)"),
+            sub("genie",     "The Genie","Genie's Vessel, elemental gifts from dao/djinni/efreeti/marid. (TCoE)"),
+            sub("undead",    "The Undead","Form of Dread and necrotic empowerment. (VRGtR)")
         ));
         return c;
     }
@@ -369,7 +411,12 @@ public class InMemoryClassRepository implements com.dnd.builder.core.port.out.Cl
             sub("evocation",     "School of Evocation","Sculpt Spells to protect allies."),
             sub("illusion",      "School of Illusion","Improved Minor Illusion, Malleable Illusions."),
             sub("necromancy",    "School of Necromancy","Grim Harvest temp HP, undead army."),
-            sub("transmutation", "School of Transmutation","Minor Alchemy, Transmuter's Stone.")
+            sub("transmutation", "School of Transmutation","Minor Alchemy, Transmuter's Stone."),
+            sub("bladesinging",  "Bladesinging","Elven sword-dance combat magic. (SCAG/TCoE)"),
+            sub("war_magic",     "War Magic","Arcane Deflection, Power Surge. (XGtE)"),
+            sub("chronurgy",     "Chronurgy Magic","Time manipulation, Chronal Shift. (EGtW)"),
+            sub("graviturgy",    "Graviturgy Magic","Gravity control, Adjust Density. (EGtW)"),
+            sub("scribes",       "Order of Scribes","Awakened Spellbook, manifest mind. (TCoE)")
         ));
         return c;
     }
