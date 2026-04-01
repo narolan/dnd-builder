@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="content">
+<div class="panel">
+  <div class="panel-title">✦ Step 4 — Ability Scores (Point Buy) ✦</div>
+  <div class="panel-body">
+    <form method="post" action="/step/4" id="scoresForm">
+
+      <div class="budget-row">
+        <div>
+          <div id="pts-remaining" class="budget-num">27</div>
+          <div class="budget-label">Points<br>Remaining</div>
+        </div>
+        <div style="flex:1">
+          <div class="budget-bar-wrap"><div id="budget-bar-fill" style="width:100%"></div></div>
+          <div id="pts-validation" style="font-family:'Cinzel',serif;font-size:.58rem;color:var(--red-lite);margin-top:4px;min-height:16px"></div>
+        </div>
+      </div>
+
+      <div class="stat-grid" id="stat-grid">
+        <th:block th:each="stat,iter : ${ {'STR','DEX','CON','INT','WIS','CHA'} }">
+          <div class="stat-card" th:id="'scard_'+${stat}">
+            <div class="mod-badge" th:id="'smod_'+${stat}">+0</div>
+            <div class="stat-abbr" th:text="${stat}">STR</div>
+            <div class="stat-full" th:text="${stat == 'STR' ? 'Strength' :
+              stat == 'DEX' ? 'Dexterity' :
+              stat == 'CON' ? 'Constitution' :
+              stat == 'INT' ? 'Intelligence' :
+              stat == 'WIS' ? 'Wisdom' : 'Charisma'}">Name</div>
+            <div class="stat-final" th:id="'sfinal_'+${stat}">8</div>
+            <div class="stat-breakdown">
+              <span th:id="'sbase_disp_'+${stat}">8</span>
+              <span th:id="'sracial_'+${stat}" style="display:none"></span>
+            </div>
+            <div class="stat-cost" th:id="'scost_'+${stat}">0 pts</div>
+            <div class="stepper">
+              <button type="button" th:data-stat="${stat}" onclick="adj(this.dataset.stat,-1)">&minus;</button>
+              <div class="stepper-val" th:id="'sstep_'+${stat}">8</div>
+              <button type="button" th:data-stat="${stat}" onclick="adj(this.dataset.stat,1)">+</button>
+            </div>
+            <input type="hidden" th:name="'score_'+${stat}" th:id="'sinput_'+${stat}"
+                   th:value="${draft.baseScores.get(stat)}"/>
+          </div>
+        </th:block>
+      </div>
+
+      <div class="btn-row">
+        <a href="/step/3" class="btn btn-prev">← Background</a>
+        <button type="submit" class="btn btn-next" id="btn-scores-next">Next: Skills →</button>
+      </div>
+    </form>
+  </div>
+</div>
+</div>
+</body>
+</html>

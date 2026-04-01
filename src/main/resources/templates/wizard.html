@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title th:text="'Character Forge — Step ' + ${step} + ' of ' + ${totalSteps}">Character Forge</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="/css/wizard.css"/>
+</head>
+<body>
+
+<header>
+  <div class="site-title">Character Forge</div>
+  <div class="site-sub">D&amp;D 5e 2014 · Step-by-Step Builder</div>
+</header>
+
+<!-- ── Progress bar ──────────────────────────────────────────────────────── -->
+<div class="progress-wrap">
+  <div class="step-labels">
+    <th:block th:each="i : ${#numbers.sequence(1,totalSteps)}">
+      <div class="step-label"
+           th:classappend="${i == step} ? 'active' : (${i < step} ? 'done' : '')"
+           th:text="${i == 1 ? 'Race' : i == 2 ? 'Class' : i == 3 ? 'Background' :
+                    i == 4 ? 'Scores' : i == 5 ? 'Skills' : i == 6 ? 'Feats' :
+                    i == 7 ? 'Spells' : i == 8 ? 'Equipment' : 'Review'}">
+      </div>
+    </th:block>
+  </div>
+  <div class="progress-track">
+    <div class="progress-fill" th:style="'width:' + (${step} * 100 / ${totalSteps}) + '%'"></div>
+  </div>
+  <div class="step-dots">
+    <th:block th:each="i : ${#numbers.sequence(1,totalSteps)}">
+      <a th:href="'/step/' + ${i}" th:if="${i <= draft.highestStepReached}"
+         class="step-dot" th:classappend="${i == step} ? 'active' : 'done'"></a>
+      <div th:unless="${i <= draft.highestStepReached}" class="step-dot"></div>
+    </th:block>
+  </div>
+</div>
+
+<!-- ── Nav shortcut strip ─────────────────────────────────────────────────── -->
+<div class="nav-strip">
+  <th:block th:each="i : ${#numbers.sequence(1,totalSteps)}">
+    <a th:if="${i <= draft.highestStepReached}" th:href="'/step/' + ${i}"
+       class="nav-link" th:classappend="${i == step} ? 'active' : ''"
+       th:text="${i == 1 ? 'Race' : i == 2 ? 'Class' : i == 3 ? 'Background' :
+                i == 4 ? 'Scores' : i == 5 ? 'Skills' : i == 6 ? 'Feats' :
+                i == 7 ? 'Spells' : i == 8 ? 'Equipment' : 'Review'}">
+    </a>
+  </th:block>
+  <form method="post" action="/new" style="display:inline">
+    <button type="submit" class="nav-link" style="background:none;cursor:pointer;border-color:var(--red);">↺ New</button>
+  </form>
+</div>
+
+<div class="forge-panel">
+
+<!-- ── Alerts ────────────────────────────────────────────────────────────── -->
+<div th:if="${error != null and !#strings.isEmpty(error)}" class="alert alert-error" th:text="${error}"></div>
+<div th:if="${importError != null}" class="alert alert-error" th:text="${importError}"></div>
+<div th:if="${importSuccess != null}" class="alert alert-success" th:text="${importSuccess}"></div>
+
+<!-- ── Step content ───────────────────────────────────────────────────────── -->
+<th:block th:if="${step == 1}"><th:block th:replace="~{steps/step1 :: content}"></th:block></th:block>
+<th:block th:if="${step == 2}"><th:block th:replace="~{steps/step2 :: content}"></th:block></th:block>
+<th:block th:if="${step == 3}"><th:block th:replace="~{steps/step3 :: content}"></th:block></th:block>
+<th:block th:if="${step == 4}"><th:block th:replace="~{steps/step4 :: content}"></th:block></th:block>
+<th:block th:if="${step == 5}"><th:block th:replace="~{steps/step5 :: content}"></th:block></th:block>
+<th:block th:if="${step == 6}"><th:block th:replace="~{steps/step6 :: content}"></th:block></th:block>
+<th:block th:if="${step == 7}"><th:block th:replace="~{steps/step7 :: content}"></th:block></th:block>
+<th:block th:if="${step == 8}"><th:block th:replace="~{steps/step8 :: content}"></th:block></th:block>
+<th:block th:if="${step == 9}"><th:block th:replace="~{steps/step9 :: content}"></th:block></th:block>
+
+</div><!-- /forge-panel -->
+
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<!-- JAVASCRIPT                                                                 -->
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<script th:inline="javascript">
+/*<![CDATA[*/
+
+// ─── Race step (step 1) ────────────────────────────────────────────────────
+const RACES_DATA = /*[[${racesJson}]]*/ '[]';
+const RACES = typeof RACES_DATA === 'string' ? JSON.parse(RACES_DATA) : (RACES_DATA || []);
+const RACES_MAP = {};
+RACES.forEach(r => RACES_MAP[r.id] = r);
+
+const STAT_NAMES = ['STR','DEX','CON','INT','WIS','CHA'];
+
+function raceChanged(raceId) {
+    const race  = RACES_MAP[raceId];
+    const tagsEl = document.getElementById('asi-tags');
+    const flexEl = document.getElementById('flex-section');
+    if (!tagsEl) return;
+    if (!race) { tagsEl.innerHTML = ''; flexEl && (flexEl.innerHTML = ''); return; }
+
+    let html = '';
+    if (race.fixedBonuses) {
+        Object.entries(race.fixedBonuses).forEach(([s,v]) => {
+            const cls = v < 0 ? 'asi-tag neg' : 'asi-tag';
+            html += `<span class="${cls}">${s} ${v>0?'+':''}${v}</span>`;
+        });
+    }
+    if (race.flexibleBonuses) {
+        race.flexibleBonuses.forEach(fb => {
+            for (let i = 0; i < fb.count; i++) {
+                html += `<span class="asi-tag flex">? +${fb.amount}</span>`;
+            }
+        });
+    }
+    tagsEl.innerHTML = html;
+    if (flexEl) buildFlexSelects(race, flexEl);
+}
+
+function buildFlexSelects(race, container) {
+    if (!race.flexibleBonuses || race.flexibleBonuses.length === 0) {
+        container.innerHTML = ''; return;
+    }
+    let html = '<div class="flex-section"><div class="flex-title">Choose Your Flexible Bonuses</div>';
+    race.flexibleBonuses.forEach((fb, idx) => {
+        for (let i = 0; i < fb.count; i++) {
+            const key = `flex_${idx}_${i}`;
+            const curVal = document.querySelector(`input[name="${key}"]`)?.value || '';
+            html += `<div class="flex-row">
+              <label>+${fb.amount} to:</label>
+              <select name="${key}" onchange="validateFlex()">
+                <option value="">— choose —</option>
+                ${STAT_NAMES.filter(s => !fb.excludedStats || !fb.excludedStats.includes(s))
+                    .map(s => `<option value="${s}" ${s===curVal?'selected':''}>${s}</option>`).join('')}
+              </select></div>`;
+        }
+    });
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+function validateFlex() { /* live validation could go here */ }
+
+(function() {
+    const checked = document.querySelector('input[name="raceId"]:checked');
+    if (checked) raceChanged(checked.value);
+})();
+
+// ─── Background step (step 3) ────────────────────────────────────────────
+const BGS_RAW = /*[[${backgroundsJson}]]*/ '[]';
+const BGS = typeof BGS_RAW === 'string' ? JSON.parse(BGS_RAW) : (BGS_RAW || []);
+const BGS_MAP = {};
+BGS.forEach(b => BGS_MAP[b.id] = b);
+
+function bgChanged(bgId) {
+    const box   = document.getElementById('bg-info');
+    const inner = document.getElementById('bg-info-inner');
+    if (!box || !inner) return;
+    const bg = BGS_MAP[bgId];
+    if (!bg) { box.style.display = 'none'; return; }
+
+    const langs = bg.bonusLanguages > 0
+        ? `${bg.bonusLanguages} additional language${bg.bonusLanguages > 1 ? 's' : ''}`
+        : 'none';
+    const tools = bg.toolProficiencies && bg.toolProficiencies.length > 0
+        ? bg.toolProficiencies.join(', ')
+        : '';
+
+    inner.innerHTML = `
+        <span class="feature-name">${bg.featureName}</span>
+        <span>${bg.featureDesc}</span>
+        <div style="margin-top:8px;font-size:.8rem;color:var(--cream-dim)">
+            Starting gold: <strong>${bg.gold} gp</strong>
+            &nbsp;·&nbsp; Languages: <strong>${langs}</strong>
+            ${tools ? `&nbsp;·&nbsp; Tools: <strong>${tools}</strong>` : ''}
+        </div>`;
+    box.style.display = 'block';
+}
+
+(function() {
+    const seed = document.getElementById('bg-seed');
+    if (!seed) return;
+    const bgId = seed.dataset.bgid;
+    if (bgId) bgChanged(bgId);
+})();
+
+// ─── Class step (step 2) ──────────────────────────────────────────────────
+const CLASSES_RAW = /*[[${classesJson}]]*/ '[]';
+const CLASSES = typeof CLASSES_RAW === 'string' ? JSON.parse(CLASSES_RAW) : (CLASSES_RAW || []);
+const CLASSES_MAP = {};
+CLASSES.forEach(c => CLASSES_MAP[c.id] = c);
+
+function classChanged(classId) {
+    const area      = document.getElementById('subclass-area');
+    const head      = document.getElementById('subclass-head');
+    const grid      = document.getElementById('subclass-grid');
+    if (!area) return;
+
+    const cls = CLASSES_MAP[classId];
+    if (!cls || !cls.subclasses || cls.subclasses.length === 0) {
+        area.style.display = 'none';
+        return;
+    }
+
+    const seed         = document.getElementById('subclass-seed');
+    const prevSubclass = seed ? seed.dataset.subclassid : '';
+
+    head.textContent = 'Subclass — ' + (cls.subclassNote || 'Choose subclass');
+
+    grid.innerHTML = cls.subclasses.map(sub => `
+        <div class="subclass-opt">
+          <input type="radio" name="subclassId" value="${sub.id}" id="sub_${sub.id}"
+                 ${sub.id === prevSubclass ? 'checked' : ''}/>
+          <label for="sub_${sub.id}">
+            <span class="subclass-name">${sub.name}</span>
+            <span class="subclass-desc">${sub.description}</span>
+          </label>
+        </div>`).join('');
+
+    area.style.display = 'block';
+}
+
+(function() {
+    const seed = document.getElementById('subclass-seed');
+    if (!seed) return;
+    const classId = seed.dataset.classid;
+    if (classId) classChanged(classId);
+    const radio = document.querySelector(`input[name="characterClass"][value="${classId}"]`);
+    if (radio) radio.checked = true;
+})();
+
+// ─── Point buy (step 4) ───────────────────────────────────────────────────
+const POINT_BUDGET  = /*[[${pointBudget}]]*/ 27;
+const SCORE_MIN     = /*[[${scoreMin}]]*/ 8;
+const SCORE_MAX     = /*[[${scoreMax}]]*/ 15;
+const POINT_COSTS   = {8:0,9:1,10:2,11:3,12:4,13:5,14:7,15:9};
+
+const RACIAL_BONUSES = {};
+(function(){
+    const raceId = /*[[${draft.raceId}]]*/ '';
+    const race   = RACES_MAP[raceId];
+    if (!race) return;
+    const flexPicks = /*[[${draft.flexPicks}]]*/ {};
+    STAT_NAMES.forEach(s => {
+        let b = (race.fixedBonuses && race.fixedBonuses[s]) || 0;
+        if (race.flexibleBonuses) {
+            race.flexibleBonuses.forEach((fb,idx) => {
+                for (let i=0; i < fb.count; i++) {
+                    const k = `flex_${idx}_${i}`;
+                    if (flexPicks[k] === s) b += fb.amount;
+                }
+            });
+        }
+        RACIAL_BONUSES[s] = b;
+    });
+})();
+
+const scores = {};
+STAT_NAMES.forEach(s => {
+    const inp = document.getElementById('sinput_' + s);
+    scores[s] = inp ? parseInt(inp.value) || 8 : 8;
+});
+
+function getCost(v) { return POINT_COSTS[v] ?? 0; }
+function spent()    { return STAT_NAMES.reduce((a,s) => a + getCost(scores[s]), 0); }
+function remaining(){ return POINT_BUDGET - spent(); }
+function mod(v)     { return Math.floor((v - 10) / 2); }
+function fmtMod(m)  { return (m>=0?'+':'')+m; }
+
+function adj(stat, delta) {
+    const cur  = scores[stat];
+    const next = cur + delta;
+    if (next < SCORE_MIN || next > SCORE_MAX) return;
+    const newCost = getCost(next) - getCost(cur);
+    if (newCost > 0 && remaining() < newCost) return;
+    scores[stat] = next;
+    refreshScores();
+}
+
+function refreshScores() {
+    if (!document.getElementById('pts-remaining')) return;
+    const rem = remaining();
+    const pct = Math.max(0, Math.min(100, (rem / POINT_BUDGET) * 100));
+
+    const numEl = document.getElementById('pts-remaining');
+    const bar   = document.getElementById('budget-bar-fill');
+    const msg   = document.getElementById('pts-validation');
+    numEl.textContent = rem;
+    numEl.className   = 'budget-num' + (rem < 0 ? ' danger' : rem <= 5 ? ' warn' : '');
+    bar.style.width   = pct + '%';
+    bar.style.background = rem < 0
+        ? 'linear-gradient(90deg,#6b1010,var(--red))'
+        : rem <= 5 ? 'linear-gradient(90deg,#7a4010,#c87020)'
+        : 'linear-gradient(90deg,var(--gold-dim),var(--gold))';
+    msg.textContent = rem < 0 ? '⚠ Over budget by ' + Math.abs(rem) + ' pt' + (Math.abs(rem)>1?'s':'') : '';
+
+    STAT_NAMES.forEach(stat => {
+        const base   = scores[stat];
+        const racial = RACIAL_BONUSES[stat] || 0;
+        const final  = base + racial;
+        const cost   = getCost(base);
+        const m      = mod(final);
+
+        const finalEl = document.getElementById('sfinal_'+stat);
+        if (finalEl) finalEl.textContent = final;
+        const baseEl = document.getElementById('sbase_disp_'+stat);
+        if (baseEl) baseEl.textContent = base;
+        const racialEl = document.getElementById('sracial_'+stat);
+        if (racialEl) {
+            if (racial !== 0) {
+                racialEl.textContent = ' + ' + (racial>0?'+':'') + racial;
+                racialEl.className   = 'stat-racial' + (racial<0?' neg':'');
+                racialEl.style.display = '';
+            } else { racialEl.style.display = 'none'; }
+        }
+        const costEl = document.getElementById('scost_'+stat);
+        if (costEl) costEl.textContent = cost + (cost===1?' pt':' pts');
+        const stepEl = document.getElementById('sstep_'+stat);
+        if (stepEl) stepEl.textContent = base;
+        const modEl  = document.getElementById('smod_'+stat);
+        if (modEl) {
+            modEl.textContent = fmtMod(m);
+            modEl.className   = 'mod-badge' + (m<0?' neg':'');
+        }
+        const inp = document.getElementById('sinput_'+stat);
+        if (inp) inp.value = base;
+
+        const card = document.getElementById('scard_'+stat);
+        if (card) {
+            const btns = card.querySelectorAll('.stepper button');
+            if (btns[0]) btns[0].disabled = base <= SCORE_MIN;
+            if (btns[1]) {
+                const nextCost = base < SCORE_MAX ? getCost(base + 1) - getCost(base) : 0;
+                btns[1].disabled = base >= SCORE_MAX || remaining() < nextCost;
+            }
+        }
+    });
+}
+
+refreshScores();
+
+// ─── Skill counter (step 5) ────────────────────────────────────────────────
+const MAX_CLASS_SKILLS = /*[[${classChoiceCount}]]*/ 2;
+
+function countSkills() {
+    const cbs    = document.querySelectorAll('input[name="skills"]');
+    const count  = Array.from(cbs).filter(c => c.checked).length;
+    const el     = document.getElementById('skill-chosen-count');
+    if (el) el.textContent = count;
+    cbs.forEach(cb => {
+        if (!cb.checked && count >= MAX_CLASS_SKILLS) cb.disabled = true;
+        else cb.disabled = false;
+    });
+}
+countSkills();
+
+// ─── Spell counters (step 7) ───────────────────────────────────────────────
+function countSpells(cbClass, countId) {
+    const cbs   = document.querySelectorAll('.' + cbClass);
+    const count = Array.from(cbs).filter(c => c.checked).length;
+    const maxEl = cbs[0];
+    const max   = maxEl ? parseInt(maxEl.dataset.max) || 99 : 99;
+    const el    = document.getElementById(countId);
+    if (el) el.textContent = count;
+    cbs.forEach(cb => {
+        if (!cb.checked && count >= max) cb.disabled = true;
+        else cb.disabled = false;
+    });
+}
+if (document.querySelector('.cantrip-cb'))  countSpells('cantrip-cb','cantrip-count');
+if (document.querySelector('.spell1-cb'))   countSpells('spell1-cb','spell-count');
+if (document.querySelector('.spellbook-cb'))countSpells('spellbook-cb','spellbook-count');
+
+/*]]>*/
+</script>
+</body>
+</html>

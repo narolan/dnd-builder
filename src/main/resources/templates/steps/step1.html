@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="content">
+<div class="panel">
+  <div class="panel-title">✦ Step 1 — Choose Your Race ✦</div>
+  <div class="panel-body">
+    <form method="post" action="/step/1" id="raceForm">
+
+      <div class="ornament">— PHB —</div>
+      <div class="select-list" style="margin-bottom:14px">
+        <th:block th:each="race : ${races}" th:if="${race.source == 'PHB'}">
+          <div class="select-item">
+            <input type="radio" name="raceId" th:value="${race.id}" th:id="'r_'+${race.id}"
+                   th:checked="${draft.raceId == race.id}" required onchange="raceChanged(this.value)"/>
+            <label th:for="'r_'+${race.id}">
+              <span th:text="${race.name}">Race</span>
+            </label>
+          </div>
+        </th:block>
+      </div>
+      <div class="ornament">— MToF · VGtM · SCAG —</div>
+      <div class="select-list" style="margin-bottom:14px">
+        <th:block th:each="race : ${races}" th:unless="${race.source == 'PHB'}">
+          <div class="select-item">
+            <input type="radio" name="raceId" th:value="${race.id}" th:id="'r_'+${race.id}"
+                   th:checked="${draft.raceId == race.id}" onchange="raceChanged(this.value)"/>
+            <label th:for="'r_'+${race.id}">
+              <span th:text="${race.name}">Race</span>
+              <span class="src-badge" th:classappend="'src-'+${race.source}" th:text="${race.source}"></span>
+            </label>
+          </div>
+        </th:block>
+      </div>
+
+      <div id="asi-preview" style="margin-bottom:14px">
+        <div th:if="${!draft.raceId.isEmpty()}">
+          <div class="section-head">Racial ASI</div>
+          <div id="asi-tags" class="asi-tags"></div>
+          <div id="flex-section"></div>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <div></div>
+        <button type="submit" class="btn btn-next">Next: Class →</button>
+      </div>
+    </form>
+  </div>
+</div>
+</div>
+</body>
+</html>

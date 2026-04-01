@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="content">
+<form method="post" action="/step/7">
+<div class="panel">
+  <div class="panel-title">✦ Step 7 — Spells ✦</div>
+  <div class="panel-body">
+
+    <div th:if="${!isSpellcaster}" class="info-box" style="text-align:center">
+      Your class has no spellcasting. Continuing…
+    </div>
+
+    <div th:if="${isSpellcaster and spellcasting != null}">
+      <div class="info-box">
+        <strong>Spellcasting Ability:</strong> <span th:text="${spellcasting.ability}"></span> ·
+        <strong>Spell Save DC:</strong> <span th:text="${derived.spellSaveDC}"></span> ·
+        <strong>Spell Attack:</strong> <span th:text="'+' + ${derived.spellAttackBonus}"></span>
+        <br>
+        <strong>Slots:</strong> <span th:text="${derived.spellSlotSummary}"></span>
+        <span th:if="${isPreparedCaster}"> · Prepared caster — you can swap spells on a long rest</span>
+        <span th:if="${isWizard}"> · Spellbook — choose <strong th:text="${spellcasting.spellbookSizeAtL1}"></strong> spells to copy in</span>
+      </div>
+
+      <div th:if="${spellcasting.cantripsAtL1 > 0}">
+        <div class="section-head">Cantrips</div>
+        <div class="spell-count">
+          Choose <span class="cnt" th:text="${spellcasting.cantripsAtL1}">2</span> cantrips
+          &nbsp;|&nbsp; Selected: <span class="cnt" id="cantrip-count">0</span>
+        </div>
+        <div class="spell-grid">
+          <th:block th:each="spell : ${cantrips}">
+            <div class="spell-card">
+              <input type="checkbox" name="cantrips" th:value="${spell.id}" th:id="'c_'+${spell.id}"
+                     th:checked="${draft.chosenCantrips.contains(spell.id)}"
+                     th:data-max="${spellcasting.cantripsAtL1}" class="cantrip-cb" onchange="countSpells('cantrip-cb','cantrip-count')"/>
+              <label th:for="'c_'+${spell.id}">
+                <span class="spell-name" th:text="${spell.name}">Spell</span>
+                <span class="spell-meta" th:text="${spell.school} + ' · ' + ${spell.castingTime}"></span>
+                <span th:if="${spell.concentration}" class="spell-conc">[C]</span>
+              </label>
+            </div>
+          </th:block>
+        </div>
+      </div>
+
+      <div th:if="${!isPreparedCaster and !isWizard and spellcasting.spellsKnownAtL1 > 0}" style="margin-top:20px">
+        <div class="section-head">Known Spells (1st Level)</div>
+        <div class="spell-count">
+          Choose <span class="cnt" th:text="${spellcasting.spellsKnownAtL1}">2</span> spells
+          &nbsp;|&nbsp; Selected: <span class="cnt" id="spell-count">0</span>
+        </div>
+        <div class="spell-grid">
+          <th:block th:each="spell : ${level1Spells}">
+            <div class="spell-card">
+              <input type="checkbox" name="spells" th:value="${spell.id}" th:id="'s_'+${spell.id}"
+                     th:checked="${draft.chosenSpells.contains(spell.id)}"
+                     th:data-max="${spellcasting.spellsKnownAtL1}" class="spell1-cb" onchange="countSpells('spell1-cb','spell-count')"/>
+              <label th:for="'s_'+${spell.id}">
+                <span class="spell-name" th:text="${spell.name}">Spell</span>
+                <span class="spell-meta" th:text="${spell.school} + ' · ' + ${spell.range}"></span>
+                <span th:if="${spell.concentration}" class="spell-conc">[C]</span>
+                <span th:if="${spell.ritual}" class="spell-conc">[R]</span>
+              </label>
+            </div>
+          </th:block>
+        </div>
+      </div>
+
+      <div th:if="${isPreparedCaster}" style="margin-top:20px">
+        <div class="section-head">Spell List — 1st Level</div>
+        <div class="info-box" style="margin-bottom:10px">
+          Prepared casters can access their full class list. Select the spells you want to have prepared at level 1.
+        </div>
+        <div class="spell-grid">
+          <th:block th:each="spell : ${level1Spells}">
+            <div class="spell-card">
+              <input type="checkbox" name="spells" th:value="${spell.id}" th:id="'sp_'+${spell.id}"
+                     th:checked="${draft.chosenSpells.contains(spell.id)}"/>
+              <label th:for="'sp_'+${spell.id}">
+                <span class="spell-name" th:text="${spell.name}">Spell</span>
+                <span class="spell-meta" th:text="${spell.school} + ' · ' + ${spell.castingTime}"></span>
+                <span th:if="${spell.concentration}" class="spell-conc">[C]</span>
+              </label>
+            </div>
+          </th:block>
+        </div>
+      </div>
+
+      <div th:if="${isWizard}" style="margin-top:20px">
+        <div class="section-head">Spellbook</div>
+        <div class="spell-count">
+          Add <span class="cnt" th:text="${spellcasting.spellbookSizeAtL1}">6</span> spells
+          &nbsp;|&nbsp; Added: <span class="cnt" id="spellbook-count">0</span>
+        </div>
+        <div class="spell-grid">
+          <th:block th:each="spell : ${level1Spells}">
+            <div class="spell-card">
+              <input type="checkbox" name="spellbook" th:value="${spell.id}" th:id="'sb_'+${spell.id}"
+                     th:checked="${draft.spellbookSpells.contains(spell.id)}"
+                     th:data-max="${spellcasting.spellbookSizeAtL1}" class="spellbook-cb" onchange="countSpells('spellbook-cb','spellbook-count')"/>
+              <label th:for="'sb_'+${spell.id}">
+                <span class="spell-name" th:text="${spell.name}">Spell</span>
+                <span class="spell-meta" th:text="${spell.school} + ' · ' + ${spell.range}"></span>
+                <span th:if="${spell.concentration}" class="spell-conc">[C]</span>
+                <span th:if="${spell.ritual}" class="spell-conc">[R]</span>
+              </label>
+            </div>
+          </th:block>
+        </div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <a th:href="${draft.variantHuman} ? '/step/6' : '/step/5'" class="btn btn-prev">← Back</a>
+      <button type="submit" class="btn btn-next">Next: Equipment →</button>
+    </div>
+  </div>
+</div>
+</form>
+</div>
+</body>
+</html>

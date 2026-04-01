@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="content">
+<form method="post" action="/step/8">
+<div class="panel">
+  <div class="panel-title">✦ Step 8 — Starting Equipment ✦</div>
+  <div class="panel-body">
+
+    <div th:each="slot : ${equipmentSlots}" class="equip-slot">
+      <div class="equip-prompt" th:text="${slot.prompt}">Choose:</div>
+      <div th:each="choice : ${slot.choices}" class="equip-option">
+        <input type="radio" th:name="${slot.slotId}" th:value="${choice.optionId}"
+               th:id="${slot.slotId}+'_'+${choice.optionId}"
+               th:checked="${draft.equipmentChoices.get(slot.slotId) == choice.optionId}"/>
+        <label th:for="${slot.slotId}+'_'+${choice.optionId}" th:text="${choice.label}">Option</label>
+      </div>
+    </div>
+
+    <div th:if="${equipmentSlots.isEmpty()}" class="info-box">No equipment choices available for this class.</div>
+
+    <div class="btn-row">
+      <a href="/step/7" class="btn btn-prev">← Spells</a>
+      <button type="submit" class="btn btn-next">Review Character →</button>
+    </div>
+  </div>
+</div>
+</form>
+</div>
+</body>
+</html>

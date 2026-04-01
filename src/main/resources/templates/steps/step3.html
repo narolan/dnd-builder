@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="content">
+<div class="panel">
+  <div class="panel-title">✦ Step 3 — Background &amp; Identity ✦</div>
+  <div class="panel-body">
+    <form method="post" action="/step/3">
+
+      <div class="field">
+        <label>Character Name</label>
+        <input type="text" name="characterName" th:value="${draft.characterName}" placeholder="Enter name…"/>
+      </div>
+      <div class="field">
+        <label>Alignment</label>
+        <select name="alignment">
+          <option value="">— Choose alignment —</option>
+          <th:block th:each="al : ${ {'Lawful Good','Neutral Good','Chaotic Good','Lawful Neutral','True Neutral','Chaotic Neutral','Lawful Evil','Neutral Evil','Chaotic Evil'} }">
+            <option th:value="${al}" th:text="${al}" th:selected="${draft.alignment == al}"></option>
+          </th:block>
+        </select>
+      </div>
+
+      <div class="section-head">Background</div>
+      <div class="card-grid">
+        <th:block th:each="bg : ${backgrounds}">
+          <div class="card-option" style="grid-column: span 1">
+            <input type="radio" name="background" th:value="${bg.id}" th:id="'bg_'+${bg.id}"
+                   th:checked="${draft.background == bg.id}" required onchange="bgChanged(this.value)"/>
+            <label th:for="'bg_'+${bg.id}">
+              <span class="card-name" th:text="${bg.name}">BG</span>
+              <span class="card-desc">
+                Skills: <span th:text="${#strings.listJoin(bg.skillProficiencies,', ')}"></span>
+                <span th:if="${!bg.toolProficiencies.isEmpty()}"> · Tools: <span th:text="${#strings.listJoin(bg.toolProficiencies,', ')}"></span></span>
+              </span>
+            </label>
+          </div>
+        </th:block>
+      </div>
+
+      <div id="bg-info" style="margin-top:14px;display:none">
+        <div class="info-box" id="bg-info-inner"></div>
+      </div>
+      <div id="bg-seed" th:data-bgid="${draft.background}" style="display:none"></div>
+
+      <div class="btn-row">
+        <a href="/step/2" class="btn btn-prev">← Class</a>
+        <button type="submit" class="btn btn-next">Next: Ability Scores →</button>
+      </div>
+    </form>
+  </div>
+</div>
+</div>
+</body>
+</html>
