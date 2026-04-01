@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="content">
+<div class="panel">
+  <div class="panel-title">✦ Step 2 — Choose Your Class ✦</div>
+  <div class="panel-body">
+    <form method="post" action="/step/2" id="classForm">
+
+      <div class="field">
+        <label>Character Level</label>
+        <input type="number" name="level" th:value="${draft.level}" min="1" max="20" style="width:80px"/>
+        <div class="info-box" style="margin-top:6px;font-size:.8rem">At level 1, subclass choices appear where applicable (Cleric, Sorcerer, Warlock). Most classes choose at level 3.</div>
+      </div>
+
+      <div class="section-head">Select Class</div>
+      <div class="card-grid">
+        <th:block th:each="cls : ${classes}">
+          <div class="card-option">
+            <input type="radio" name="characterClass" th:value="${cls.id}" th:id="'cls_'+${cls.id}"
+                   th:checked="${draft.characterClass == cls.id}" onchange="classChanged(this.value)" required/>
+            <label th:for="'cls_'+${cls.id}">
+              <span class="card-name" th:text="${cls.name}">Class</span>
+              <span class="card-desc">
+                d<span th:text="${cls.hitDie}"></span> · Saves:
+                <span th:text="${#strings.listJoin(cls.savingThrows,', ')}"></span>
+                <span th:if="${cls.spellcasting != null}"> · Casts (<span th:text="${cls.spellcasting.ability}"></span>)</span>
+              </span>
+            </label>
+          </div>
+        </th:block>
+      </div>
+
+      <div id="subclass-area" style="margin-top:20px;display:none">
+        <div class="section-head" id="subclass-head">Subclass</div>
+        <div class="subclass-grid" id="subclass-grid"></div>
+      </div>
+      <div id="subclass-seed"
+           th:data-classid="${draft.characterClass}"
+           th:data-subclassid="${draft.subclassId}"
+           style="display:none"></div>
+
+      <div class="btn-row">
+        <a href="/step/1" class="btn btn-prev">← Race</a>
+        <button type="submit" class="btn btn-next">Next: Background →</button>
+      </div>
+    </form>
+  </div>
+</div>
+</div>
+</body>
+</html>

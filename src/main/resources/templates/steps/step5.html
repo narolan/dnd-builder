@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="content">
+<div class="panel">
+  <div class="panel-title">✦ Step 5 — Skill Proficiencies ✦</div>
+  <div class="panel-body">
+    <form method="post" action="/step/5">
+
+      <div class="info-box">
+        Choose <strong th:text="${classChoiceCount}">2</strong> skills from your class list.
+        Background skills are already included (shown in gold).
+      </div>
+
+      <div id="skill-count-display" class="spell-count" style="margin-bottom:12px">
+        Class choices: <span class="cnt" id="skill-chosen-count">0</span> /
+        <span th:text="${classChoiceCount}">2</span>
+      </div>
+
+      <div class="skill-check-list">
+        <th:block th:each="entry : ${skillAbilityMap}">
+          <th:block th:with="skill=${entry.key}, ability=${entry.value}, isBg=${bgSkills.contains(entry.key)}, isChosen=${currentSkillChoices.contains(entry.key)}, inClass=${availableSkills.contains(entry.key)}">
+
+            <label th:if="${isBg}" class="skill-check-item locked" style="cursor:default">
+              <span class="skill-check-box" style="background:var(--gold);border-color:var(--gold);display:flex;align-items:center;justify-content:center">
+                <span style="font-size:.55rem;color:var(--ink)">✓</span>
+              </span>
+              <span class="skill-check-name" style="color:var(--gold-lite)" th:text="${skill}">Skill</span>
+              <span class="skill-check-ability" th:text="${ability}">ABL</span>
+              <span style="font-size:.6rem;color:var(--gold-dim);margin-left:4px">(bg)</span>
+            </label>
+
+            <label th:if="${!isBg and inClass}" class="skill-check-item" th:for="'sk_'+${skill}">
+              <input type="checkbox" name="skills" th:value="${skill}" th:id="'sk_'+${skill}"
+                     th:checked="${isChosen}" onchange="countSkills()"/>
+              <span class="skill-check-box"></span>
+              <span class="skill-check-name" th:text="${skill}">Skill</span>
+              <span class="skill-check-ability" th:text="${ability}">ABL</span>
+            </label>
+
+            <label th:if="${!isBg and !inClass}" class="skill-check-item locked" style="cursor:default;opacity:.35">
+              <span class="skill-check-box"></span>
+              <span class="skill-check-name" th:text="${skill}">Skill</span>
+              <span class="skill-check-ability" th:text="${ability}">ABL</span>
+            </label>
+
+          </th:block>
+        </th:block>
+      </div>
+
+      <div class="btn-row">
+        <a href="/step/4" class="btn btn-prev">← Scores</a>
+        <button type="submit" class="btn btn-next">Next: Feats →</button>
+      </div>
+    </form>
+  </div>
+</div>
+</div>
+</body>
+</html>

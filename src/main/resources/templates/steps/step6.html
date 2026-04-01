@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="content">
+<form method="post" action="/step/6">
+<div class="panel">
+  <div class="panel-title">✦ Step 6 — Feat (Variant Human) ✦</div>
+  <div class="panel-body">
+
+    <div th:if="${isVariantHuman}">
+      <div class="info-box">As a Variant Human, choose one feat at 1st level.</div>
+      <div class="feat-grid">
+        <div class="feat-card">
+          <input type="radio" name="chosenFeatId" value="" id="feat_none" th:checked="${draft.chosenFeatId.isEmpty()}"/>
+          <label for="feat_none">
+            <span class="feat-name">No Feat (take +1 ASI instead)</span>
+            <span class="feat-desc">Skip the feat; no additional mechanical benefit.</span>
+          </label>
+        </div>
+        <th:block th:each="feat : ${feats}">
+          <div class="feat-card">
+            <input type="radio" name="chosenFeatId" th:value="${feat.id}" th:id="'ft_'+${feat.id}"
+                   th:checked="${draft.chosenFeatId == feat.id}"/>
+            <label th:for="'ft_'+${feat.id}">
+              <span class="feat-name" th:text="${feat.name}">Feat</span>
+              <span class="feat-prereq" th:if="${!feat.prerequisite.isEmpty()}" th:text="'Prereq: '+${feat.prerequisite}">Prereq</span>
+              <span class="feat-desc" th:text="${feat.description}">Desc</span>
+            </label>
+          </div>
+        </th:block>
+      </div>
+    </div>
+
+    <div th:unless="${isVariantHuman}" class="info-box" style="text-align:center">
+      Feats are available at level 4+ via Ability Score Improvement.
+      This step is only applicable for Variant Human characters at level 1.
+      <br><br><em style="color:var(--gold-dim)">Continuing to next step…</em>
+    </div>
+
+    <div class="btn-row">
+      <a href="/step/5" class="btn btn-prev">← Skills</a>
+      <button type="submit" class="btn btn-next">Next: Spells →</button>
+    </div>
+  </div>
+</div>
+</form>
+</div>
+</body>
+</html>

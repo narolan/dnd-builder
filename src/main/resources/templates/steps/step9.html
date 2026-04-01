@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="content">
+<div class="panel">
+  <div class="panel-title">
+    ✦ <span th:text="${draft.characterName != null and !draft.characterName.isEmpty()} ? ${draft.characterName} : 'Character'">Character</span> ✦
+  </div>
+  <div class="panel-body">
+
+    <div class="core-stat-row" style="margin-bottom:16px">
+      <div class="core-chip">
+        <span class="core-chip-label">Race</span>
+        <span class="core-chip-val" th:text="${raceDef != null} ? ${raceDef.name} : '—'">—</span>
+      </div>
+      <div class="core-chip">
+        <span class="core-chip-label">Class</span>
+        <span class="core-chip-val" th:text="${classDef != null} ? ${classDef.name} : '—'">—</span>
+      </div>
+      <div class="core-chip">
+        <span class="core-chip-label">Level</span>
+        <span class="core-chip-val" th:text="${draft.level}">1</span>
+      </div>
+      <div class="core-chip">
+        <span class="core-chip-label">Background</span>
+        <span class="core-chip-val" th:text="${bgDef != null} ? ${bgDef.name} : '—'">—</span>
+      </div>
+      <div class="core-chip">
+        <span class="core-chip-label">Alignment</span>
+        <span class="core-chip-val" th:text="${!draft.alignment.isEmpty()} ? ${draft.alignment} : '—'">—</span>
+      </div>
+    </div>
+
+    <div class="sheet">
+      <div>
+        <div class="sheet-stat-grid">
+          <th:block th:each="stat : ${ {'STR','DEX','CON','INT','WIS','CHA'} }">
+            <div class="sheet-stat">
+              <div class="sheet-stat-abbr" th:text="${stat}">STR</div>
+              <div class="sheet-stat-score" th:text="${derived.finalScores.get(stat)}">10</div>
+              <div class="sheet-stat-mod"
+                   th:text="${derived.modifiers.get(stat) >= 0} ? '+' + ${derived.modifiers.get(stat)} : ${derived.modifiers.get(stat)}">+0</div>
+            </div>
+          </th:block>
+        </div>
+
+        <div class="core-stat-row" style="margin-top:12px;flex-wrap:wrap">
+          <div class="core-chip">
+            <span class="core-chip-label">Prof Bonus</span>
+            <span class="core-chip-val" th:text="'+' + ${derived.proficiencyBonus}">+2</span>
+          </div>
+          <div class="core-chip">
+            <span class="core-chip-label">Initiative</span>
+            <span class="core-chip-val" th:text="${derived.initiative >= 0} ? '+' + ${derived.initiative} : ${derived.initiative}">+0</span>
+          </div>
+          <div class="core-chip">
+            <span class="core-chip-label">AC</span>
+            <span class="core-chip-val" th:text="${derived.armorClass}">10</span>
+          </div>
+          <div class="core-chip">
+            <span class="core-chip-label">Max HP</span>
+            <span class="core-chip-val" th:text="${derived.maxHitPoints}">8</span>
+          </div>
+          <div class="core-chip">
+            <span class="core-chip-label">Hit Die</span>
+            <span class="core-chip-val" th:text="${draft.level} + 'd' + ${derived.hitDice}">1d8</span>
+          </div>
+          <div class="core-chip">
+            <span class="core-chip-label">Speed</span>
+            <span class="core-chip-val" th:text="${derived.speed} + ' ft'">30 ft</span>
+          </div>
+          <div class="core-chip">
+            <span class="core-chip-label">Passive Perc</span>
+            <span class="core-chip-val" th:text="${derived.passivePerception}">10</span>
+          </div>
+        </div>
+
+        <div class="sheet-detail" style="margin-top:12px">
+          <div class="sheet-detail-title">Saving Throws</div>
+          <div class="sheet-detail-body">
+            <ul>
+              <li th:each="stat : ${ {'STR','DEX','CON','INT','WIS','CHA'} }"
+                  th:with="prof=${derived.savingThrowProficiencies.contains(stat)},val=${derived.savingThrows.get(stat)}">
+                <span class="skill-dot" th:classappend="${prof} ? 'filled' : ''"></span>
+                <span th:text="${stat}" th:classappend="${prof} ? 'save-prof' : ''"></span>
+                <span style="float:right;font-family:'Cinzel',serif;font-size:.8rem"
+                      th:text="${val >= 0} ? '+' + ${val} : ${val}"></span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="sheet-detail">
+          <div class="sheet-detail-title">Skills</div>
+          <div class="sheet-detail-body">
+            <th:block th:each="entry : ${allSkills}">
+              <th:block th:with="skill=${entry.key},ability=${entry.value},prof=${derived.allSkillProficiencies.contains(entry.key)},val=${derived.skillBonuses.get(entry.key)}">
+                <div class="skill-row">
+                  <span class="skill-dot" th:classappend="${prof} ? 'filled' : ''"></span>
+                  <span class="sk-name" th:classappend="${prof} ? 'prof' : ''"
+                        th:text="${skill} + ' (' + ${ability} + ')'"></span>
+                  <span class="sk-bonus" th:text="${val >= 0} ? '+' + ${val} : ${val}"></span>
+                </div>
+              </th:block>
+            </th:block>
+          </div>
+        </div>
+
+        <div th:if="${derived.spellcaster}" class="sheet-detail" style="margin-top:8px">
+          <div class="sheet-detail-title">Spellcasting</div>
+          <div class="sheet-detail-body">
+            Ability: <strong th:text="${derived.spellcastingAbility}"></strong> ·
+            Save DC: <strong th:text="${derived.spellSaveDC}"></strong> ·
+            Attack: <strong th:text="'+' + ${derived.spellAttackBonus}"></strong><br>
+            Slots: <span th:text="${derived.spellSlotSummary}"></span>
+            <div th:if="${!spellNames.isEmpty()}" style="margin-top:6px">
+              <th:block th:each="sn : ${spellNames}">
+                <span style="display:inline-block;background:rgba(201,164,64,.1);border:1px solid var(--border);border-radius:2px;padding:1px 7px;font-size:.8rem;margin:2px" th:text="${sn}"></span>
+              </th:block>
+            </div>
+          </div>
+        </div>
+
+        <div class="sheet-detail" style="margin-top:8px">
+          <div class="sheet-detail-title">Proficiencies &amp; Languages</div>
+          <div class="sheet-detail-body" style="font-size:.85rem;line-height:1.7">
+            <strong style="color:var(--cream-dim)">Armor:</strong>
+            <span th:text="${derived.armorProficiencies != null} ? ${#strings.listJoin(derived.armorProficiencies,', ')} : '—'"></span><br>
+            <strong style="color:var(--cream-dim)">Weapons:</strong>
+            <span th:text="${derived.weaponProficiencies != null} ? ${#strings.listJoin(derived.weaponProficiencies,', ')} : '—'"></span><br>
+            <strong style="color:var(--cream-dim)">Tools:</strong>
+            <span th:text="${derived.toolProficiencies != null and !derived.toolProficiencies.isEmpty()} ? ${#strings.listJoin(derived.toolProficiencies,', ')} : 'None'"></span><br>
+            <strong style="color:var(--cream-dim)">Languages:</strong>
+            <span th:text="${derived.languages != null} ? ${#strings.listJoin(derived.languages,', ')} : 'Common'"></span>
+          </div>
+        </div>
+
+        <div class="sheet-detail" style="margin-top:8px">
+          <div class="sheet-detail-title">Equipment</div>
+          <div class="sheet-detail-body" style="font-size:.85rem;line-height:1.7">
+            <th:block th:each="item : ${derived.equipmentSummary}">
+              <div th:text="${item}"></div>
+            </th:block>
+            <div th:if="${derived.backgroundEquipment != null}" style="margin-top:6px;color:var(--cream-dim);font-style:italic;font-size:.8rem">
+              <strong style="color:var(--cream-dim)">Background:</strong> <span th:text="${derived.backgroundEquipment}"></span>
+            </div>
+          </div>
+        </div>
+
+        <div th:if="${featName != null}" class="sheet-detail" style="margin-top:8px">
+          <div class="sheet-detail-title">Feat</div>
+          <div class="sheet-detail-body" th:text="${featName}"></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:24px;border-top:1px solid var(--border);padding-top:20px">
+      <div class="section-head">Save &amp; Load</div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start">
+        <a href="/export" class="btn btn-export" style="text-decoration:none;display:inline-block;padding:10px 28px">
+          ↓ Export JSON
+        </a>
+        <form method="post" action="/import" enctype="multipart/form-data" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <input type="file" name="file" accept=".json" style="color:var(--cream-dim);font-size:.85rem"/>
+          <button type="submit" class="btn btn-prev">↑ Import JSON</button>
+        </form>
+        <form method="post" action="/new">
+          <button type="submit" class="btn btn-danger">↺ Start Over</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <a href="/step/8" class="btn btn-prev">← Equipment</a>
+      <div></div>
+    </div>
+  </div>
+</div>
+</div>
+</body>
+</html>
