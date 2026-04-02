@@ -8,6 +8,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 import static com.dnd.builder.in.web.CharacterBuilderController.DRAFT_KEY;
@@ -21,10 +22,16 @@ public class PlayModeController {
 
     private final CharacterCalculator calculator;
     private final ClassRepository classRepository;
+    private final com.dnd.builder.core.port.out.SpellRepository spellRepository;
+    private final com.dnd.builder.core.port.out.FeatRepository  featRepository;
 
-    public PlayModeController(CharacterCalculator calculator, ClassRepository classRepository) {
-        this.calculator = calculator;
+    public PlayModeController(CharacterCalculator calculator, ClassRepository classRepository,
+                              com.dnd.builder.core.port.out.SpellRepository spellRepository,
+                              com.dnd.builder.core.port.out.FeatRepository featRepository) {
+        this.calculator      = calculator;
         this.classRepository = classRepository;
+        this.spellRepository = spellRepository;
+        this.featRepository  = featRepository;
     }
 
     // ══════════════════════════════════════════════════════════════════════════
@@ -428,6 +435,146 @@ public class PlayModeController {
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
+
+    @GetMapping("/levelup/options")
+    @ResponseBody
+    public Map<String, Object> levelUpOptions(HttpSession session,
+                                              jakarta.servlet.http.HttpServletResponse response) {
+        CharacterDraft draft = getDraft(session);
+        if (draft == null || draft.getCharacterClass().isEmpty()) {
+            response.setStatus(400);
+            return Map.of("error", "No character in session");
+        }
+        int currentLevel = draft.getLevel();
+        if (currentLevel >= 20) {
+            response.setStatus(400);
+            return Map.of("error", "Already at maximum level");
+        }
+        int newLevel = currentLevel + 1;
+        String classId = draft.getCharacterClass();
+        var classDef = classRepository.findById(classId);
+        if (classDef == null) {
+            response.setStatus(400);
+            return Map.of("error", "Unknown class");
+        }
+
+        // New class features at the new level
+        var newFeatures = classDef.getFeatures() != null
+            ? classDef.getFeatures().stream().filter(f -> f.level() == newLevel).toList()
+            : List.of();
+
+        // HP gain for next level: average roll + CON mod
+        var derived = calculator.calculate(draft);
+        int conMod  = derived.getModifiers().get("CON");
+        int hpGain  = (classDef.getHitDie() / 2 + 1) + conMod;
+
+        // Proficiency bonus
+        boolean profBonusChanged =
+            ClassRepository.proficiencyBonus(newLevel) > ClassRepository.proficiencyBonus(currentLevel);
+
+        // Spell slot changes
+        boolean spellSlotsChanged = false;
+        String  newSpellSlotSummary = "";
+        var sc = classDef.getSpellcasting();
+        if (sc != null) {
+            if ("warlock".equals(classId)) {
+                int[] o = ClassRepository.warlockSlots(currentLevel);
+                int[] n = ClassRepository.warlockSlots(newLevel);
+                spellSlotsChanged = o[0] != n[0] || o[1] != n[1];
+                if (spellSlotsChanged) newSpellSlotSummary = n[0] + " × " + ordinal(n[1]) + "-level (short rest)";
+            } else if ("half".equals(sc.getType())) {
+                int[] o = ClassRepository.halfCasterSlots(currentLevel);
+                int[] n = ClassRepository.halfCasterSlots(newLevel);
+                spellSlotsChanged = !java.util.Arrays.equals(o, n);
+                if (spellSlotsChanged) newSpellSlotSummary = buildSlotSummary(n);
+            } else {
+                int[] o = ClassRepository.fullCasterSlots(currentLevel);
+                int[] n = ClassRepository.fullCasterSlots(newLevel);
+                spellSlotsChanged = !java.util.Arrays.equals(o, n);
+                if (spellSlotsChanged) newSpellSlotSummary = buildSlotSummary(n);
+            }
+        }
+
+        // ASI needed?
+        boolean needsAsi = classDef.getAsiLevels() != null && classDef.getAsiLevels().contains(newLevel);
+
+        // Subclass needed?
+        boolean needsSubclass = newLevel == classDef.getSubclassLevel()
+            && (draft.getSubclassId() == null || draft.getSubclassId().isEmpty());
+
+        // Cantrip gain
+        int newCantripsCount = Math.max(0,
+            ClassRepository.cantripsKnown(classId, newLevel) - ClassRepository.cantripsKnown(classId, currentLevel));
+
+        // Spell gain (known-casters only; prepared casters get 0)
+        int newSpellsCount = 0;
+        if (sc != null && !sc.isPrepareSpells()) {
+            newSpellsCount = Math.max(0,
+                ClassRepository.spellsKnown(classId, newLevel) - ClassRepository.spellsKnown(classId, currentLevel));
+        }
+
+        boolean isWizard = "wizard".equals(classId);
+        int wizardSpellbookGain = isWizard && newLevel > 1 ? 2 : 0;
+        int maxNewSpellLevel = ClassRepository.maxSpellLevel(classId, newLevel);
+
+        // Available cantrips (not already chosen)
+        var availableCantrips = newCantripsCount > 0
+            ? spellRepository.findCantripsForClass(classId).stream()
+                .filter(s -> !draft.getChosenCantrips().contains(s.getId()))
+                .toList()
+            : List.of();
+
+        // Available spells (not already known, up to new max spell level)
+        var availableSpells = (newSpellsCount > 0 || wizardSpellbookGain > 0)
+            ? spellRepository.findByClass(classId, maxNewSpellLevel).stream()
+                .filter(s -> s.getLevel() > 0)
+                .filter(s -> !draft.getChosenSpells().contains(s.getId())
+                          && !draft.getSpellbookSpells().contains(s.getId()))
+                .toList()
+            : List.of();
+
+        var availableFeats      = needsAsi       ? featRepository.findAll()         : List.of();
+        var availableSubclasses = needsSubclass && classDef.getSubclasses() != null
+                                    ? classDef.getSubclasses() : List.of();
+
+        var result = new java.util.LinkedHashMap<String, Object>();
+        result.put("currentLevel",        currentLevel);
+        result.put("newLevel",            newLevel);
+        result.put("newFeatures",         newFeatures);
+        result.put("hpGain",              hpGain);
+        result.put("profBonusChanged",    profBonusChanged);
+        result.put("spellSlotsChanged",   spellSlotsChanged);
+        result.put("newSpellSlotSummary", newSpellSlotSummary);
+        result.put("needsAsi",            needsAsi);
+        result.put("needsSubclass",       needsSubclass);
+        result.put("newCantripsCount",    newCantripsCount);
+        result.put("newSpellsCount",      newSpellsCount);
+        result.put("availableCantrips",   availableCantrips);
+        result.put("availableSpells",     availableSpells);
+        result.put("availableFeats",      availableFeats);
+        result.put("availableSubclasses", availableSubclasses);
+        result.put("maxNewSpellLevel",    maxNewSpellLevel);
+        result.put("isWizard",            isWizard);
+        result.put("wizardSpellbookGain", wizardSpellbookGain);
+        return result;
+    }
+
+    private String buildSlotSummary(int[] slots) {
+        var parts = new java.util.ArrayList<String>();
+        for (int i = 0; i < slots.length; i++) {
+            if (slots[i] > 0) parts.add(slots[i] + "×" + ordinal(i + 1));
+        }
+        return String.join(", ", parts);
+    }
+
+    private String ordinal(int n) {
+        return switch (n) {
+            case 1 -> "1st";
+            case 2 -> "2nd";
+            case 3 -> "3rd";
+            default -> n + "th";
+        };
+    }
 
     private CharacterDraft getDraft(HttpSession session) {
         return (CharacterDraft) session.getAttribute(DRAFT_KEY);

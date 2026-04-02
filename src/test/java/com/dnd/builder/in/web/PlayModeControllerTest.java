@@ -11,9 +11,13 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpSession;
+import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.ui.ExtendedModelMap;
 import org.springframework.ui.Model;
+import com.dnd.builder.out.persistence.InMemoryFeatRepository;
+import com.dnd.builder.out.persistence.InMemorySpellRepository;
 
+import java.util.List;
 import java.util.Map;
 
 import static com.dnd.builder.in.web.CharacterBuilderController.DRAFT_KEY;
@@ -40,7 +44,12 @@ class PlayModeControllerTest {
                 new InMemorySpellRepository(),
                 new InMemoryEquipmentRepository()
         );
-        controller = new PlayModeController(calculator, classRepository);
+        controller = new PlayModeController(
+                calculator,
+                classRepository,
+                new InMemorySpellRepository(),
+                new InMemoryFeatRepository()
+        );
 
         session = new MockHttpSession();
         draft = CharacterDraft.fresh();
@@ -481,6 +490,115 @@ class PlayModeControllerTest {
 
             assertEquals(0, result.get("successes"));
             assertEquals(0, result.get("failures"));
+        }
+    }
+
+    @Nested
+    @DisplayName("Level Up")
+    class LevelUp {
+
+        @Test
+        @DisplayName("returns options for next level — no choices needed (Barbarian L1→2)")
+        void returnsOptionsNoChoicesNeeded() {
+            draft.setCharacterClass("barbarian");
+            draft.setLevel(1);
+
+            var resp = new MockHttpServletResponse();
+            Map<String, Object> result = controller.levelUpOptions(session, resp);
+
+            assertEquals(200, resp.getStatus());
+            assertEquals(1, result.get("currentLevel"));
+            assertEquals(2, result.get("newLevel"));
+            assertEquals(false, result.get("needsAsi"));
+            assertEquals(false, result.get("needsSubclass"));
+            assertEquals(0, result.get("newCantripsCount"));
+            assertEquals(0, result.get("newSpellsCount"));
+            assertEquals(0, result.get("wizardSpellbookGain"));
+            assertTrue(result.get("hpGain") instanceof Integer);
+        }
+
+        @Test
+        @DisplayName("needsAsi is true when levelling to an ASI level")
+        void needsAsiAtLevel4() {
+            draft.setCharacterClass("fighter");
+            draft.setLevel(3);  // levelling to 4 (Fighter ASI)
+
+            Map<String, Object> result = controller.levelUpOptions(session, new MockHttpServletResponse());
+
+            assertEquals(true, result.get("needsAsi"));
+            assertFalse(((List<?>) result.get("availableFeats")).isEmpty());
+        }
+
+        @Test
+        @DisplayName("needsSubclass is true when reaching subclass level without one")
+        void needsSubclassWhenMissing() {
+            draft.setCharacterClass("fighter");
+            draft.setSubclassId("");
+            draft.setLevel(2);  // Fighter subclass at 3
+
+            Map<String, Object> result = controller.levelUpOptions(session, new MockHttpServletResponse());
+
+            assertEquals(true, result.get("needsSubclass"));
+            assertFalse(((List<?>) result.get("availableSubclasses")).isEmpty());
+        }
+
+        @Test
+        @DisplayName("needsSubclass is false when subclass already chosen")
+        void noSubclassNeededWhenAlreadyChosen() {
+            draft.setCharacterClass("fighter");
+            draft.setSubclassId("champion");
+            draft.setLevel(2);
+
+            Map<String, Object> result = controller.levelUpOptions(session, new MockHttpServletResponse());
+
+            assertEquals(false, result.get("needsSubclass"));
+        }
+
+        @Test
+        @DisplayName("newSpellsCount > 0 for known caster (Warlock L1→2)")
+        void warlockGainsSpell() {
+            draft.setCharacterClass("warlock");
+            draft.setLevel(1);
+
+            Map<String, Object> result = controller.levelUpOptions(session, new MockHttpServletResponse());
+
+            assertTrue((int) result.get("newSpellsCount") > 0);
+            assertFalse(((List<?>) result.get("availableSpells")).isEmpty());
+        }
+
+        @Test
+        @DisplayName("wizardSpellbookGain is 2 for wizard beyond level 1")
+        void wizardGainsSpellbookSpells() {
+            draft.setCharacterClass("wizard");
+            draft.setLevel(1);
+
+            Map<String, Object> result = controller.levelUpOptions(session, new MockHttpServletResponse());
+
+            assertEquals(true, result.get("isWizard"));
+            assertEquals(2, result.get("wizardSpellbookGain"));
+        }
+
+        @Test
+        @DisplayName("returns 400 at level 20")
+        void level20Cap() {
+            draft.setLevel(20);
+            var resp = new MockHttpServletResponse();
+
+            Map<String, Object> result = controller.levelUpOptions(session, resp);
+
+            assertEquals(400, resp.getStatus());
+            assertTrue(result.containsKey("error"));
+        }
+
+        @Test
+        @DisplayName("returns 400 when no character in session")
+        void noCharacterInSession() {
+            var resp = new MockHttpServletResponse();
+
+            Map<String, Object> result = controller.levelUpOptions(new MockHttpSession(), resp);
+
+            assertEquals(400, resp.getStatus());
+            assertTrue(result.containsKey("error"));
         }
     }
 
