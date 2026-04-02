@@ -232,7 +232,7 @@ public class CharacterCalculator {
         return bonus;
     }
 
-    public static int modifier(int score) { return (score - 10) / 2; }
+    public static int modifier(int score) { return Math.floorDiv(score - 10, 2); }
 
     /** Sum of all ASI bonuses from asiChoices for a given stat */
     public int getAsiBonus(CharacterDraft draft, String statKey) {

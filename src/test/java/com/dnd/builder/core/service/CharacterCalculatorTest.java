@@ -56,15 +56,11 @@ class CharacterCalculatorTest {
         })
         @DisplayName("Modifier calculation follows PHB formula")
         void modifierCalculation(int score, int expectedMod) {
-            // D&D formula: (score - 10) / 2 with integer floor division
-            // Note: Java integer division truncates toward zero, which works correctly for positive results
-            // For negative results: (1-10)/2 = -9/2 = -4 (Java truncates toward zero)
-            // PHB expects floor division: -9/2 should be -5 (floor)
-            // The implementation uses (score - 10) / 2 which gives -4 for score 1
-            // This is technically incorrect per PHB but many digital tools use this simpler formula
+            // D&D formula: floor((score - 10) / 2)
+            // Score 9: floor(-1/2) = floor(-0.5) = -1
+            // Score 1: floor(-9/2) = floor(-4.5) = -5
             int actual = CharacterCalculator.modifier(score);
-            // Verify the formula: (score - 10) / 2
-            assertEquals((score - 10) / 2, actual);
+            assertEquals(expectedMod, actual, "Score " + score + " should have modifier " + expectedMod);
         }
     }
 
