@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="theme-color" content="#c9a440"/>
+<title>My Characters — Character Forge</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="/css/wizard.css"/>
+<style>
+.characters-container { max-width: 900px; margin: 0 auto; padding: 20px; }
+.characters-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+.characters-title { font-family: 'Cinzel Decorative', serif; font-size: 1.5rem; color: var(--gold); }
+.new-btn { padding: 10px 20px; border: 1px solid var(--gold); background: rgba(201,164,64,.1); color: var(--gold); border-radius: 4px; cursor: pointer; font-family: 'Cinzel', serif; text-decoration: none; transition: all .2s; }
+.new-btn:hover { background: rgba(201,164,64,.2); }
+
+.character-list { display: grid; gap: 16px; }
+.character-card { display: flex; gap: 16px; background: linear-gradient(135deg, rgba(37,29,14,.95) 0%, rgba(25,20,10,.95) 100%); border: 1px solid var(--border); border-radius: 8px; padding: 16px; cursor: pointer; transition: all .2s; }
+.character-card:hover { border-color: var(--gold); transform: translateY(-2px); }
+.character-card.active { border-color: var(--gold); box-shadow: 0 0 20px rgba(201,164,64,.2); }
+
+.character-avatar { width: 60px; height: 60px; background: rgba(0,0,0,.3); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-family: 'Cinzel Decorative', serif; font-size: 1.5rem; color: var(--gold-dim); }
+.character-info { flex: 1; }
+.character-name { font-family: 'Cinzel', serif; font-size: 1.1rem; color: var(--cream); margin-bottom: 4px; }
+.character-details { font-size: .85rem; color: var(--cream-dim); }
+.character-meta { font-size: .75rem; color: var(--gold-dim); margin-top: 6px; }
+
+.character-actions { display: flex; flex-direction: column; gap: 8px; }
+.char-btn { padding: 6px 12px; border: 1px solid var(--border); background: rgba(0,0,0,.3); color: var(--cream); border-radius: 4px; cursor: pointer; font-family: 'Cinzel', serif; font-size: .75rem; transition: all .2s; }
+.char-btn:hover { border-color: var(--gold); background: rgba(201,164,64,.1); }
+.char-btn.delete { border-color: #c43030; color: #e05050; }
+.char-btn.delete:hover { background: rgba(196,48,48,.2); }
+.char-btn.load { border-color: #4a9c4a; }
+.char-btn.load:hover { background: rgba(74,156,74,.2); }
+
+.empty-state { text-align: center; padding: 60px 20px; color: var(--cream-dim); }
+.empty-state h2 { font-family: 'Cinzel Decorative', serif; color: var(--gold-dim); margin-bottom: 16px; }
+
+.storage-info { text-align: center; font-size: .8rem; color: var(--cream-dim); margin-top: 24px; padding: 12px; background: rgba(0,0,0,.2); border-radius: 4px; }
+
+.import-export { display: flex; gap: 12px; justify-content: center; margin-top: 16px; }
+.import-export button, .import-export label { padding: 8px 16px; border: 1px solid var(--border); background: rgba(0,0,0,.3); color: var(--cream); border-radius: 4px; cursor: pointer; font-family: 'Cinzel', serif; font-size: .8rem; transition: all .2s; }
+.import-export button:hover, .import-export label:hover { border-color: var(--gold); background: rgba(201,164,64,.1); }
+.import-export input[type="file"] { display: none; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="site-title">Character Forge</div>
+  <div class="site-sub">Your Characters</div>
+</header>
+
+<div class="characters-container">
+  <div class="characters-header">
+    <div class="characters-title">Saved Characters</div>
+    <a href="/new" class="new-btn">+ New Character</a>
+  </div>
+
+  <div class="character-list" id="character-list">
+    <!-- Populated by JavaScript -->
+  </div>
+
+  <div class="empty-state" id="empty-state" style="display:none">
+    <h2>No Characters Yet</h2>
+    <p>Create your first character to get started!</p>
+    <a href="/new" class="new-btn" style="display:inline-block;margin-top:16px">Create Character</a>
+  </div>
+
+  <div class="import-export">
+    <button onclick="exportAll()">Export All</button>
+    <label>
+      Import
+      <input type="file" accept=".json" onchange="importCharacters(this.files)"/>
+    </label>
+  </div>
+
+  <div class="storage-info">
+    Characters are saved in your browser's local storage.<br/>
+    Export to backup or transfer between devices.
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'characterForge_characters';
+
+function loadCharacters() {
+    const data = localStorage.getItem(STORAGE_KEY);
+    return data ? JSON.parse(data) : [];
+}
+
+function saveCharacters(characters) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(characters));
+}
+
+function renderCharacters() {
+    const characters = loadCharacters();
+    const list = document.getElementById('character-list');
+    const empty = document.getElementById('empty-state');
+
+    if (characters.length === 0) {
+        list.style.display = 'none';
+        empty.style.display = 'block';
+        return;
+    }
+
+    list.style.display = 'grid';
+    empty.style.display = 'none';
+
+    list.innerHTML = characters.map((char, index) => {
+        const initials = (char.characterName || 'C').substring(0, 2).toUpperCase();
+        const details = [char.raceName || 'Unknown Race', char.className || 'Unknown Class', 'Level ' + (char.level || 1)].join(' • ');
+        const saved = char.savedAt ? new Date(char.savedAt).toLocaleDateString() : 'Unknown';
+
+        return `
+            <div class="character-card" data-index="${index}">
+                <div class="character-avatar">${initials}</div>
+                <div class="character-info" onclick="loadCharacter(${index})">
+                    <div class="character-name">${char.characterName || 'Unnamed Character'}</div>
+                    <div class="character-details">${details}</div>
+                    <div class="character-meta">Saved: ${saved}</div>
+                </div>
+                <div class="character-actions">
+                    <button class="char-btn load" onclick="loadCharacter(${index})">Load</button>
+                    <button class="char-btn" onclick="exportCharacter(${index})">Export</button>
+                    <button class="char-btn delete" onclick="deleteCharacter(${index})">Delete</button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function loadCharacter(index) {
+    const characters = loadCharacters();
+    const char = characters[index];
+    if (!char) return;
+
+    // POST to server to load into session
+    fetch('/characters/load', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(char.draft)
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            window.location.href = '/step/9'; // Go to review page
+        }
+    });
+}
+
+function deleteCharacter(index) {
+    if (!confirm('Delete this character permanently?')) return;
+    const characters = loadCharacters();
+    characters.splice(index, 1);
+    saveCharacters(characters);
+    renderCharacters();
+}
+
+function exportCharacter(index) {
+    const characters = loadCharacters();
+    const char = characters[index];
+    if (!char) return;
+
+    const blob = new Blob([JSON.stringify(char, null, 2)], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = (char.characterName || 'character').replace(/[^a-z0-9]/gi, '_') + '.json';
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+function exportAll() {
+    const characters = loadCharacters();
+    if (characters.length === 0) {
+        alert('No characters to export');
+        return;
+    }
+
+    const blob = new Blob([JSON.stringify(characters, null, 2)], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'character_forge_backup_' + new Date().toISOString().split('T')[0] + '.json';
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+function importCharacters(files) {
+    if (!files.length) return;
+    const file = files[0];
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = JSON.parse(e.target.result);
+            const characters = loadCharacters();
+
+            if (Array.isArray(data)) {
+                // Bulk import
+                characters.push(...data);
+                alert(`Imported ${data.length} character(s)`);
+            } else if (data.draft) {
+                // Single character
+                characters.push(data);
+                alert('Imported 1 character');
+            } else if (data.characterClass) {
+                // Raw draft format
+                characters.push({
+                    characterName: data.characterName || 'Imported Character',
+                    draft: data,
+                    savedAt: new Date().toISOString()
+                });
+                alert('Imported 1 character');
+            }
+
+            saveCharacters(characters);
+            renderCharacters();
+        } catch (err) {
+            alert('Invalid JSON file');
+        }
+    };
+    reader.readAsText(file);
+}
+
+// Save current character to local storage
+function saveCurrentCharacter(draft, raceName, className) {
+    const characters = loadCharacters();
+
+    // Check if character with same name exists
+    const existingIndex = characters.findIndex(c =>
+        c.characterName === draft.characterName && draft.characterName
+    );
+
+    const charData = {
+        characterName: draft.characterName || 'Unnamed Character',
+        raceName: raceName,
+        className: className,
+        level: draft.level,
+        draft: draft,
+        savedAt: new Date().toISOString()
+    };
+
+    if (existingIndex >= 0) {
+        characters[existingIndex] = charData;
+    } else {
+        characters.push(charData);
+    }
+
+    saveCharacters(characters);
+    return true;
+}
+
+// Expose for use from other pages
+window.CharacterStorage = {
+    save: saveCurrentCharacter,
+    load: loadCharacters,
+    render: renderCharacters
+};
+
+// Initial render
+renderCharacters();
+</script>
+</body>
+</html>

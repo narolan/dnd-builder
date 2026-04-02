@@ -253,4 +253,141 @@ class CharacterDraftTest {
             assertNotNull(draft.getInventory());
         }
     }
+
+    @Nested
+    @DisplayName("Conditions")
+    class Conditions {
+
+        @Test
+        @DisplayName("Fresh draft has no conditions")
+        void freshDraftNoConditions() {
+            assertTrue(draft.getConditions().isEmpty());
+        }
+
+        @Test
+        @DisplayName("addCondition adds to list")
+        void addCondition() {
+            var condition = new ActiveCondition("Poisoned");
+            draft.addCondition(condition);
+
+            assertEquals(1, draft.getConditions().size());
+            assertEquals("Poisoned", draft.getConditions().get(0).getName());
+        }
+
+        @Test
+        @DisplayName("removeCondition removes by ID")
+        void removeCondition() {
+            var cond1 = new ActiveCondition("Poisoned");
+            var cond2 = new ActiveCondition("Stunned");
+            draft.addCondition(cond1);
+            draft.addCondition(cond2);
+
+            draft.removeCondition(cond1.getId());
+
+            assertEquals(1, draft.getConditions().size());
+            assertEquals("Stunned", draft.getConditions().get(0).getName());
+        }
+
+        @Test
+        @DisplayName("hasCondition checks by name")
+        void hasCondition() {
+            draft.addCondition(new ActiveCondition("Poisoned"));
+
+            assertTrue(draft.hasCondition("Poisoned"));
+            assertTrue(draft.hasCondition("poisoned")); // case insensitive
+            assertFalse(draft.hasCondition("Stunned"));
+        }
+    }
+
+    @Nested
+    @DisplayName("Death Saves")
+    class DeathSaves {
+
+        @Test
+        @DisplayName("Fresh draft has 0 death saves")
+        void freshDraftNoDeathSaves() {
+            assertEquals(0, draft.getDeathSaveSuccesses());
+            assertEquals(0, draft.getDeathSaveFailures());
+        }
+
+        @Test
+        @DisplayName("Death saves are clamped to 0-3")
+        void deathSavesClamped() {
+            draft.setDeathSaveSuccesses(5);
+            assertEquals(3, draft.getDeathSaveSuccesses());
+
+            draft.setDeathSaveFailures(-1);
+            assertEquals(0, draft.getDeathSaveFailures());
+        }
+
+        @Test
+        @DisplayName("isStable returns true at 3 successes")
+        void isStable() {
+            draft.setDeathSaveSuccesses(2);
+            assertFalse(draft.isStable());
+
+            draft.setDeathSaveSuccesses(3);
+            assertTrue(draft.isStable());
+        }
+
+        @Test
+        @DisplayName("isDead returns true at 3 failures")
+        void isDead() {
+            draft.setDeathSaveFailures(2);
+            assertFalse(draft.isDead());
+
+            draft.setDeathSaveFailures(3);
+            assertTrue(draft.isDead());
+        }
+
+        @Test
+        @DisplayName("resetDeathSaves resets both")
+        void resetDeathSaves() {
+            draft.setDeathSaveSuccesses(2);
+            draft.setDeathSaveFailures(1);
+
+            draft.resetDeathSaves();
+
+            assertEquals(0, draft.getDeathSaveSuccesses());
+            assertEquals(0, draft.getDeathSaveFailures());
+        }
+    }
+
+    @Nested
+    @DisplayName("Concentration")
+    class Concentration {
+
+        @Test
+        @DisplayName("Fresh draft has no concentration")
+        void freshDraftNoConcentration() {
+            assertNull(draft.getConcentratingOn());
+            assertFalse(draft.isConcentrating());
+        }
+
+        @Test
+        @DisplayName("setConcentratingOn sets spell")
+        void setConcentration() {
+            draft.setConcentratingOn("Haste");
+
+            assertEquals("Haste", draft.getConcentratingOn());
+            assertTrue(draft.isConcentrating());
+        }
+
+        @Test
+        @DisplayName("breakConcentration clears spell")
+        void breakConcentration() {
+            draft.setConcentratingOn("Haste");
+            draft.breakConcentration();
+
+            assertNull(draft.getConcentratingOn());
+            assertFalse(draft.isConcentrating());
+        }
+
+        @Test
+        @DisplayName("Empty string counts as not concentrating")
+        void emptyStringNotConcentrating() {
+            draft.setConcentratingOn("");
+            assertFalse(draft.isConcentrating());
+        }
+    }
 }

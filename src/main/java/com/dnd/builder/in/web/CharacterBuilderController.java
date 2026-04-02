@@ -44,12 +44,50 @@ public class CharacterBuilderController {
 
     // ── Home / start fresh ────────────────────────────────────────────────────
     @GetMapping("/")
-    public String home() { return "redirect:/step/1"; }
+    public String home() { return "redirect:/characters"; }
+
+    @GetMapping("/new")
+    public String newCharacterGet(HttpSession session) {
+        session.setAttribute(DRAFT_KEY, CharacterDraft.fresh());
+        return "redirect:/step/1";
+    }
 
     @PostMapping("/new")
     public String newCharacter(HttpSession session) {
         session.setAttribute(DRAFT_KEY, CharacterDraft.fresh());
         return "redirect:/step/1";
+    }
+
+    // ── Character Management ──────────────────────────────────────────────────
+    @GetMapping("/characters")
+    public String characterList() {
+        return "characters";
+    }
+
+    @PostMapping("/characters/load")
+    @ResponseBody
+    public Map<String, Object> loadCharacter(@RequestBody CharacterDraft draft, HttpSession session) {
+        session.setAttribute(DRAFT_KEY, draft);
+        return Map.of("success", true);
+    }
+
+    @GetMapping("/characters/current")
+    @ResponseBody
+    public Map<String, Object> getCurrentCharacter(HttpSession session) {
+        CharacterDraft draft = (CharacterDraft) session.getAttribute(DRAFT_KEY);
+        if (draft == null || draft.getCharacterClass().isEmpty()) {
+            return Map.of("exists", false);
+        }
+
+        var race = raceRepository.findById(draft.getRaceId());
+        var classDef = classRepository.findById(draft.getCharacterClass());
+
+        return Map.of(
+            "exists", true,
+            "draft", draft,
+            "raceName", race != null ? race.name() : "Unknown",
+            "className", classDef != null ? classDef.getName() : "Unknown"
+        );
     }
 
     // ── Universal step GET ────────────────────────────────────────────────────

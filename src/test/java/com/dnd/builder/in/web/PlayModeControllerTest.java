@@ -374,4 +374,175 @@ class PlayModeControllerTest {
             assertEquals(0, draft.getGold());
         }
     }
+
+    @Nested
+    @DisplayName("Condition Tracking")
+    class ConditionTracking {
+
+        @Test
+        @DisplayName("addCondition adds condition to draft")
+        void addCondition() {
+            Map<String, Object> result = controller.addCondition("Poisoned", 3, "Trap", session);
+
+            assertEquals(true, result.get("success"));
+            assertFalse(draft.getConditions().isEmpty());
+            assertEquals("Poisoned", draft.getConditions().get(0).getName());
+            assertEquals(3, draft.getConditions().get(0).getRemainingRounds());
+        }
+
+        @Test
+        @DisplayName("removeCondition removes condition")
+        void removeCondition() {
+            controller.addCondition("Poisoned", -1, null, session);
+            String condId = draft.getConditions().get(0).getId();
+
+            Map<String, Object> result = controller.removeCondition(condId, session);
+
+            assertEquals(true, result.get("success"));
+            assertTrue(draft.getConditions().isEmpty());
+        }
+
+        @Test
+        @DisplayName("tickConditions decrements durations")
+        void tickConditions() {
+            controller.addCondition("Poisoned", 2, null, session);
+
+            Map<String, Object> result = controller.tickConditions(session);
+
+            assertEquals(true, result.get("success"));
+            assertEquals(1, draft.getConditions().get(0).getRemainingRounds());
+        }
+
+        @Test
+        @DisplayName("tickConditions removes expired conditions")
+        void tickRemovesExpired() {
+            controller.addCondition("Poisoned", 1, null, session);
+
+            Map<String, Object> result = controller.tickConditions(session);
+
+            assertTrue(draft.getConditions().isEmpty());
+            assertTrue(((java.util.List<?>)result.get("expired")).contains("Poisoned"));
+        }
+    }
+
+    @Nested
+    @DisplayName("Death Saves")
+    class DeathSavesTracking {
+
+        @Test
+        @DisplayName("deathSaveSuccess increments successes")
+        void deathSaveSuccess() {
+            Map<String, Object> result = controller.deathSaveSuccess(session);
+
+            assertEquals(1, result.get("successes"));
+            assertEquals(0, result.get("failures"));
+            assertEquals(false, result.get("stable"));
+        }
+
+        @Test
+        @DisplayName("3 successes means stable")
+        void threeSuccessesStable() {
+            controller.deathSaveSuccess(session);
+            controller.deathSaveSuccess(session);
+            Map<String, Object> result = controller.deathSaveSuccess(session);
+
+            assertEquals(3, result.get("successes"));
+            assertEquals(true, result.get("stable"));
+        }
+
+        @Test
+        @DisplayName("deathSaveFailure increments failures")
+        void deathSaveFailure() {
+            Map<String, Object> result = controller.deathSaveFailure(session);
+
+            assertEquals(0, result.get("successes"));
+            assertEquals(1, result.get("failures"));
+            assertEquals(false, result.get("dead"));
+        }
+
+        @Test
+        @DisplayName("3 failures means dead")
+        void threeFailuresDead() {
+            controller.deathSaveFailure(session);
+            controller.deathSaveFailure(session);
+            Map<String, Object> result = controller.deathSaveFailure(session);
+
+            assertEquals(3, result.get("failures"));
+            assertEquals(true, result.get("dead"));
+        }
+
+        @Test
+        @DisplayName("resetDeathSaves clears both")
+        void resetDeathSaves() {
+            draft.setDeathSaveSuccesses(2);
+            draft.setDeathSaveFailures(1);
+
+            Map<String, Object> result = controller.resetDeathSaves(session);
+
+            assertEquals(0, result.get("successes"));
+            assertEquals(0, result.get("failures"));
+        }
+    }
+
+    @Nested
+    @DisplayName("Concentration")
+    class ConcentrationTests {
+
+        @BeforeEach
+        void setCaster() {
+            draft.setCharacterClass("wizard");
+        }
+
+        @Test
+        @DisplayName("setConcentration sets spell")
+        void setConcentration() {
+            Map<String, Object> result = controller.setConcentration("Haste", session);
+
+            assertEquals(true, result.get("success"));
+            assertEquals("Haste", result.get("concentratingOn"));
+            assertEquals("Haste", draft.getConcentratingOn());
+        }
+
+        @Test
+        @DisplayName("breakConcentration clears spell")
+        void breakConcentration() {
+            draft.setConcentratingOn("Haste");
+
+            Map<String, Object> result = controller.breakConcentration(session);
+
+            assertEquals(true, result.get("success"));
+            assertEquals("Haste", result.get("broken"));
+            assertNull(draft.getConcentratingOn());
+        }
+
+        @Test
+        @DisplayName("concentrationCheck returns DC when concentrating")
+        void concentrationCheck() {
+            draft.setConcentratingOn("Haste");
+
+            Map<String, Object> result = controller.concentrationCheck(20, session);
+
+            assertEquals(true, result.get("required"));
+            assertEquals(10, result.get("dc")); // Max of 10 or 20/2=10
+            assertEquals("Haste", result.get("spell"));
+        }
+
+        @Test
+        @DisplayName("concentrationCheck DC is half damage when higher")
+        void concentrationCheckHighDamage() {
+            draft.setConcentratingOn("Haste");
+
+            Map<String, Object> result = controller.concentrationCheck(40, session);
+
+            assertEquals(20, result.get("dc")); // 40/2 = 20
+        }
+
+        @Test
+        @DisplayName("concentrationCheck not required when not concentrating")
+        void concentrationCheckNotRequired() {
+            Map<String, Object> result = controller.concentrationCheck(20, session);
+
+            assertEquals(false, result.get("required"));
+        }
+    }
 }

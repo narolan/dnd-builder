@@ -221,6 +221,14 @@
       </div>
 
       <div class="section-head">Save &amp; Load</div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start;margin-bottom:16px">
+        <button type="button" class="btn btn-next" onclick="saveToLocal()" style="padding:10px 28px">
+          ✓ Save Character
+        </button>
+        <a href="/characters" class="btn btn-prev" style="text-decoration:none;display:inline-block;padding:10px 28px">
+          📋 My Characters
+        </a>
+      </div>
       <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start">
         <a href="/export/pdf" class="btn btn-next" style="text-decoration:none;display:inline-block;padding:10px 28px">
           ↓ Download PDF
@@ -236,7 +244,44 @@
           <button type="submit" class="btn btn-danger">↺ Start Over</button>
         </form>
       </div>
+      <div id="save-status" style="margin-top:8px;font-size:.85rem;color:var(--gold)"></div>
     </div>
+
+    <script th:inline="javascript">
+    const STORAGE_KEY = 'characterForge_characters';
+    const currentDraft = /*[[${draft}]]*/ {};
+    const raceName = /*[[${raceDef != null ? raceDef.name : 'Unknown'}]]*/ 'Unknown';
+    const className = /*[[${classDef != null ? classDef.name : 'Unknown'}]]*/ 'Unknown';
+
+    function saveToLocal() {
+        const characters = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+
+        // Check if character with same name exists
+        const existingIndex = characters.findIndex(c =>
+            c.characterName === currentDraft.characterName && currentDraft.characterName
+        );
+
+        const charData = {
+            characterName: currentDraft.characterName || 'Unnamed Character',
+            raceName: raceName,
+            className: className,
+            level: currentDraft.level,
+            draft: currentDraft,
+            savedAt: new Date().toISOString()
+        };
+
+        if (existingIndex >= 0) {
+            characters[existingIndex] = charData;
+            document.getElementById('save-status').textContent = 'Character updated!';
+        } else {
+            characters.push(charData);
+            document.getElementById('save-status').textContent = 'Character saved!';
+        }
+
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(characters));
+        setTimeout(() => document.getElementById('save-status').textContent = '', 3000);
+    }
+    </script>
 
     <div class="btn-row">
       <a href="/step/8" class="btn btn-prev">← Equipment</a>
