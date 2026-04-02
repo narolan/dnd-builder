@@ -40,6 +40,21 @@
                 <span class="spell-meta" th:text="${spell.school} + ' · ' + ${spell.castingTime}"></span>
                 <span th:if="${spell.concentration}" class="spell-conc">[C]</span>
               </label>
+              <div class="spell-tooltip">
+                <div class="spell-tooltip-name" th:text="${spell.name}">Spell Name</div>
+                <div class="spell-tooltip-level">Cantrip · <span th:text="${spell.school}">School</span></div>
+                <dl class="spell-tooltip-meta">
+                  <dt>Casting Time</dt><dd th:text="${spell.castingTime}">1 action</dd>
+                  <dt>Range</dt><dd th:text="${spell.range}">60 feet</dd>
+                  <dt>Components</dt><dd th:text="${spell.components}">V, S</dd>
+                  <dt>Duration</dt><dd th:text="${spell.duration}">Instantaneous</dd>
+                </dl>
+                <div class="spell-tooltip-desc" th:text="${spell.description}">Description</div>
+                <div class="spell-tooltip-tags">
+                  <span th:if="${spell.concentration}" class="spell-tooltip-tag conc">Concentration</span>
+                  <span th:if="${spell.ritual}" class="spell-tooltip-tag ritual">Ritual</span>
+                </div>
+              </div>
             </div>
           </th:block>
         </div>
@@ -68,6 +83,21 @@
                     <span th:if="${spell.concentration}" class="spell-conc">[C]</span>
                     <span th:if="${spell.ritual}" class="spell-conc">[R]</span>
                   </label>
+                  <div class="spell-tooltip">
+                    <div class="spell-tooltip-name" th:text="${spell.name}">Spell Name</div>
+                    <div class="spell-tooltip-level" th:text="'Level ' + ${spell.level} + ' · ' + ${spell.school}">Level 1 · School</div>
+                    <dl class="spell-tooltip-meta">
+                      <dt>Casting Time</dt><dd th:text="${spell.castingTime}">1 action</dd>
+                      <dt>Range</dt><dd th:text="${spell.range}">60 feet</dd>
+                      <dt>Components</dt><dd th:text="${spell.components}">V, S</dd>
+                      <dt>Duration</dt><dd th:text="${spell.duration}">Instantaneous</dd>
+                    </dl>
+                    <div class="spell-tooltip-desc" th:text="${spell.description}">Description</div>
+                    <div class="spell-tooltip-tags">
+                      <span th:if="${spell.concentration}" class="spell-tooltip-tag conc">Concentration</span>
+                      <span th:if="${spell.ritual}" class="spell-tooltip-tag ritual">Ritual</span>
+                    </div>
+                  </div>
                 </div>
               </th:block>
             </div>
@@ -99,6 +129,21 @@
                     <span th:if="${spell.concentration}" class="spell-conc">[C]</span>
                     <span th:if="${spell.ritual}" class="spell-conc">[R]</span>
                   </label>
+                  <div class="spell-tooltip">
+                    <div class="spell-tooltip-name" th:text="${spell.name}">Spell Name</div>
+                    <div class="spell-tooltip-level" th:text="'Level ' + ${spell.level} + ' · ' + ${spell.school}">Level 1 · School</div>
+                    <dl class="spell-tooltip-meta">
+                      <dt>Casting Time</dt><dd th:text="${spell.castingTime}">1 action</dd>
+                      <dt>Range</dt><dd th:text="${spell.range}">60 feet</dd>
+                      <dt>Components</dt><dd th:text="${spell.components}">V, S</dd>
+                      <dt>Duration</dt><dd th:text="${spell.duration}">Instantaneous</dd>
+                    </dl>
+                    <div class="spell-tooltip-desc" th:text="${spell.description}">Description</div>
+                    <div class="spell-tooltip-tags">
+                      <span th:if="${spell.concentration}" class="spell-tooltip-tag conc">Concentration</span>
+                      <span th:if="${spell.ritual}" class="spell-tooltip-tag ritual">Ritual</span>
+                    </div>
+                  </div>
                 </div>
               </th:block>
             </div>
@@ -130,6 +175,21 @@
                     <span th:if="${spell.concentration}" class="spell-conc">[C]</span>
                     <span th:if="${spell.ritual}" class="spell-conc">[R]</span>
                   </label>
+                  <div class="spell-tooltip">
+                    <div class="spell-tooltip-name" th:text="${spell.name}">Spell Name</div>
+                    <div class="spell-tooltip-level" th:text="'Level ' + ${spell.level} + ' · ' + ${spell.school}">Level 1 · School</div>
+                    <dl class="spell-tooltip-meta">
+                      <dt>Casting Time</dt><dd th:text="${spell.castingTime}">1 action</dd>
+                      <dt>Range</dt><dd th:text="${spell.range}">60 feet</dd>
+                      <dt>Components</dt><dd th:text="${spell.components}">V, S</dd>
+                      <dt>Duration</dt><dd th:text="${spell.duration}">Instantaneous</dd>
+                    </dl>
+                    <div class="spell-tooltip-desc" th:text="${spell.description}">Description</div>
+                    <div class="spell-tooltip-tags">
+                      <span th:if="${spell.concentration}" class="spell-tooltip-tag conc">Concentration</span>
+                      <span th:if="${spell.ritual}" class="spell-tooltip-tag ritual">Ritual</span>
+                    </div>
+                  </div>
                 </div>
               </th:block>
             </div>
@@ -168,6 +228,36 @@ document.addEventListener('DOMContentLoaded', function() {
 <style>
 .spell-level-group { border-left: 3px solid var(--gold-dim); padding-left: 12px; }
 .spell-level-header { font-family: 'Cinzel', serif; font-size: 1rem; color: var(--gold); margin-bottom: 8px; }
+
+/* Spell Tooltip */
+.spell-card { position: relative; }
+.spell-tooltip {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 320px;
+  max-width: 90vw;
+  background: linear-gradient(135deg, rgba(30,24,12,.98) 0%, rgba(20,16,8,.98) 100%);
+  border: 1px solid var(--gold);
+  border-radius: 6px;
+  padding: 12px;
+  z-index: 1000;
+  box-shadow: 0 4px 20px rgba(0,0,0,.6);
+  pointer-events: none;
+}
+.spell-card:hover .spell-tooltip { display: block; }
+.spell-tooltip-name { font-family: 'Cinzel', serif; font-size: 1rem; color: var(--gold); margin-bottom: 4px; }
+.spell-tooltip-level { font-size: .8rem; color: var(--gold-dim); margin-bottom: 8px; }
+.spell-tooltip-meta { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: .8rem; margin-bottom: 8px; }
+.spell-tooltip-meta dt { color: var(--gold-dim); }
+.spell-tooltip-meta dd { color: var(--cream); margin: 0; }
+.spell-tooltip-desc { font-size: .85rem; color: var(--cream-dim); line-height: 1.4; max-height: 150px; overflow-y: auto; }
+.spell-tooltip-tags { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+.spell-tooltip-tag { font-size: .7rem; padding: 2px 6px; border-radius: 3px; background: rgba(201,164,64,.15); color: var(--gold); }
+.spell-tooltip-tag.conc { background: rgba(192,96,192,.2); color: #c0a0f0; }
+.spell-tooltip-tag.ritual { background: rgba(96,192,96,.2); color: #80c080; }
 </style>
 </div>
 </body>
