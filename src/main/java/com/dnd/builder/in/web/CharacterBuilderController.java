@@ -183,22 +183,71 @@ public class CharacterBuilderController {
         draft.setSkillProficiencies(all);
         advance(draft, 5);
 
-        // Skip feat step if not Variant Human (feat step only relevant at L1 for VH)
-        if (!draft.isVariantHuman()) {
+        // Check if step 6 is needed: Variant Human OR character has reached an ASI level
+        var asiLevels = calculator.getAvailableAsiLevels(draft);
+        boolean needsStep6 = draft.isVariantHuman() || !asiLevels.isEmpty();
+
+        if (!needsStep6) {
             advance(draft, 6);
+            // Skip spells if not a spellcaster
+            var classDef = classRepository.findById(draft.getCharacterClass());
+            if (classDef == null || classDef.getSpellcasting() == null) {
+                advance(draft, 7);
+                return "redirect:/step/8";
+            }
             return "redirect:/step/7";
         }
         return "redirect:/step/6";
     }
 
     // ══════════════════════════════════════════════════════════════════════════
-    // STEP 6 — Feats (Variant Human only at L1)
+    // STEP 6 — ASI/Feats
     // ══════════════════════════════════════════════════════════════════════════
     @PostMapping("/step/6")
-    public String saveStep6(@RequestParam(required=false) String chosenFeatId,
+    public String saveStep6(@RequestParam Map<String, String> allParams,
                              HttpSession session) {
         CharacterDraft draft = getOrCreateDraft(session);
-        draft.setChosenFeatId(chosenFeatId != null ? chosenFeatId : "");
+
+        // Collect ASI choices from form params
+        var asiLevels = calculator.getAvailableAsiLevels(draft);
+        var choices = new ArrayList<com.dnd.builder.core.model.AsiChoice>();
+
+        for (int lvl : asiLevels) {
+            String choiceType = allParams.get("asi_type_" + lvl); // "asi" or "feat"
+            if ("feat".equals(choiceType)) {
+                String featId = allParams.get("feat_" + lvl);
+                // Feats may also grant stat bonuses (handled separately if needed)
+                choices.add(com.dnd.builder.core.model.AsiChoice.feat(lvl, featId, Map.of()));
+            } else {
+                // ASI: could be +2 to one stat or +1/+1 to two
+                var statIncreases = new LinkedHashMap<String, Integer>();
+                String mode = allParams.get("asi_mode_" + lvl); // "single" (+2) or "split" (+1/+1)
+                if ("single".equals(mode)) {
+                    String stat = allParams.get("asi_single_" + lvl);
+                    if (stat != null && !stat.isEmpty()) {
+                        statIncreases.put(stat, 2);
+                    }
+                } else {
+                    String stat1 = allParams.get("asi_split1_" + lvl);
+                    String stat2 = allParams.get("asi_split2_" + lvl);
+                    if (stat1 != null && !stat1.isEmpty()) {
+                        statIncreases.merge(stat1, 1, Integer::sum);
+                    }
+                    if (stat2 != null && !stat2.isEmpty()) {
+                        statIncreases.merge(stat2, 1, Integer::sum);
+                    }
+                }
+                choices.add(com.dnd.builder.core.model.AsiChoice.asi(lvl, statIncreases));
+            }
+        }
+
+        // Also handle Variant Human L1 feat (legacy support)
+        String vhFeatId = allParams.get("vh_feat");
+        if (draft.isVariantHuman() && vhFeatId != null && !vhFeatId.isEmpty()) {
+            draft.setChosenFeatId(vhFeatId);
+        }
+
+        draft.setAsiChoices(choices);
         advance(draft, 6);
 
         // Skip spells if not a spellcaster
@@ -226,23 +275,43 @@ public class CharacterBuilderController {
         var classDef = classRepository.findById(draft.getCharacterClass());
         if (classDef != null && classDef.getSpellcasting() != null) {
             var sc = classDef.getSpellcasting();
+            String classId = draft.getCharacterClass();
+            int level = draft.getLevel();
 
-            // Validate cantrip count
-            if (cantrips.size() > sc.getCantripsAtL1()) {
-                ra.addAttribute("error","Choose at most " + sc.getCantripsAtL1() + " cantrips");
+            // Validate cantrip count using level-scaled limit
+            int cantripsLimit = ClassRepository.cantripsKnown(classId, level);
+            if (cantrips.size() > cantripsLimit) {
+                ra.addAttribute("error", "Choose at most " + cantripsLimit + " cantrips");
                 return "redirect:/step/7";
             }
 
-            // Validate spell count (known casters)
-            if (!sc.isPrepareSpells() && spells.size() > sc.getSpellsKnownAtL1()) {
-                ra.addAttribute("error","Choose at most " + sc.getSpellsKnownAtL1() + " spells");
-                return "redirect:/step/7";
+            // Validate spell count for known casters
+            if (!sc.isPrepareSpells() && !"wizard".equals(classId)) {
+                int spellsKnown = ClassRepository.spellsKnown(classId, level);
+                if (spells.size() > spellsKnown) {
+                    ra.addAttribute("error", "Choose at most " + spellsKnown + " spells");
+                    return "redirect:/step/7";
+                }
+            }
+
+            // Validate prepared spell count
+            if (sc.isPrepareSpells() && !"wizard".equals(classId)) {
+                var derived = calculator.calculate(draft);
+                int abilityMod = derived.getModifiers().get(sc.getAbility());
+                int maxPrepared = ClassRepository.maxPrepared(classId, level, abilityMod);
+                if (spells.size() > maxPrepared) {
+                    ra.addAttribute("error", "You can prepare at most " + maxPrepared + " spells");
+                    return "redirect:/step/7";
+                }
             }
 
             // Validate spellbook (wizard)
-            if (sc.getSpellbookSizeAtL1() > 0 && spellbook.size() > sc.getSpellbookSizeAtL1()) {
-                ra.addAttribute("error","Spellbook holds at most " + sc.getSpellbookSizeAtL1() + " spells at level 1");
-                return "redirect:/step/7";
+            if ("wizard".equals(classId)) {
+                int spellbookSize = 6 + (level - 1) * 2;
+                if (spellbook.size() > spellbookSize) {
+                    ra.addAttribute("error", "Spellbook holds at most " + spellbookSize + " spells at level " + level);
+                    return "redirect:/step/7";
+                }
             }
         }
 
@@ -331,20 +400,83 @@ public class CharacterBuilderController {
                 model.addAttribute("skillAbilityMap",    CharacterCalculator.SKILL_ABILITY);
             }
             case 6 -> {
-                model.addAttribute("feats",       featRepository.findAll());
+                model.addAttribute("feats", featRepository.findAll());
                 model.addAttribute("isVariantHuman", draft.isVariantHuman());
+
+                // Get ASI levels the character has reached
+                var asiLevels = calculator.getAvailableAsiLevels(draft);
+                model.addAttribute("asiLevels", asiLevels);
+
+                // For each ASI level, check if choice was already made
+                var existingChoices = new java.util.HashMap<Integer, com.dnd.builder.core.model.AsiChoice>();
+                if (draft.getAsiChoices() != null) {
+                    for (var choice : draft.getAsiChoices()) {
+                        existingChoices.put(choice.level(), choice);
+                    }
+                }
+                model.addAttribute("existingChoices", existingChoices);
+
+                // Add variant human L1 feat as a special case
+                boolean showVariantHumanFeat = draft.isVariantHuman();
+                model.addAttribute("showVariantHumanFeat", showVariantHumanFeat);
+
+                // Need current stats for feat prerequisites
+                var derived = calculator.calculate(draft);
+                model.addAttribute("currentStats", derived.getFinalScores());
             }
             case 7 -> {
                 var cd = classRepository.findById(draft.getCharacterClass());
                 if (cd != null && cd.getSpellcasting() != null) {
                     var sc = cd.getSpellcasting();
-                    model.addAttribute("spellcasting",      sc);
-                    model.addAttribute("cantrips",          spellRepository.findCantripsForClass(draft.getCharacterClass()));
-                    model.addAttribute("level1Spells",      spellRepository.findLevel1ForClass(draft.getCharacterClass()));
-                    model.addAttribute("level2Spells",      spellRepository.findByClass(draft.getCharacterClass(), 2).stream()
-                            .filter(s -> s.getLevel() == 2).collect(Collectors.toList()));
-                    model.addAttribute("isWizard",          "wizard".equals(draft.getCharacterClass()));
-                    model.addAttribute("isPreparedCaster",  sc.isPrepareSpells() && !"wizard".equals(draft.getCharacterClass()));
+                    String classId = draft.getCharacterClass();
+                    int level = draft.getLevel();
+                    int maxSpellLvl = ClassRepository.maxSpellLevel(classId, level);
+
+                    model.addAttribute("spellcasting", sc);
+                    model.addAttribute("cantrips", spellRepository.findCantripsForClass(classId));
+                    model.addAttribute("maxSpellLevel", maxSpellLvl);
+
+                    // Fetch spells grouped by level
+                    var allSpells = spellRepository.findByClass(classId, maxSpellLvl);
+                    var spellsByLevel = new LinkedHashMap<Integer, List<SpellDefinition>>();
+                    for (int lvl = 1; lvl <= maxSpellLvl; lvl++) {
+                        final int spellLvl = lvl;
+                        var spellsAtLevel = allSpells.stream()
+                                .filter(s -> s.getLevel() == spellLvl)
+                                .collect(Collectors.toList());
+                        if (!spellsAtLevel.isEmpty()) {
+                            spellsByLevel.put(lvl, spellsAtLevel);
+                        }
+                    }
+                    model.addAttribute("spellsByLevel", spellsByLevel);
+
+                    // Scaling limits
+                    int cantripsLimit = ClassRepository.cantripsKnown(classId, level);
+                    model.addAttribute("cantripsLimit", cantripsLimit);
+
+                    boolean isKnownCaster = !sc.isPrepareSpells();
+                    boolean isWizard = "wizard".equals(classId);
+                    model.addAttribute("isWizard", isWizard);
+                    model.addAttribute("isPreparedCaster", sc.isPrepareSpells() && !isWizard);
+                    model.addAttribute("isKnownCaster", isKnownCaster && !isWizard);
+
+                    if (isKnownCaster && !isWizard) {
+                        int spellsKnown = ClassRepository.spellsKnown(classId, level);
+                        model.addAttribute("spellsKnownLimit", spellsKnown);
+                    }
+
+                    if (sc.isPrepareSpells() && !isWizard) {
+                        var derived = calculator.calculate(draft);
+                        int abilityMod = derived.getModifiers().get(sc.getAbility());
+                        int maxPrepared = ClassRepository.maxPrepared(classId, level, abilityMod);
+                        model.addAttribute("maxPrepared", maxPrepared);
+                    }
+
+                    if (isWizard) {
+                        // Wizard spellbook: 6 at L1, +2 per wizard level
+                        int spellbookSize = 6 + (level - 1) * 2;
+                        model.addAttribute("spellbookSize", spellbookSize);
+                    }
                 }
                 var classDef = classRepository.findById(draft.getCharacterClass());
                 model.addAttribute("isSpellcaster", classDef != null && classDef.getSpellcasting() != null);
@@ -361,27 +493,75 @@ public class CharacterBuilderController {
                 model.addAttribute("classDef",   cd);
                 model.addAttribute("bgDef",      bg);
                 model.addAttribute("raceDef",    race);
-                // Chosen spells display
-                var spellNames = new ArrayList<String>();
+
+                // Class features up to current level
+                if (cd != null && cd.getFeatures() != null) {
+                    var features = cd.getFeatures().stream()
+                        .filter(f -> f.level() <= draft.getLevel())
+                        .toList();
+                    model.addAttribute("classFeatures", features);
+                }
+
+                // Subclass features if applicable
+                if (cd != null && cd.getSubclasses() != null && !draft.getSubclassId().isEmpty()) {
+                    var subclass = cd.getSubclasses().stream()
+                        .filter(s -> s.id().equals(draft.getSubclassId()))
+                        .findFirst().orElse(null);
+                    model.addAttribute("subclassDef", subclass);
+                    if (subclass != null && subclass.features() != null) {
+                        var subFeatures = subclass.features().stream()
+                            .filter(f -> f.level() <= draft.getLevel())
+                            .toList();
+                        model.addAttribute("subclassFeatures", subFeatures);
+                    }
+                }
+                // Chosen spells display - with full spell objects for tooltips
+                var chosenSpells = new ArrayList<SpellDefinition>();
                 for (var id : draft.getChosenCantrips()) {
                     var sp = spellRepository.findById(id);
-                    if (sp != null) spellNames.add(sp.getName() + " (cantrip)");
+                    if (sp != null) chosenSpells.add(sp);
                 }
                 for (var id : draft.getChosenSpells()) {
                     var sp = spellRepository.findById(id);
-                    if (sp != null) spellNames.add(sp.getName() + " (1st)");
+                    if (sp != null) chosenSpells.add(sp);
                 }
                 for (var id : draft.getSpellbookSpells()) {
                     var sp = spellRepository.findById(id);
-                    if (sp != null) spellNames.add(sp.getName() + " (spellbook)");
+                    if (sp != null) chosenSpells.add(sp);
+                }
+                model.addAttribute("chosenSpells", chosenSpells);
+
+                // Legacy spellNames for backwards compat
+                var spellNames = new ArrayList<String>();
+                for (var sp : chosenSpells) {
+                    String lvl = sp.getLevel() == 0 ? "cantrip" : ordinal(sp.getLevel());
+                    spellNames.add(sp.getName() + " (" + lvl + ")");
                 }
                 model.addAttribute("spellNames", spellNames);
 
-                // Chosen feat name
+                // Chosen feat name (Variant Human)
                 if (!draft.getChosenFeatId().isBlank()) {
                     var feat = featRepository.findById(draft.getChosenFeatId());
                     model.addAttribute("featName", feat != null ? feat.getName() : draft.getChosenFeatId());
                 }
+
+                // ASI summary for review
+                var asiSummary = new ArrayList<String>();
+                if (draft.getAsiChoices() != null) {
+                    for (var choice : draft.getAsiChoices()) {
+                        if ("feat".equals(choice.type())) {
+                            var feat = featRepository.findById(choice.featId());
+                            String featName = feat != null ? feat.getName() : choice.featId();
+                            asiSummary.add("Level " + choice.level() + ": " + featName + " (Feat)");
+                        } else if (choice.statIncreases() != null && !choice.statIncreases().isEmpty()) {
+                            var parts = new ArrayList<String>();
+                            choice.statIncreases().forEach((stat, bonus) ->
+                                parts.add(stat + " +" + bonus));
+                            asiSummary.add("Level " + choice.level() + ": " + String.join(", ", parts));
+                        }
+                    }
+                }
+                model.addAttribute("asiSummary", asiSummary);
             }
         }
     }
@@ -404,5 +584,12 @@ public class CharacterBuilderController {
 
     private String safeJson(Object o) {
         try { return objectMapper.writeValueAsString(o); } catch (Exception e) { return "[]"; }
+    }
+
+    private String ordinal(int n) {
+        return switch (n) {
+            case 1 -> "1st"; case 2 -> "2nd"; case 3 -> "3rd";
+            default -> n + "th";
+        };
     }
 }

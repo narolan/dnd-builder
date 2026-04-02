@@ -115,9 +115,23 @@
             Save DC: <strong th:text="${derived.spellSaveDC}"></strong> ·
             Attack: <strong th:text="'+' + ${derived.spellAttackBonus}"></strong><br>
             Slots: <span th:text="${derived.spellSlotSummary}"></span>
-            <div th:if="${!spellNames.isEmpty()}" style="margin-top:6px">
-              <th:block th:each="sn : ${spellNames}">
-                <span style="display:inline-block;background:rgba(201,164,64,.1);border:1px solid var(--border);border-radius:2px;padding:1px 7px;font-size:.8rem;margin:2px" th:text="${sn}"></span>
+            <div th:if="${chosenSpells != null and !chosenSpells.isEmpty()}" style="margin-top:8px">
+              <th:block th:each="spell : ${chosenSpells}">
+                <span class="spell-chip" th:data-spell-name="${spell.name}"
+                      th:data-spell-level="${spell.level}"
+                      th:data-spell-school="${spell.school}"
+                      th:data-spell-time="${spell.castingTime}"
+                      th:data-spell-range="${spell.range}"
+                      th:data-spell-duration="${spell.duration}"
+                      th:data-spell-components="${spell.components}"
+                      th:data-spell-conc="${spell.concentration}"
+                      th:data-spell-ritual="${spell.ritual}"
+                      th:data-spell-desc="${spell.description}">
+                  <span class="spell-chip-name" th:text="${spell.name}">Spell</span>
+                  <span class="spell-chip-level" th:text="${spell.level == 0} ? 'C' : ${spell.level}">1</span>
+                  <span th:if="${spell.concentration}" class="spell-chip-tag">C</span>
+                  <span th:if="${spell.ritual}" class="spell-chip-tag">R</span>
+                </span>
               </th:block>
             </div>
           </div>
@@ -150,15 +164,67 @@
         </div>
 
         <div th:if="${featName != null}" class="sheet-detail" style="margin-top:8px">
-          <div class="sheet-detail-title">Feat</div>
+          <div class="sheet-detail-title">Variant Human Feat</div>
           <div class="sheet-detail-body" th:text="${featName}"></div>
+        </div>
+
+        <div th:if="${!asiSummary.isEmpty()}" class="sheet-detail" style="margin-top:8px">
+          <div class="sheet-detail-title">Ability Score Improvements</div>
+          <div class="sheet-detail-body" style="font-size:.85rem;line-height:1.7">
+            <div th:each="entry : ${asiSummary}" th:text="${entry}"></div>
+          </div>
         </div>
       </div>
     </div>
 
+    <!-- Class Features Section -->
+    <div th:if="${classFeatures != null and !classFeatures.isEmpty()}" class="features-section" style="margin-top:24px;border-top:1px solid var(--border);padding-top:20px">
+      <div class="section-head">Class Features</div>
+      <div class="features-grid">
+        <th:block th:each="feature : ${classFeatures}">
+          <div class="feature-card">
+            <div class="feature-header">
+              <span class="feature-name" th:text="${feature.name()}">Feature</span>
+              <span class="feature-level" th:text="'Lvl ' + ${feature.level()}">Lvl 1</span>
+            </div>
+            <div class="feature-desc" th:text="${feature.description()}">Description</div>
+          </div>
+        </th:block>
+      </div>
+    </div>
+
+    <!-- Subclass Features Section -->
+    <div th:if="${subclassFeatures != null and !subclassFeatures.isEmpty()}" class="features-section" style="margin-top:16px">
+      <div class="section-head" th:text="${subclassDef != null} ? ${subclassDef.name()} + ' Features' : 'Subclass Features'">Subclass Features</div>
+      <div class="features-grid">
+        <th:block th:each="feature : ${subclassFeatures}">
+          <div class="feature-card subclass">
+            <div class="feature-header">
+              <span class="feature-name" th:text="${feature.name()}">Feature</span>
+              <span class="feature-level" th:text="'Lvl ' + ${feature.level()}">Lvl 3</span>
+            </div>
+            <div class="feature-desc" th:text="${feature.description()}">Description</div>
+          </div>
+        </th:block>
+      </div>
+    </div>
+
     <div style="margin-top:24px;border-top:1px solid var(--border);padding-top:20px">
+      <div class="section-head">Play Mode</div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px">
+        <a href="/play" class="btn btn-next" style="text-decoration:none;display:inline-block;padding:10px 28px">
+          ⚔ Combat Dashboard
+        </a>
+        <a href="/play/inventory" class="btn btn-prev" style="text-decoration:none;display:inline-block;padding:10px 28px">
+          🎒 Inventory
+        </a>
+      </div>
+
       <div class="section-head">Save &amp; Load</div>
       <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start">
+        <a href="/export/pdf" class="btn btn-next" style="text-decoration:none;display:inline-block;padding:10px 28px">
+          ↓ Download PDF
+        </a>
         <a href="/export" class="btn btn-export" style="text-decoration:none;display:inline-block;padding:10px 28px">
           ↓ Export JSON
         </a>

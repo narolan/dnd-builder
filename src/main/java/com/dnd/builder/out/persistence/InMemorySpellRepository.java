@@ -512,6 +512,626 @@ public class InMemorySpellRepository implements com.dnd.builder.core.port.out.Sp
             "Summon bestial spirit (air, land, or water). HP and attacks scale with slot level.",
             "druid","ranger"));
 
+        // ══ LEVEL 3 SPELLS ═══════════════════════════════════════════════════
+        list.add(s("animate_dead","Animate Dead",3,"Necromancy","1 minute","10 ft","Instantaneous",false,false,"V,S,M",
+            "Create undead servant from bones or corpse. Obeys your commands for 24 hours.",
+            "cleric","wizard"));
+        list.add(s("aura_of_vitality","Aura of Vitality",3,"Evocation","1 action","Self (30-ft)","Up to 1 min",true,false,"V",
+            "Healing aura; use bonus action to restore 2d6 HP to one creature within 30 ft.",
+            "paladin"));
+        list.add(s("beacon_of_hope","Beacon of Hope",3,"Abjuration","1 action","30 ft","Up to 1 min",true,false,"V,S",
+            "Targets have advantage on WIS saves and death saves; regain maximum HP from healing.",
+            "cleric"));
+        list.add(s("bestow_curse","Bestow Curse",3,"Necromancy","1 action","Touch","Up to 1 min",true,false,"V,S",
+            "WIS save or cursed with disadvantage on ability checks/saves, attacks, or other effect.",
+            "bard","cleric","wizard"));
+        list.add(s("blinding_smite","Blinding Smite",3,"Evocation","1 bonus action","Self","Up to 1 min",true,false,"V",
+            "Next weapon hit deals extra 3d8 radiant; CON save or blinded.",
+            "paladin"));
+        list.add(s("blink","Blink",3,"Transmutation","1 action","Self","1 minute",false,false,"V,S",
+            "Each turn, 50% chance to vanish to Ethereal Plane until start of next turn.",
+            "sorcerer","wizard"));
+        list.add(s("call_lightning","Call Lightning",3,"Conjuration","1 action","120 ft","Up to 10 min",true,false,"V,S",
+            "Storm cloud deals 3d10 lightning in 5-ft radius; DEX save for half. Repeat each turn.",
+            "druid"));
+        list.add(s("clairvoyance","Clairvoyance",3,"Divination","10 minutes","1 mile","Up to 10 min",true,false,"V,S,M",
+            "Create invisible sensor at a known location; see or hear through it.",
+            "bard","cleric","sorcerer","wizard"));
+        list.add(s("conjure_animals","Conjure Animals",3,"Conjuration","1 action","60 ft","Up to 1 hour",true,false,"V,S",
+            "Summon fey spirits as beasts (up to 8 CR 1/4, 4 CR 1/2, 2 CR 1, or 1 CR 2).",
+            "druid","ranger"));
+        list.add(s("counterspell","Counterspell",3,"Abjuration","1 reaction","60 ft","Instantaneous",false,false,"S",
+            "Interrupt a spell being cast. Auto-success if same level or lower; otherwise ability check.",
+            "sorcerer","warlock","wizard"));
+        list.add(s("create_food_water","Create Food and Water",3,"Conjuration","1 action","30 ft","Instantaneous",false,false,"V,S",
+            "Create 45 pounds of food and 30 gallons of water.",
+            "cleric","paladin"));
+        list.add(s("crusaders_mantle","Crusader's Mantle",3,"Evocation","1 action","Self (30-ft)","Up to 1 min",true,false,"V",
+            "Allies within 30 ft deal extra 1d4 radiant on weapon hits.",
+            "paladin"));
+        list.add(s("daylight","Daylight",3,"Evocation","1 action","60 ft","1 hour",false,false,"V,S",
+            "60-ft radius of bright light; dispels darkness of 3rd level or lower.",
+            "cleric","druid","paladin","ranger","sorcerer"));
+        list.add(s("dispel_magic","Dispel Magic",3,"Abjuration","1 action","120 ft","Instantaneous",false,false,"V,S",
+            "End spells on target. Auto-success for 3rd level or lower; otherwise ability check.",
+            "bard","cleric","druid","paladin","sorcerer","warlock","wizard"));
+        list.add(s("elemental_weapon","Elemental Weapon",3,"Transmutation","1 action","Touch","Up to 1 hour",true,false,"V,S",
+            "Weapon becomes +1 magic and deals extra 1d4 acid/cold/fire/lightning/thunder.",
+            "paladin"));
+        list.add(s("fear","Fear",3,"Illusion","1 action","Self (30-ft cone)","Up to 1 min",true,false,"V,S,M",
+            "WIS save or frightened and must Dash away. Save each turn while line of sight.",
+            "bard","sorcerer","warlock","wizard"));
+        list.add(s("feign_death","Feign Death",3,"Necromancy","1 action","Touch","1 hour",false,true,"V,S,M",
+            "Willing creature appears dead; blinded, incapacitated, resistant to all but psychic.",
+            "bard","cleric","druid","wizard"));
+        list.add(s("fireball","Fireball",3,"Evocation","1 action","150 ft","Instantaneous",false,false,"V,S,M",
+            "20-ft radius explosion; DEX save or 8d6 fire damage (half on save).",
+            "sorcerer","wizard"));
+        list.add(s("fly","Fly",3,"Transmutation","1 action","Touch","Up to 10 min",true,false,"V,S,M",
+            "Target gains 60-ft flying speed.",
+            "sorcerer","warlock","wizard"));
+        list.add(s("gaseous_form","Gaseous Form",3,"Transmutation","1 action","Touch","Up to 1 hour",true,false,"V,S,M",
+            "Target becomes misty cloud; fly 10 ft, resistant to nonmagical damage, can pass through cracks.",
+            "sorcerer","warlock","wizard"));
+        list.add(s("glyph_of_warding","Glyph of Warding",3,"Abjuration","1 hour","Touch","Until dispelled",false,false,"V,S,M",
+            "Inscribe a glyph that triggers a spell or explosion when conditions are met.",
+            "bard","cleric","wizard"));
+        list.add(s("haste","Haste",3,"Transmutation","1 action","30 ft","Up to 1 min",true,false,"V,S,M",
+            "Double speed, +2 AC, advantage on DEX saves, extra action (Attack/Dash/Disengage/Hide/Use).",
+            "sorcerer","wizard"));
+        list.add(s("hunger_of_hadar","Hunger of Hadar",3,"Conjuration","1 action","150 ft","Up to 1 min",true,false,"V,S,M",
+            "20-ft sphere of darkness; difficult terrain, 2d6 cold at start, 2d6 acid at end of turn.",
+            "warlock"));
+        list.add(s("hypnotic_pattern","Hypnotic Pattern",3,"Illusion","1 action","120 ft","Up to 1 min",true,false,"S,M",
+            "30-ft cube; WIS save or charmed, incapacitated, speed 0. Ends if damaged or shaken awake.",
+            "bard","sorcerer","warlock","wizard"));
+        list.add(s("leomund_tiny_hut","Leomund's Tiny Hut",3,"Evocation","1 minute","Self (10-ft)","8 hours",false,true,"V,S,M",
+            "Immobile dome protects up to 9 creatures; blocks spells and elements.",
+            "bard","wizard"));
+        list.add(s("lightning_bolt","Lightning Bolt",3,"Evocation","1 action","Self (100-ft line)","Instantaneous",false,false,"V,S,M",
+            "100-ft line; DEX save or 8d6 lightning damage (half on save).",
+            "sorcerer","wizard"));
+        list.add(s("magic_circle","Magic Circle",3,"Abjuration","1 minute","10 ft","1 hour",false,false,"V,S,M",
+            "10-ft cylinder protects against chosen creature type; can't enter, target, or charm creatures inside.",
+            "cleric","paladin","warlock","wizard"));
+        list.add(s("major_image","Major Image",3,"Illusion","1 action","120 ft","Up to 10 min",true,false,"V,S,M",
+            "Create illusion up to 20-ft cube with sound, smell, and temperature.",
+            "bard","sorcerer","warlock","wizard"));
+        list.add(s("mass_healing_word","Mass Healing Word",3,"Evocation","1 bonus action","60 ft","Instantaneous",false,false,"V",
+            "Up to 6 creatures regain 1d4 + spellcasting modifier HP.",
+            "cleric"));
+        list.add(s("meld_into_stone","Meld into Stone",3,"Transmutation","1 action","Touch","8 hours",false,true,"V,S",
+            "Step into stone surface large enough to contain you; expelled if stone is damaged.",
+            "cleric","druid"));
+        list.add(s("nondetection","Nondetection",3,"Abjuration","1 action","Touch","8 hours",false,false,"V,S,M",
+            "Target can't be targeted by divination magic or perceived by magical scrying.",
+            "bard","ranger","wizard"));
+        list.add(s("phantom_steed","Phantom Steed",3,"Illusion","1 minute","30 ft","1 hour",false,true,"V,S",
+            "Create quasi-real horse with 100-ft speed; fades over 1 minute if attacked.",
+            "wizard"));
+        list.add(s("plant_growth","Plant Growth",3,"Transmutation","1 action or 8 hours","150 ft","Instantaneous",false,false,"V,S",
+            "Action: 100-ft radius becomes overgrown (4 ft movement per 1 ft). 8 hours: enriches land.",
+            "bard","druid","ranger"));
+        list.add(s("protection_from_energy","Protection from Energy",3,"Abjuration","1 action","Touch","Up to 1 hour",true,false,"V,S",
+            "Target has resistance to one damage type: acid, cold, fire, lightning, or thunder.",
+            "cleric","druid","ranger","sorcerer","wizard"));
+        list.add(s("remove_curse","Remove Curse",3,"Abjuration","1 action","Touch","Instantaneous",false,false,"V,S",
+            "End all curses affecting the target. Doesn't remove cursed item, but allows unequipping.",
+            "cleric","paladin","warlock","wizard"));
+        list.add(s("revivify","Revivify",3,"Necromancy","1 action","Touch","Instantaneous",false,false,"V,S,M",
+            "Return creature dead less than 1 minute to life with 1 HP. Can't restore missing parts.",
+            "cleric","paladin"));
+        list.add(s("sending","Sending",3,"Evocation","1 action","Unlimited","1 round",false,false,"V,S,M",
+            "Send 25-word message to known creature on same plane; they can reply with 25 words.",
+            "bard","cleric","wizard"));
+        list.add(s("sleet_storm","Sleet Storm",3,"Conjuration","1 action","150 ft","Up to 1 min",true,false,"V,S,M",
+            "40-ft cylinder; heavily obscured, difficult terrain, DEX save or prone when entering.",
+            "druid","sorcerer","wizard"));
+        list.add(s("slow","Slow",3,"Transmutation","1 action","120 ft","Up to 1 min",true,false,"V,S,M",
+            "Up to 6 creatures; WIS save or -2 AC/DEX saves, can't use reactions, one attack only.",
+            "sorcerer","wizard"));
+        list.add(s("speak_with_dead","Speak with Dead",3,"Necromancy","1 action","10 ft","10 minutes",false,false,"V,S,M",
+            "Corpse answers up to 5 questions. Knows only what it knew in life; can't lie.",
+            "bard","cleric"));
+        list.add(s("speak_with_plants","Speak with Plants",3,"Transmutation","1 action","Self (30-ft)","10 minutes",false,false,"V,S",
+            "Plants can communicate; difficult terrain becomes passable, plants can perform tasks.",
+            "bard","druid","ranger"));
+        list.add(s("spirit_guardians","Spirit Guardians",3,"Conjuration","1 action","Self (15-ft)","Up to 10 min",true,false,"V,S,M",
+            "Spirits surround you; enemies in area take 3d8 radiant/necrotic, WIS save for half.",
+            "cleric"));
+        list.add(s("stinking_cloud","Stinking Cloud",3,"Conjuration","1 action","90 ft","Up to 1 min",true,false,"V,S,M",
+            "20-ft sphere; heavily obscured, CON save or lose action retching.",
+            "bard","sorcerer","wizard"));
+        list.add(s("tongues","Tongues",3,"Divination","1 action","Touch","1 hour",false,false,"V,M",
+            "Target understands any spoken language and can be understood by any creature.",
+            "bard","cleric","sorcerer","warlock","wizard"));
+        list.add(s("vampiric_touch","Vampiric Touch",3,"Necromancy","1 action","Self","Up to 1 min",true,false,"V,S",
+            "Melee spell attack; 3d6 necrotic, regain HP equal to half damage dealt.",
+            "warlock","wizard"));
+        list.add(s("water_breathing","Water Breathing",3,"Transmutation","1 action","30 ft","24 hours",false,true,"V,S,M",
+            "Up to 10 creatures can breathe underwater.",
+            "druid","ranger","sorcerer","wizard"));
+        list.add(s("water_walk","Water Walk",3,"Transmutation","1 action","30 ft","1 hour",false,true,"V,S,M",
+            "Up to 10 creatures can walk on liquid surfaces.",
+            "cleric","druid","ranger","sorcerer"));
+        list.add(s("wind_wall","Wind Wall",3,"Evocation","1 action","120 ft","Up to 1 min",true,false,"V,S,M",
+            "50-ft long, 15-ft high wall of wind; 3d8 bludgeoning, blocks arrows/gas/flying creatures.",
+            "druid","ranger"));
+
+        // ══ LEVEL 4 SPELLS ═══════════════════════════════════════════════════
+        list.add(s("arcane_eye","Arcane Eye",4,"Divination","1 action","30 ft","Up to 1 hour",true,false,"V,S,M",
+            "Create invisible, magical eye you can see through; 30-ft movement, 30-ft darkvision.",
+            "wizard"));
+        list.add(s("aura_of_life","Aura of Life",4,"Abjuration","1 action","Self (30-ft)","Up to 10 min",true,false,"V",
+            "Nonhostile creatures in aura have resistance to necrotic; regain 1 HP if at 0.",
+            "paladin"));
+        list.add(s("aura_of_purity","Aura of Purity",4,"Abjuration","1 action","Self (30-ft)","Up to 10 min",true,false,"V",
+            "Nonhostile creatures immune to disease, resistant to poison, advantage on saves vs conditions.",
+            "paladin"));
+        list.add(s("banishment","Banishment",4,"Abjuration","1 action","60 ft","Up to 1 min",true,false,"V,S,M",
+            "CHA save or banished to another plane. If native to current plane, returns when spell ends.",
+            "cleric","paladin","sorcerer","warlock","wizard"));
+        list.add(s("blight","Blight",4,"Necromancy","1 action","30 ft","Instantaneous",false,false,"V,S",
+            "8d8 necrotic damage, CON save for half. Plants have disadvantage and take max damage.",
+            "druid","sorcerer","warlock","wizard"));
+        list.add(s("compulsion","Compulsion",4,"Enchantment","1 action","30 ft","Up to 1 min",true,false,"V,S",
+            "WIS save or must move in direction you choose. Repeat save each turn.",
+            "bard"));
+        list.add(s("confusion","Confusion",4,"Enchantment","1 action","90 ft","Up to 1 min",true,false,"V,S,M",
+            "10-ft sphere; WIS save or roll d10 each turn to determine random action.",
+            "bard","druid","sorcerer","wizard"));
+        list.add(s("conjure_minor_elementals","Conjure Minor Elementals",4,"Conjuration","1 minute","90 ft","Up to 1 hour",true,false,"V,S",
+            "Summon elementals (8 CR 1/4, 4 CR 1/2, 2 CR 1, or 1 CR 2).",
+            "druid","wizard"));
+        list.add(s("conjure_woodland_beings","Conjure Woodland Beings",4,"Conjuration","1 action","60 ft","Up to 1 hour",true,false,"V,S,M",
+            "Summon fey creatures (8 CR 1/4, 4 CR 1/2, 2 CR 1, or 1 CR 2).",
+            "druid","ranger"));
+        list.add(s("control_water","Control Water",4,"Transmutation","1 action","300 ft","Up to 10 min",true,false,"V,S,M",
+            "Manipulate water: flood, part, redirect, or create whirlpool in 100-ft cube.",
+            "cleric","druid","wizard"));
+        list.add(s("death_ward","Death Ward",4,"Abjuration","1 action","Touch","8 hours",false,false,"V,S",
+            "First time target would drop to 0 HP, drop to 1 HP instead.",
+            "cleric","paladin"));
+        list.add(s("dimension_door","Dimension Door",4,"Conjuration","1 action","500 ft","Instantaneous",false,false,"V",
+            "Teleport self and one willing creature to a spot within range you can visualize.",
+            "bard","sorcerer","warlock","wizard"));
+        list.add(s("dominate_beast","Dominate Beast",4,"Enchantment","1 action","60 ft","Up to 1 min",true,false,"V,S",
+            "WIS save or beast is charmed and obeys your telepathic commands.",
+            "druid","sorcerer"));
+        list.add(s("evards_black_tentacles","Evard's Black Tentacles",4,"Conjuration","1 action","90 ft","Up to 1 min",true,false,"V,S,M",
+            "20-ft square; DEX save or restrained and 3d6 bludgeoning damage each turn.",
+            "wizard"));
+        list.add(s("fabricate","Fabricate",4,"Transmutation","10 minutes","120 ft","Instantaneous",false,false,"V,S",
+            "Convert raw materials into finished products. Requires proficiency for complex items.",
+            "wizard"));
+        list.add(s("fire_shield","Fire Shield",4,"Evocation","1 action","Self","10 minutes",false,false,"V,S,M",
+            "Resistance to cold or fire; creatures hitting you with melee take 2d8 of the other type.",
+            "wizard"));
+        list.add(s("freedom_of_movement","Freedom of Movement",4,"Abjuration","1 action","Touch","1 hour",false,false,"V,S,M",
+            "Target's movement unaffected by difficult terrain, spells, or restraints.",
+            "bard","cleric","druid","ranger"));
+        list.add(s("giant_insect","Giant Insect",4,"Transmutation","1 action","30 ft","Up to 10 min",true,false,"V,S",
+            "Transform up to 10 centipedes, 3 spiders, 5 wasps, or 1 scorpion into giant versions.",
+            "druid"));
+        list.add(s("greater_invisibility","Greater Invisibility",4,"Illusion","1 action","Touch","Up to 1 min",true,false,"V,S",
+            "Target becomes invisible. Doesn't end when they attack or cast spells.",
+            "bard","sorcerer","wizard"));
+        list.add(s("guardian_of_faith","Guardian of Faith",4,"Conjuration","1 action","30 ft","8 hours",false,false,"V",
+            "Spectral guardian; creatures within 10 ft take 20 radiant, DEX save for half. 60 HP total.",
+            "cleric"));
+        list.add(s("hallucinatory_terrain","Hallucinatory Terrain",4,"Illusion","10 minutes","300 ft","24 hours",false,false,"V,S,M",
+            "150-ft cube terrain appears different. Investigation check vs. spell save DC.",
+            "bard","druid","warlock","wizard"));
+        list.add(s("ice_storm","Ice Storm",4,"Evocation","1 action","300 ft","Instantaneous",false,false,"V,S,M",
+            "20-ft radius; 2d8 bludgeoning + 4d6 cold, DEX save for half. Difficult terrain for 1 round.",
+            "druid","sorcerer","wizard"));
+        list.add(s("locate_creature","Locate Creature",4,"Divination","1 action","Self","Up to 1 hour",true,false,"V,S,M",
+            "Sense direction to a specific creature within 1000 ft. Blocked by running water.",
+            "bard","cleric","druid","paladin","ranger","wizard"));
+        list.add(s("mordenkainens_faithful_hound","Mordenkainen's Faithful Hound",4,"Conjuration","1 action","30 ft","8 hours",false,false,"V,S,M",
+            "Phantom watchdog guards area; barks at hostiles, bites for 4d8 piercing.",
+            "wizard"));
+        list.add(s("mordenkainens_private_sanctum","Mordenkainen's Private Sanctum",4,"Abjuration","10 minutes","120 ft","24 hours",false,false,"V,S,M",
+            "Area up to 100-ft cube is secure from scrying, teleportation, and planar travel.",
+            "wizard"));
+        list.add(s("otilukes_resilient_sphere","Otiluke's Resilient Sphere",4,"Evocation","1 action","30 ft","Up to 1 min",true,false,"V,S,M",
+            "Enclose Large or smaller creature in shimmering sphere; immune to damage, can't leave.",
+            "wizard"));
+        list.add(s("phantasmal_killer","Phantasmal Killer",4,"Illusion","1 action","120 ft","Up to 1 min",true,false,"V,S",
+            "WIS save or frightened by nightmare; 4d10 psychic at end of each turn, WIS save to end.",
+            "wizard"));
+        list.add(s("polymorph","Polymorph",4,"Transmutation","1 action","60 ft","Up to 1 hour",true,false,"V,S,M",
+            "Transform creature into beast of same CR or lower. Reverts when HP drops to 0.",
+            "bard","druid","sorcerer","wizard"));
+        list.add(s("staggering_smite","Staggering Smite",4,"Evocation","1 bonus action","Self","Up to 1 min",true,false,"V",
+            "Next weapon hit deals extra 4d6 psychic; WIS save or disadvantage on attacks and saves.",
+            "paladin"));
+        list.add(s("stoneskin","Stoneskin",4,"Abjuration","1 action","Touch","Up to 1 hour",true,false,"V,S,M",
+            "Target has resistance to nonmagical bludgeoning, piercing, and slashing.",
+            "druid","ranger","sorcerer","wizard"));
+        list.add(s("stone_shape","Stone Shape",4,"Transmutation","1 action","Touch","Instantaneous",false,false,"V,S,M",
+            "Reshape a Medium or smaller stone object or a 5-ft cube of stone.",
+            "cleric","druid","wizard"));
+        list.add(s("wall_of_fire","Wall of Fire",4,"Evocation","1 action","120 ft","Up to 1 min",true,false,"V,S,M",
+            "60-ft wall or 20-ft ring; 5d8 fire to one side, 5d8 when entering or starting turn in wall.",
+            "druid","sorcerer","wizard"));
+
+        // ══ LEVEL 5 SPELLS ═══════════════════════════════════════════════════
+        list.add(s("animate_objects","Animate Objects",5,"Transmutation","1 action","120 ft","Up to 1 min",true,false,"V,S",
+            "Animate up to 10 nonmagical objects; they obey your commands and attack.",
+            "bard","sorcerer","wizard"));
+        list.add(s("antilife_shell","Antilife Shell",5,"Abjuration","1 action","Self (10-ft)","Up to 1 hour",true,false,"V,S",
+            "Barrier prevents living creatures from passing through or reaching you.",
+            "druid"));
+        list.add(s("awaken","Awaken",5,"Transmutation","8 hours","Touch","Instantaneous",false,false,"V,S,M",
+            "Grant beast or plant INT 10 and ability to speak; it becomes friendly to you.",
+            "bard","druid"));
+        list.add(s("banishing_smite","Banishing Smite",5,"Abjuration","1 bonus action","Self","Up to 1 min",true,false,"V",
+            "Next weapon hit deals extra 5d10 force; if target drops below 50 HP, banished.",
+            "paladin"));
+        list.add(s("bigbys_hand","Bigby's Hand",5,"Evocation","1 action","120 ft","Up to 1 min",true,false,"V,S,M",
+            "Create Large spectral hand; punch for 4d8, grapple, push, or block.",
+            "wizard"));
+        list.add(s("circle_of_power","Circle of Power",5,"Abjuration","1 action","Self (30-ft)","Up to 10 min",true,false,"V",
+            "Friendly creatures in aura have advantage on saves vs magic; save for half becomes save for none.",
+            "paladin"));
+        list.add(s("cloudkill","Cloudkill",5,"Conjuration","1 action","120 ft","Up to 10 min",true,false,"V,S",
+            "20-ft sphere of poisonous fog; 5d8 poison, CON save for half. Moves away 10 ft each turn.",
+            "sorcerer","wizard"));
+        list.add(s("commune","Commune",5,"Divination","1 minute","Self","1 minute",false,true,"V,S,M",
+            "Contact your deity for up to 3 yes-or-no questions.",
+            "cleric"));
+        list.add(s("commune_with_nature","Commune with Nature",5,"Divination","1 minute","Self","Instantaneous",false,true,"V,S",
+            "Learn about terrain, bodies of water, and creatures within 3 miles outdoors (300 ft underground).",
+            "druid","ranger"));
+        list.add(s("cone_of_cold","Cone of Cold",5,"Evocation","1 action","Self (60-ft cone)","Instantaneous",false,false,"V,S,M",
+            "60-ft cone; 8d8 cold damage, CON save for half. Kills creatures become frozen statues.",
+            "sorcerer","wizard"));
+        list.add(s("conjure_elemental","Conjure Elemental",5,"Conjuration","1 minute","90 ft","Up to 1 hour",true,false,"V,S,M",
+            "Summon CR 5 or lower elemental. Requires element source. Goes hostile if concentration breaks.",
+            "druid","wizard"));
+        list.add(s("contact_other_plane","Contact Other Plane",5,"Divination","1 minute","Self","1 minute",false,true,"V",
+            "Contact extraplanar entity for 5 questions. DC 15 INT save or take 6d6 psychic and go insane.",
+            "warlock","wizard"));
+        list.add(s("contagion","Contagion",5,"Necromancy","1 action","Touch","7 days",false,false,"V,S",
+            "Melee spell attack; target diseased. 3 failed CON saves makes disease permanent.",
+            "cleric","druid"));
+        list.add(s("creation","Creation",5,"Illusion","1 minute","30 ft","Special",false,false,"V,S,M",
+            "Create nonliving object from shadow. Duration depends on material (1 day stone, 1 hour iron).",
+            "sorcerer","wizard"));
+        list.add(s("destructive_wave","Destructive Wave",5,"Evocation","1 action","Self (30-ft)","Instantaneous",false,false,"V",
+            "30-ft radius; 5d6 thunder + 5d6 radiant/necrotic, CON save for half, knocked prone.",
+            "paladin"));
+        list.add(s("dispel_evil_good","Dispel Evil and Good",5,"Abjuration","1 action","Self","Up to 1 min",true,false,"V,S,M",
+            "+2 AC vs aberrations/celestials/elementals/fey/fiends/undead. Can dismiss or break enchantment.",
+            "cleric","paladin"));
+        list.add(s("dominate_person","Dominate Person",5,"Enchantment","1 action","60 ft","Up to 1 min",true,false,"V,S",
+            "WIS save or humanoid is charmed and obeys telepathic commands. Save with advantage if in combat.",
+            "bard","sorcerer","wizard"));
+        list.add(s("dream","Dream",5,"Illusion","1 minute","Special","8 hours",false,false,"V,S,M",
+            "Enter target's dreams. Can communicate or send nightmares (WIS save or 3d6 psychic, no rest benefit).",
+            "bard","warlock","wizard"));
+        list.add(s("flame_strike","Flame Strike",5,"Evocation","1 action","60 ft","Instantaneous",false,false,"V,S,M",
+            "10-ft cylinder; 4d6 fire + 4d6 radiant, DEX save for half.",
+            "cleric"));
+        list.add(s("geas","Geas",5,"Enchantment","1 minute","60 ft","30 days",false,false,"V",
+            "WIS save or must follow a command. Takes 5d10 psychic if acts against it. Can't harm itself.",
+            "bard","cleric","druid","paladin","wizard"));
+        list.add(s("greater_restoration","Greater Restoration",5,"Abjuration","1 action","Touch","Instantaneous",false,false,"V,S,M",
+            "End one: charm/petrify/curse/ability reduction/HP max reduction, or restore 1 exhaustion level.",
+            "bard","cleric","druid"));
+        list.add(s("hallow","Hallow",5,"Evocation","24 hours","Touch","Until dispelled",false,false,"V,S,M",
+            "60-ft radius becomes holy/unholy ground. Choose extra effect: courage, protection, tongues, etc.",
+            "cleric"));
+        list.add(s("hold_monster","Hold Monster",5,"Enchantment","1 action","90 ft","Up to 1 min",true,false,"V,S,M",
+            "WIS save or paralyzed. Save each turn to end. Works on any creature (not just humanoids).",
+            "bard","sorcerer","warlock","wizard"));
+        list.add(s("insect_plague","Insect Plague",5,"Conjuration","1 action","300 ft","Up to 10 min",true,false,"V,S,M",
+            "20-ft sphere of swarming locusts; 4d10 piercing, CON save for half. Difficult terrain.",
+            "cleric","druid","sorcerer"));
+        list.add(s("legend_lore","Legend Lore",5,"Divination","10 minutes","Self","Instantaneous",false,false,"V,S,M",
+            "Learn legendary information about a person, place, or object.",
+            "bard","cleric","wizard"));
+        list.add(s("mass_cure_wounds","Mass Cure Wounds",5,"Evocation","1 action","60 ft","Instantaneous",false,false,"V,S",
+            "Up to 6 creatures regain 3d8 + spellcasting modifier HP.",
+            "bard","cleric","druid"));
+        list.add(s("mislead","Mislead",5,"Illusion","1 action","Self","Up to 1 hour",true,false,"S",
+            "Become invisible and create illusory double you can see/speak through.",
+            "bard","wizard"));
+        list.add(s("modify_memory","Modify Memory",5,"Enchantment","1 action","30 ft","Up to 1 min",true,false,"V,S",
+            "WIS save or charmed. While charmed, can modify up to 10 minutes of memory.",
+            "bard","wizard"));
+        list.add(s("planar_binding","Planar Binding",5,"Abjuration","1 hour","60 ft","24 hours",false,false,"V,S,M",
+            "CHA save or celestial/elemental/fey/fiend is bound to serve you for the duration.",
+            "bard","cleric","druid","wizard"));
+        list.add(s("raise_dead","Raise Dead",5,"Necromancy","1 hour","Touch","Instantaneous",false,false,"V,S,M",
+            "Return creature dead less than 10 days to life. -4 penalty to rolls, reduced by 1 per long rest.",
+            "bard","cleric","paladin"));
+        list.add(s("rary_telepathic_bond","Rary's Telepathic Bond",5,"Divination","1 action","30 ft","1 hour",false,true,"V,S,M",
+            "Up to 8 willing creatures can communicate telepathically regardless of language or distance.",
+            "wizard"));
+        list.add(s("reincarnate","Reincarnate",5,"Transmutation","1 hour","Touch","Instantaneous",false,false,"V,S,M",
+            "Return creature dead less than 10 days to life in a new, random humanoid body.",
+            "druid"));
+        list.add(s("scrying","Scrying",5,"Divination","10 minutes","Self","Up to 10 min",true,false,"V,S,M",
+            "See and hear a specific creature on same plane. WIS save modified by familiarity.",
+            "bard","cleric","druid","warlock","wizard"));
+        list.add(s("seeming","Seeming",5,"Illusion","1 action","30 ft","8 hours",false,false,"V,S",
+            "Disguise any number of creatures within range. Investigation vs. spell save DC.",
+            "bard","sorcerer","wizard"));
+        list.add(s("telekinesis","Telekinesis",5,"Transmutation","1 action","60 ft","Up to 10 min",true,false,"V,S",
+            "Move creature or object up to 1000 lbs. Creatures contest STR vs. your spellcasting.",
+            "sorcerer","wizard"));
+        list.add(s("teleportation_circle","Teleportation Circle",5,"Conjuration","1 minute","10 ft","1 round",false,false,"V,M",
+            "Create portal to a permanent circle you know the sigil sequence for.",
+            "bard","sorcerer","wizard"));
+        list.add(s("tree_stride","Tree Stride",5,"Conjuration","1 action","Self","Up to 1 min",true,false,"V,S",
+            "Enter a tree and teleport to another tree of same kind within 500 ft.",
+            "druid","ranger"));
+        list.add(s("wall_of_force","Wall of Force",5,"Evocation","1 action","120 ft","Up to 10 min",true,false,"V,S,M",
+            "Create invisible wall of force up to 10 panels. Nothing can physically pass through.",
+            "wizard"));
+        list.add(s("wall_of_stone","Wall of Stone",5,"Evocation","1 action","120 ft","Up to 10 min",true,false,"V,S,M",
+            "Create nonmagical stone wall. Each 10-ft panel has AC 15 and 30 HP per inch.",
+            "druid","sorcerer","wizard"));
+
+        // ══ LEVEL 6 SPELLS ═══════════════════════════════════════════════════
+        list.add(s("arcane_gate","Arcane Gate",6,"Conjuration","1 action","500 ft","Up to 10 min",true,false,"V,S",
+            "Create linked teleportation portals within 500 ft; enter one, exit the other.",
+            "sorcerer","warlock","wizard"));
+        list.add(s("blade_barrier","Blade Barrier",6,"Evocation","1 action","90 ft","Up to 10 min",true,false,"V,S",
+            "Wall of spinning blades; 6d10 slashing, DEX save for half.",
+            "cleric"));
+        list.add(s("chain_lightning","Chain Lightning",6,"Evocation","1 action","150 ft","Instantaneous",false,false,"V,S,M",
+            "10d8 lightning to primary target; arcs to up to 3 secondary targets for 10d8 each.",
+            "sorcerer","wizard"));
+        list.add(s("circle_of_death","Circle of Death",6,"Necromancy","1 action","150 ft","Instantaneous",false,false,"V,S,M",
+            "60-ft sphere; 8d6 necrotic damage, CON save for half.",
+            "sorcerer","warlock","wizard"));
+        list.add(s("conjure_fey","Conjure Fey",6,"Conjuration","1 minute","90 ft","Up to 1 hour",true,false,"V,S",
+            "Summon fey creature of CR 6 or lower. Goes hostile if concentration breaks.",
+            "druid","warlock"));
+        list.add(s("contingency","Contingency",6,"Evocation","10 minutes","Self","10 days",false,false,"V,S,M",
+            "Store a spell of 5th level or lower to trigger when specific conditions are met.",
+            "wizard"));
+        list.add(s("create_undead","Create Undead",6,"Necromancy","1 minute","10 ft","Instantaneous",false,false,"V,S,M",
+            "Create 3 ghouls from corpses; obey your commands for 24 hours. Higher slots = stronger undead.",
+            "cleric","warlock","wizard"));
+        list.add(s("disintegrate","Disintegrate",6,"Transmutation","1 action","60 ft","Instantaneous",false,false,"V,S,M",
+            "DEX save or 10d6+40 force damage. Target reduced to 0 HP becomes fine dust.",
+            "sorcerer","wizard"));
+        list.add(s("eyebite","Eyebite",6,"Necromancy","1 action","Self","Up to 1 min",true,false,"V,S",
+            "Each turn, target one creature: WIS save or asleep, panicked, or sickened.",
+            "bard","sorcerer","warlock","wizard"));
+        list.add(s("find_the_path","Find the Path",6,"Divination","1 minute","Self","Up to 1 day",true,false,"V,S,M",
+            "Know shortest route to a location. Alerts you to hazards and traps.",
+            "bard","cleric","druid"));
+        list.add(s("flesh_to_stone","Flesh to Stone",6,"Transmutation","1 action","60 ft","Up to 1 min",true,false,"V,S,M",
+            "CON save or begin turning to stone. 3 failed saves = permanent petrification.",
+            "warlock","wizard"));
+        list.add(s("forbiddance","Forbiddance",6,"Abjuration","10 minutes","Touch","1 day",false,true,"V,S,M",
+            "40,000 sq ft area prevents planar travel; deals 5d10 radiant/necrotic to chosen creature types.",
+            "cleric"));
+        list.add(s("globe_of_invulnerability","Globe of Invulnerability",6,"Abjuration","1 action","Self (10-ft)","Up to 1 min",true,false,"V,S,M",
+            "10-ft barrier; spells of 5th level or lower can't affect anything inside.",
+            "sorcerer","wizard"));
+        list.add(s("guards_and_wards","Guards and Wards",6,"Abjuration","10 minutes","Touch","24 hours",false,false,"V,S,M",
+            "Ward up to 2,500 sq ft with fog, webs, doors, stairs illusions, and more.",
+            "bard","wizard"));
+        list.add(s("harm","Harm",6,"Necromancy","1 action","60 ft","Instantaneous",false,false,"V,S",
+            "14d6 necrotic damage, CON save for half. Can't reduce target below 1 HP.",
+            "cleric"));
+        list.add(s("heal","Heal",6,"Evocation","1 action","60 ft","Instantaneous",false,false,"V,S",
+            "Restore 70 HP and end blindness, deafness, and any diseases.",
+            "cleric","druid"));
+        list.add(s("heroes_feast","Heroes' Feast",6,"Conjuration","10 minutes","30 ft","Instantaneous",false,false,"V,S,M",
+            "Feast for 12; cures disease/poison, immunity to poison/fear, advantage on WIS saves, +2d10 max HP.",
+            "cleric","druid"));
+        list.add(s("magic_jar","Magic Jar",6,"Necromancy","1 minute","Self","Until dispelled",false,false,"V,S,M",
+            "Project your soul into a container; possess humanoids within 100 ft (CHA save).",
+            "wizard"));
+        list.add(s("mass_suggestion","Mass Suggestion",6,"Enchantment","1 action","60 ft","24 hours",false,false,"V,M",
+            "Up to 12 creatures; WIS save or follow a reasonable suggestion.",
+            "bard","sorcerer","warlock","wizard"));
+        list.add(s("move_earth","Move Earth",6,"Transmutation","1 action","120 ft","Up to 2 hours",true,false,"V,S,M",
+            "Reshape terrain in a 40-ft square; raise/lower by up to 10 ft per 10 minutes.",
+            "druid","sorcerer","wizard"));
+        list.add(s("ottos_irresistible_dance","Otto's Irresistible Dance",6,"Enchantment","1 action","30 ft","Up to 1 min",true,false,"V",
+            "Target must dance; speed 0, disadvantage on DEX saves and attacks. WIS save each turn to end.",
+            "bard","wizard"));
+        list.add(s("planar_ally","Planar Ally",6,"Conjuration","10 minutes","60 ft","Instantaneous",false,false,"V,S",
+            "Beseech an entity for a celestial, elemental, or fiend to aid you (payment required).",
+            "cleric"));
+        list.add(s("programmed_illusion","Programmed Illusion",6,"Illusion","1 action","120 ft","Until dispelled",false,false,"V,S,M",
+            "Create illusion up to 30-ft cube that activates when specific conditions are met.",
+            "bard","wizard"));
+        list.add(s("sunbeam","Sunbeam",6,"Evocation","1 action","Self (60-ft line)","Up to 1 min",true,false,"V,S,M",
+            "60-ft line; 6d8 radiant and blinded, CON save for half and not blinded. Action to repeat.",
+            "druid","sorcerer","wizard"));
+        list.add(s("transport_via_plants","Transport via Plants",6,"Conjuration","1 action","10 ft","1 round",false,false,"V,S",
+            "Create portal between two plants; any creature can use it to travel between them.",
+            "druid"));
+        list.add(s("true_seeing","True Seeing",6,"Divination","1 action","Touch","1 hour",false,false,"V,S,M",
+            "Target has truesight (120 ft), sees invisible, sees true form, perceives portals.",
+            "bard","cleric","sorcerer","warlock","wizard"));
+        list.add(s("wall_of_ice","Wall of Ice",6,"Evocation","1 action","120 ft","Up to 10 min",true,false,"V,S,M",
+            "Wall of 10 panels (10×10×1 ft); 10d6 cold when it appears, CON save for half.",
+            "wizard"));
+        list.add(s("wall_of_thorns","Wall of Thorns",6,"Conjuration","1 action","120 ft","Up to 10 min",true,false,"V,S,M",
+            "60-ft wall; 7d8 slashing when entering, DEX save for half. Difficult terrain.",
+            "druid"));
+        list.add(s("wind_walk","Wind Walk",6,"Transmutation","1 minute","30 ft","8 hours",false,false,"V,S,M",
+            "Up to 10 creatures become gaseous; 300-ft fly speed, resist nonmagical damage.",
+            "druid"));
+        list.add(s("word_of_recall","Word of Recall",6,"Conjuration","1 action","5 ft","Instantaneous",false,false,"V",
+            "Teleport you and 5 willing creatures to a sanctuary you designated.",
+            "cleric"));
+
+        // ══ LEVEL 7 SPELLS ═══════════════════════════════════════════════════
+        list.add(s("conjure_celestial","Conjure Celestial",7,"Conjuration","1 minute","90 ft","Up to 1 hour",true,false,"V,S",
+            "Summon celestial of CR 4 or lower; obeys your commands.",
+            "cleric"));
+        list.add(s("delayed_blast_fireball","Delayed Blast Fireball",7,"Evocation","1 action","150 ft","Up to 1 min",true,false,"V,S,M",
+            "Bead of fire grows by 1d6 each turn; up to 12d6 + 1d6 per turn fire, DEX save for half.",
+            "sorcerer","wizard"));
+        list.add(s("divine_word","Divine Word",7,"Evocation","1 bonus action","30 ft","Instantaneous",false,false,"V",
+            "Based on HP: 50 or less deafened, 40 or less blinded, 30 or less stunned, 20 or less killed.",
+            "cleric"));
+        list.add(s("etherealness","Etherealness",7,"Transmutation","1 action","Self","Up to 8 hours",false,false,"V,S",
+            "Step into Ethereal Plane; see into Material Plane 60 ft, can return as action.",
+            "bard","cleric","sorcerer","warlock","wizard"));
+        list.add(s("finger_of_death","Finger of Death",7,"Necromancy","1 action","60 ft","Instantaneous",false,false,"V,S",
+            "7d8 + 30 necrotic, CON save for half. Humanoid killed rises as zombie under your control.",
+            "sorcerer","warlock","wizard"));
+        list.add(s("fire_storm","Fire Storm",7,"Evocation","1 action","150 ft","Instantaneous",false,false,"V,S",
+            "Ten 10-ft cubes; 7d10 fire damage, DEX save for half. Can spare plant creatures.",
+            "cleric","druid","sorcerer"));
+        list.add(s("forcecage","Forcecage",7,"Evocation","1 action","100 ft","1 hour",false,false,"V,S,M",
+            "Create cage or box of force; CHA save (DC 13 + spell level) to teleport out.",
+            "bard","warlock","wizard"));
+        list.add(s("mirage_arcane","Mirage Arcane",7,"Illusion","10 minutes","Sight","10 days",false,false,"V,S",
+            "Terrain within 1-mile square looks and feels like different terrain.",
+            "bard","druid","wizard"));
+        list.add(s("mordenkainens_magnificent_mansion","Mordenkainen's Magnificent Mansion",7,"Conjuration","1 minute","300 ft","24 hours",false,false,"V,S,M",
+            "Extradimensional dwelling with 100 servants, banquet, and accommodations.",
+            "bard","wizard"));
+        list.add(s("mordenkainens_sword","Mordenkainen's Sword",7,"Evocation","1 action","60 ft","Up to 1 min",true,false,"V,S,M",
+            "Spectral sword; 3d10 force as bonus action, crits on 19-20.",
+            "bard","wizard"));
+        list.add(s("plane_shift","Plane Shift",7,"Conjuration","1 action","Touch","Instantaneous",false,false,"V,S,M",
+            "Transport up to 8 willing creatures to another plane, or banish unwilling (CHA save).",
+            "cleric","druid","sorcerer","warlock","wizard"));
+        list.add(s("prismatic_spray","Prismatic Spray",7,"Evocation","1 action","Self (60-ft cone)","Instantaneous",false,false,"V,S",
+            "60-ft cone; roll d8 for each creature: fire, acid, lightning, poison, cold, petrify, banish, or two effects.",
+            "sorcerer","wizard"));
+        list.add(s("project_image","Project Image",7,"Illusion","1 action","500 miles","Up to 1 day",true,false,"V,S,M",
+            "Create illusory double you can see/hear through and cast spells from.",
+            "bard","wizard"));
+        list.add(s("regenerate","Regenerate",7,"Transmutation","1 minute","Touch","1 hour",false,false,"V,S,M",
+            "Regain 4d8 + 15 HP, then 1 HP per minute. Regrow lost limbs in 2 minutes.",
+            "bard","cleric","druid"));
+        list.add(s("resurrection","Resurrection",7,"Necromancy","1 hour","Touch","Instantaneous",false,false,"V,S,M",
+            "Return creature dead up to 100 years to life. Restores missing body parts.",
+            "bard","cleric"));
+        list.add(s("reverse_gravity","Reverse Gravity",7,"Transmutation","1 action","100 ft","Up to 1 min",true,false,"V,S,M",
+            "50-ft radius cylinder; creatures fall upward 100 ft, DEX save to grab something.",
+            "druid","sorcerer","wizard"));
+        list.add(s("sequester","Sequester",7,"Transmutation","1 action","Touch","Until dispelled",false,false,"V,S,M",
+            "Willing creature or object becomes invisible and can't be located. Can set trigger.",
+            "wizard"));
+        list.add(s("simulacrum","Simulacrum",7,"Illusion","12 hours","Touch","Until dispelled",false,false,"V,S,M",
+            "Create duplicate of creature with half HP. Obeys your commands absolutely.",
+            "wizard"));
+        list.add(s("symbol","Symbol",7,"Abjuration","1 minute","Touch","Until dispelled",false,false,"V,S,M",
+            "Inscribe glyph that triggers: death, discord, fear, hopelessness, insanity, pain, sleep, or stunning.",
+            "bard","cleric","wizard"));
+        list.add(s("teleport","Teleport",7,"Conjuration","1 action","10 ft","Instantaneous",false,false,"V",
+            "Transport self and up to 8 creatures anywhere on same plane. Accuracy depends on familiarity.",
+            "bard","sorcerer","wizard"));
+
+        // ══ LEVEL 8 SPELLS ═══════════════════════════════════════════════════
+        list.add(s("antimagic_field","Antimagic Field",8,"Abjuration","1 action","Self (10-ft)","Up to 1 hour",true,false,"V,S,M",
+            "10-ft sphere; all magic is suppressed within.",
+            "cleric","wizard"));
+        list.add(s("antipathy_sympathy","Antipathy/Sympathy",8,"Enchantment","1 hour","60 ft","10 days",false,false,"V,S,M",
+            "Object repels or attracts a type of creature. WIS save to resist each hour.",
+            "druid","wizard"));
+        list.add(s("clone","Clone",8,"Necromancy","1 hour","Touch","Instantaneous",false,false,"V,S,M",
+            "Create inert clone. When original dies, soul transfers to clone if available.",
+            "wizard"));
+        list.add(s("control_weather","Control Weather",8,"Transmutation","10 minutes","Self (5-mile)","Up to 8 hours",true,false,"V,S,M",
+            "Change weather conditions within 5-mile radius over 1d4 × 10 minutes.",
+            "cleric","druid","wizard"));
+        list.add(s("demiplane","Demiplane",8,"Conjuration","1 action","60 ft","1 hour",false,false,"S",
+            "Create door to 30-ft empty room; can connect to a demiplane you've created before.",
+            "warlock","wizard"));
+        list.add(s("dominate_monster","Dominate Monster",8,"Enchantment","1 action","60 ft","Up to 1 hour",true,false,"V,S",
+            "WIS save or creature is charmed and obeys your telepathic commands.",
+            "bard","sorcerer","warlock","wizard"));
+        list.add(s("earthquake","Earthquake",8,"Evocation","1 action","500 ft","Up to 1 min",true,false,"V,S,M",
+            "100-ft radius; difficult terrain, fissures open, structures collapse.",
+            "cleric","druid","sorcerer"));
+        list.add(s("feeblemind","Feeblemind",8,"Enchantment","1 action","150 ft","Instantaneous",false,false,"V,S,M",
+            "4d6 psychic; INT save or INT and CHA become 1. Can't cast spells. Save every 30 days.",
+            "bard","druid","warlock","wizard"));
+        list.add(s("glibness","Glibness",8,"Transmutation","1 action","Self","1 hour",false,false,"V",
+            "CHA checks have minimum roll of 15. Magic can't determine if you're lying.",
+            "bard","warlock"));
+        list.add(s("holy_aura","Holy Aura",8,"Abjuration","1 action","Self (30-ft)","Up to 1 min",true,false,"V,S,M",
+            "Creatures in aura have advantage on saves, attackers have disadvantage, fiends are blinded.",
+            "cleric"));
+        list.add(s("incendiary_cloud","Incendiary Cloud",8,"Conjuration","1 action","150 ft","Up to 1 min",true,false,"V,S",
+            "20-ft sphere of smoke and embers; 10d8 fire, DEX save for half. Moves 10 ft each turn.",
+            "sorcerer","wizard"));
+        list.add(s("maze","Maze",8,"Conjuration","1 action","60 ft","Up to 10 min",true,false,"V,S",
+            "Banish creature to labyrinthine demiplane; DC 20 INT check to escape.",
+            "wizard"));
+        list.add(s("mind_blank","Mind Blank",8,"Abjuration","1 action","Touch","24 hours",false,false,"V,S",
+            "One creature immune to psychic damage, mind reading, divination, and charm.",
+            "bard","wizard"));
+        list.add(s("power_word_stun","Power Word Stun",8,"Enchantment","1 action","60 ft","Instantaneous",false,false,"V",
+            "Creature with 150 HP or less is stunned; CON save each turn to end.",
+            "bard","sorcerer","warlock","wizard"));
+        list.add(s("sunburst","Sunburst",8,"Evocation","1 action","150 ft","Instantaneous",false,false,"V,S,M",
+            "60-ft sphere; 12d6 radiant and blinded for 1 minute, CON save for half and not blinded.",
+            "druid","sorcerer","wizard"));
+        list.add(s("telepathy","Telepathy",8,"Evocation","1 action","Unlimited","24 hours",false,false,"V,S,M",
+            "Telepathic link with willing creature on same plane; communicate regardless of language.",
+            "wizard"));
+        list.add(s("tsunami","Tsunami",8,"Conjuration","1 minute","Sight","Up to 6 rounds",true,false,"V,S",
+            "300-ft long, 300-ft high wave; 6d10 bludgeoning per round, STR save for half.",
+            "druid"));
+
+        // ══ LEVEL 9 SPELLS ═══════════════════════════════════════════════════
+        list.add(s("astral_projection","Astral Projection",9,"Necromancy","1 hour","10 ft","Special",false,false,"V,S,M",
+            "Project yourself and up to 8 others into the Astral Plane. Silver cord connects to body.",
+            "cleric","warlock","wizard"));
+        list.add(s("foresight","Foresight",9,"Divination","1 minute","Touch","8 hours",false,false,"V,S,M",
+            "Target can't be surprised; advantage on attacks, checks, saves; attackers have disadvantage.",
+            "bard","druid","warlock","wizard"));
+        list.add(s("gate","Gate",9,"Conjuration","1 action","60 ft","Up to 1 min",true,false,"V,S,M",
+            "Portal to another plane. Can summon specific creature by name (no save).",
+            "cleric","sorcerer","wizard"));
+        list.add(s("imprisonment","Imprisonment",9,"Abjuration","1 minute","30 ft","Until dispelled",false,false,"V,S,M",
+            "WIS save or imprisoned: buried, chained, hedged, minimus, slumber, etc.",
+            "warlock","wizard"));
+        list.add(s("mass_heal","Mass Heal",9,"Evocation","1 action","60 ft","Instantaneous",false,false,"V,S",
+            "Restore 700 HP divided among any creatures within 60 ft. Cures diseases/blindness/deafness.",
+            "cleric"));
+        list.add(s("meteor_swarm","Meteor Swarm",9,"Evocation","1 action","1 mile","Instantaneous",false,false,"V,S",
+            "Four 40-ft spheres; 20d6 fire + 20d6 bludgeoning, DEX save for half.",
+            "sorcerer","wizard"));
+        list.add(s("power_word_heal","Power Word Heal",9,"Evocation","1 action","Touch","Instantaneous",false,false,"V,S",
+            "Restore all HP. End charm, frightened, paralyzed, stunned. Can stand for free.",
+            "bard"));
+        list.add(s("power_word_kill","Power Word Kill",9,"Enchantment","1 action","60 ft","Instantaneous",false,false,"V",
+            "Creature with 100 HP or less dies instantly. No save.",
+            "bard","sorcerer","warlock","wizard"));
+        list.add(s("prismatic_wall","Prismatic Wall",9,"Abjuration","1 action","60 ft","10 minutes",false,false,"V,S",
+            "Seven-layer wall; each layer has different effect and requires different spell to dispel.",
+            "wizard"));
+        list.add(s("shapechange","Shapechange",9,"Transmutation","1 action","Self","Up to 1 hour",true,false,"V,S,M",
+            "Transform into any creature of your CR or lower. Retain mental stats, gain physical stats.",
+            "druid","wizard"));
+        list.add(s("storm_of_vengeance","Storm of Vengeance",9,"Conjuration","1 action","Sight","Up to 1 min",true,false,"V,S",
+            "360-ft storm; each round different effect: thunder, acid rain, lightning, hail, etc.",
+            "druid"));
+        list.add(s("time_stop","Time Stop",9,"Transmutation","1 action","Self","Instantaneous",false,false,"V",
+            "Stop time for 1d4+1 turns. Ends if you affect another creature or its possessions.",
+            "sorcerer","wizard"));
+        list.add(s("true_polymorph","True Polymorph",9,"Transmutation","1 action","30 ft","Up to 1 hour",true,false,"V,S,M",
+            "Transform creature into another creature, or object into creature. Permanent if concentrated 1 hour.",
+            "bard","warlock","wizard"));
+        list.add(s("true_resurrection","True Resurrection",9,"Necromancy","1 hour","Touch","Instantaneous",false,false,"V,S,M",
+            "Return creature dead up to 200 years to life. Restores body completely if needed.",
+            "cleric","druid"));
+        list.add(s("weird","Weird",9,"Illusion","1 action","120 ft","Up to 1 min",true,false,"V,S",
+            "Each creature in 30-ft sphere: WIS save or frightened, 4d10 psychic per turn.",
+            "wizard"));
+        list.add(s("wish","Wish",9,"Conjuration","1 action","Self","Instantaneous",false,false,"V",
+            "Duplicate any 8th-level spell, or create other effects. Stress may prevent future Wishes.",
+            "sorcerer","wizard"));
+
         return list;
     }
 }

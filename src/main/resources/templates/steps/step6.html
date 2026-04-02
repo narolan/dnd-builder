@@ -4,36 +4,113 @@
 <div th:fragment="content">
 <form method="post" action="/step/6">
 <div class="panel">
-  <div class="panel-title">✦ Step 6 — Feat (Variant Human) ✦</div>
+  <div class="panel-title">✦ Step 6 — Ability Score Improvements &amp; Feats ✦</div>
   <div class="panel-body">
 
-    <div th:if="${isVariantHuman}">
+    <!-- Variant Human L1 Feat -->
+    <div th:if="${showVariantHumanFeat}" class="asi-section" style="margin-bottom:24px">
+      <div class="section-head">Variant Human Bonus Feat (Level 1)</div>
       <div class="info-box">As a Variant Human, choose one feat at 1st level.</div>
-      <div class="feat-grid">
-        <div class="feat-card">
-          <input type="radio" name="chosenFeatId" value="" id="feat_none" th:checked="${draft.chosenFeatId.isEmpty()}"/>
-          <label for="feat_none">
-            <span class="feat-name">No Feat (take +1 ASI instead)</span>
-            <span class="feat-desc">Skip the feat; no additional mechanical benefit.</span>
-          </label>
-        </div>
+      <select name="vh_feat" class="feat-select" style="width:100%;padding:10px;margin-top:8px">
+        <option value="">— Select a Feat —</option>
         <th:block th:each="feat : ${feats}">
-          <div class="feat-card">
-            <input type="radio" name="chosenFeatId" th:value="${feat.id}" th:id="'ft_'+${feat.id}"
-                   th:checked="${draft.chosenFeatId == feat.id}"/>
-            <label th:for="'ft_'+${feat.id}">
-              <span class="feat-name" th:text="${feat.name}">Feat</span>
-              <span class="feat-prereq" th:if="${!feat.prerequisite.isEmpty()}" th:text="'Prereq: '+${feat.prerequisite}">Prereq</span>
-              <span class="feat-desc" th:text="${feat.description}">Desc</span>
-            </label>
-          </div>
+          <option th:value="${feat.id}" th:text="${feat.name}"
+                  th:selected="${draft.chosenFeatId == feat.id}"></option>
         </th:block>
-      </div>
+      </select>
     </div>
 
-    <div th:unless="${isVariantHuman}" class="info-box" style="text-align:center">
-      Feats are available at level 4+ via Ability Score Improvement.
-      This step is only applicable for Variant Human characters at level 1.
+    <!-- ASI Choices for each level reached -->
+    <th:block th:if="${!asiLevels.isEmpty()}">
+      <div th:each="lvl : ${asiLevels}" class="asi-section" style="margin-bottom:24px;padding:16px;border:1px solid var(--border);border-radius:4px">
+        <div class="section-head" th:text="'Level ' + ${lvl} + ' — Ability Score Improvement'">Level 4 ASI</div>
+
+        <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:12px">
+          <!-- Choice: ASI or Feat -->
+          <div style="flex:1;min-width:200px">
+            <label style="display:block;margin-bottom:8px;color:var(--cream-dim)">Choose:</label>
+            <div style="display:flex;gap:12px">
+              <label class="radio-label">
+                <input type="radio" th:name="'asi_type_' + ${lvl}" value="asi"
+                       th:checked="${existingChoices.get(lvl) == null or existingChoices.get(lvl).type() == 'asi'}"
+                       th:onclick="'toggleAsiMode(' + ${lvl} + ', true)'"/>
+                <span>Ability Score Improvement</span>
+              </label>
+              <label class="radio-label">
+                <input type="radio" th:name="'asi_type_' + ${lvl}" value="feat"
+                       th:checked="${existingChoices.get(lvl) != null and existingChoices.get(lvl).type() == 'feat'}"
+                       th:onclick="'toggleAsiMode(' + ${lvl} + ', false)'"/>
+                <span>Feat</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- ASI Options (shown when ASI selected) -->
+        <div th:id="'asi_options_' + ${lvl}" class="asi-options" style="margin-top:16px">
+          <label style="display:block;margin-bottom:8px;color:var(--cream-dim)">ASI Mode:</label>
+          <div style="display:flex;gap:12px;margin-bottom:12px">
+            <label class="radio-label">
+              <input type="radio" th:name="'asi_mode_' + ${lvl}" value="single" checked
+                     th:onclick="'toggleSplitMode(' + ${lvl} + ', false)'"/>
+              <span>+2 to one ability</span>
+            </label>
+            <label class="radio-label">
+              <input type="radio" th:name="'asi_mode_' + ${lvl}" value="split"
+                     th:onclick="'toggleSplitMode(' + ${lvl} + ', true)'"/>
+              <span>+1 to two abilities</span>
+            </label>
+          </div>
+
+          <!-- Single +2 -->
+          <div th:id="'single_' + ${lvl}" class="asi-single">
+            <select th:name="'asi_single_' + ${lvl}" style="padding:8px;min-width:120px">
+              <option value="">— Select —</option>
+              <option th:each="stat : ${ {'STR','DEX','CON','INT','WIS','CHA'} }"
+                      th:value="${stat}" th:text="${stat}"></option>
+            </select>
+            <span style="color:var(--cream-dim);margin-left:8px">+2</span>
+          </div>
+
+          <!-- Split +1/+1 -->
+          <div th:id="'split_' + ${lvl}" class="asi-split" style="display:none">
+            <div style="display:flex;gap:16px;flex-wrap:wrap">
+              <div>
+                <select th:name="'asi_split1_' + ${lvl}" style="padding:8px;min-width:120px">
+                  <option value="">— Select —</option>
+                  <option th:each="stat : ${ {'STR','DEX','CON','INT','WIS','CHA'} }"
+                          th:value="${stat}" th:text="${stat}"></option>
+                </select>
+                <span style="color:var(--cream-dim);margin-left:8px">+1</span>
+              </div>
+              <div>
+                <select th:name="'asi_split2_' + ${lvl}" style="padding:8px;min-width:120px">
+                  <option value="">— Select —</option>
+                  <option th:each="stat : ${ {'STR','DEX','CON','INT','WIS','CHA'} }"
+                          th:value="${stat}" th:text="${stat}"></option>
+                </select>
+                <span style="color:var(--cream-dim);margin-left:8px">+1</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Feat Options (shown when Feat selected) -->
+        <div th:id="'feat_options_' + ${lvl}" class="feat-options" style="margin-top:16px;display:none">
+          <select th:name="'feat_' + ${lvl}" class="feat-select" style="width:100%;padding:10px">
+            <option value="">— Select a Feat —</option>
+            <th:block th:each="feat : ${feats}">
+              <option th:value="${feat.id}" th:text="${feat.name + (feat.prerequisite.isEmpty() ? '' : ' (Prereq: ' + feat.prerequisite + ')')}"></option>
+            </th:block>
+          </select>
+        </div>
+      </div>
+    </th:block>
+
+    <!-- No ASI message -->
+    <div th:if="${asiLevels.isEmpty() and !showVariantHumanFeat}" class="info-box" style="text-align:center">
+      No Ability Score Improvements available at your current level.
+      <br>ASIs are gained at levels 4, 8, 12, 16, and 19 (varies by class).
       <br><br><em style="color:var(--gold-dim)">Continuing to next step…</em>
     </div>
 
@@ -44,6 +121,31 @@
   </div>
 </div>
 </form>
+
+<script th:inline="javascript">
+function toggleAsiMode(lvl, isAsi) {
+  document.getElementById('asi_options_' + lvl).style.display = isAsi ? 'block' : 'none';
+  document.getElementById('feat_options_' + lvl).style.display = isAsi ? 'none' : 'block';
+}
+
+function toggleSplitMode(lvl, isSplit) {
+  document.getElementById('single_' + lvl).style.display = isSplit ? 'none' : 'block';
+  document.getElementById('split_' + lvl).style.display = isSplit ? 'flex' : 'none';
+}
+
+// Initialize visibility on page load
+document.addEventListener('DOMContentLoaded', function() {
+  /*[# th:each="lvl : ${asiLevels}"]*/
+  var lvl = /*[[${lvl}]]*/ 4;
+  var asiRadio = document.querySelector('input[name="asi_type_' + lvl + '"][value="asi"]');
+  if (asiRadio && asiRadio.checked) {
+    toggleAsiMode(lvl, true);
+  } else {
+    toggleAsiMode(lvl, false);
+  }
+  /*[/]*/
+});
+</script>
 </div>
 </body>
 </html>

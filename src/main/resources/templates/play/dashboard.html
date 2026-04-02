@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="theme-color" content="#c9a440"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<link rel="manifest" href="/manifest.json"/>
+<title th:text="${draft.characterName != null and !draft.characterName.isEmpty()} ? ${draft.characterName} + ' — Play Mode' : 'Play Mode'">Play Mode</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="/css/wizard.css"/>
+<style>
+.play-container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+.play-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+.play-title { font-family: 'Cinzel Decorative', serif; font-size: 1.5rem; color: var(--gold); }
+.play-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
+.play-card { background: linear-gradient(135deg, rgba(37,29,14,.95) 0%, rgba(25,20,10,.95) 100%); border: 1px solid var(--border); border-radius: 8px; padding: 20px; }
+.play-card-title { font-family: 'Cinzel', serif; font-size: 1rem; color: var(--gold); margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+
+/* HP Tracker */
+.hp-display { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; }
+.hp-current { font-family: 'Cinzel Decorative', serif; font-size: 3rem; color: var(--cream); }
+.hp-max { font-family: 'Cinzel', serif; font-size: 1.5rem; color: var(--cream-dim); }
+.hp-bar { height: 24px; background: rgba(0,0,0,.4); border-radius: 4px; overflow: hidden; margin-bottom: 16px; }
+.hp-fill { height: 100%; background: linear-gradient(90deg, #4a1010, #8b2020); transition: width .3s ease; }
+.hp-fill.healthy { background: linear-gradient(90deg, #2a5c2a, #4a9c4a); }
+.hp-fill.bloodied { background: linear-gradient(90deg, #7a4010, #c87020); }
+.temp-hp { font-size: .85rem; color: #80c0e0; margin-bottom: 12px; }
+.hp-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
+.hp-btn { padding: 8px 16px; border: 1px solid var(--border); background: rgba(0,0,0,.3); color: var(--cream); border-radius: 4px; cursor: pointer; font-family: 'Cinzel', serif; font-size: .85rem; transition: all .2s; }
+.hp-btn:hover { border-color: var(--gold); background: rgba(201,164,64,.1); }
+.hp-btn.heal { border-color: #4a9c4a; }
+.hp-btn.heal:hover { background: rgba(42,92,42,.3); }
+.hp-btn.damage { border-color: #c43030; }
+.hp-btn.damage:hover { background: rgba(139,32,32,.3); }
+
+/* Spell Slots */
+.slots-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 12px; }
+.slot-group { text-align: center; }
+.slot-level { font-family: 'Cinzel', serif; font-size: .75rem; color: var(--gold-dim); margin-bottom: 6px; }
+.slot-pips { display: flex; justify-content: center; gap: 4px; flex-wrap: wrap; }
+.slot-pip { width: 20px; height: 20px; border: 2px solid var(--gold-dim); border-radius: 50%; cursor: pointer; transition: all .2s; }
+.slot-pip.available { background: var(--gold); }
+.slot-pip:hover { transform: scale(1.1); border-color: var(--gold); }
+
+/* Dice Roller */
+.dice-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.dice-btn { padding: 12px 8px; border: 1px solid var(--border); background: rgba(0,0,0,.3); color: var(--cream); border-radius: 4px; cursor: pointer; font-family: 'Cinzel', serif; font-size: .9rem; text-align: center; transition: all .2s; }
+.dice-btn:hover { border-color: var(--gold); background: rgba(201,164,64,.1); transform: translateY(-2px); }
+.dice-result { margin-top: 16px; padding: 12px; background: rgba(0,0,0,.3); border-radius: 4px; text-align: center; min-height: 50px; }
+.dice-total { font-family: 'Cinzel Decorative', serif; font-size: 2rem; color: var(--gold); }
+.dice-breakdown { font-size: .8rem; color: var(--cream-dim); margin-top: 4px; }
+
+/* Stats Quick Reference */
+.stats-mini { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-bottom: 16px; }
+.stat-mini { text-align: center; padding: 8px; background: rgba(0,0,0,.2); border-radius: 4px; cursor: pointer; transition: all .2s; }
+.stat-mini:hover { background: rgba(201,164,64,.1); }
+.stat-mini-abbr { font-family: 'Cinzel', serif; font-size: .7rem; color: var(--gold-dim); }
+.stat-mini-mod { font-family: 'Cinzel', serif; font-size: 1.1rem; color: var(--cream); }
+
+/* Rest Buttons */
+.rest-buttons { display: flex; gap: 12px; margin-top: 16px; }
+.rest-btn { flex: 1; padding: 12px; border: 1px solid var(--border); background: rgba(0,0,0,.3); color: var(--cream); border-radius: 4px; cursor: pointer; font-family: 'Cinzel', serif; font-size: .85rem; transition: all .2s; }
+.rest-btn:hover { border-color: var(--gold); background: rgba(201,164,64,.1); }
+.rest-btn.short { border-color: #80a0c0; }
+.rest-btn.short:hover { background: rgba(80,120,160,.2); }
+.rest-btn.long { border-color: #80c080; }
+.rest-btn.long:hover { background: rgba(80,160,80,.2); }
+
+/* Death Saves */
+.death-saves { display: flex; gap: 24px; justify-content: center; margin: 16px 0; }
+.save-group { text-align: center; }
+.save-label { font-family: 'Cinzel', serif; font-size: .75rem; color: var(--gold-dim); margin-bottom: 8px; }
+.save-pips { display: flex; gap: 6px; justify-content: center; }
+.save-pip { width: 18px; height: 18px; border: 2px solid var(--border); border-radius: 50%; cursor: pointer; transition: all .2s; }
+.save-pip:hover { transform: scale(1.1); }
+.save-pip.success.filled { background: #4a9c4a; border-color: #6bc06b; }
+.save-pip.failure.filled { background: #c43030; border-color: #e05050; }
+.death-status { text-align: center; font-family: 'Cinzel', serif; font-size: .9rem; padding: 8px; border-radius: 4px; margin-top: 8px; }
+.death-status.stable { background: rgba(74,156,74,.2); color: #6bc06b; }
+.death-status.dead { background: rgba(196,48,48,.2); color: #e05050; }
+
+/* Conditions */
+.conditions-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.condition-tag { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: rgba(196,48,48,.2); border: 1px solid #c43030; border-radius: 16px; font-size: .8rem; color: var(--cream); }
+.condition-tag .rounds { font-size: .7rem; color: var(--gold-dim); }
+.condition-tag .remove { cursor: pointer; opacity: .7; }
+.condition-tag .remove:hover { opacity: 1; }
+.add-condition { display: flex; gap: 8px; }
+.add-condition select, .add-condition input { padding: 6px 10px; border: 1px solid var(--border); background: rgba(0,0,0,.3); color: var(--cream); border-radius: 4px; font-family: 'Crimson Text', serif; }
+.add-condition select { flex: 1; }
+.add-condition input { width: 60px; }
+
+/* Concentration */
+.concentration-box { padding: 12px; background: rgba(128,96,192,.15); border: 1px solid #8060c0; border-radius: 4px; margin-bottom: 12px; }
+.concentration-spell { font-family: 'Cinzel', serif; color: #c0a0f0; display: flex; justify-content: space-between; align-items: center; }
+.concentration-break { cursor: pointer; font-size: .8rem; color: #e05050; }
+
+/* Navigation */
+.play-nav { display: flex; gap: 12px; }
+.play-nav a { padding: 8px 16px; border: 1px solid var(--border); background: rgba(0,0,0,.3); color: var(--cream); border-radius: 4px; text-decoration: none; font-family: 'Cinzel', serif; font-size: .85rem; transition: all .2s; }
+.play-nav a:hover { border-color: var(--gold); background: rgba(201,164,64,.1); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="site-title">Character Forge</div>
+  <div class="site-sub">Play Mode — Session Dashboard</div>
+</header>
+
+<div class="play-container">
+  <div class="play-header">
+    <div class="play-title" th:text="${draft.characterName != null and !draft.characterName.isEmpty()} ? ${draft.characterName} : 'Character'">Character</div>
+    <div class="play-nav">
+      <a href="/play/inventory">Inventory</a>
+      <a href="/step/9">Character Sheet</a>
+    </div>
+  </div>
+
+  <div class="play-grid">
+    <!-- HP Tracker -->
+    <div class="play-card">
+      <div class="play-card-title">Hit Points</div>
+      <div class="hp-display">
+        <span class="hp-current" id="hp-current" th:text="${currentHp}">10</span>
+        <span class="hp-max">/ <span th:text="${derived.maxHitPoints}">10</span></span>
+      </div>
+      <div class="hp-bar">
+        <div class="hp-fill" id="hp-fill"
+             th:classappend="${currentHp >= derived.maxHitPoints / 2} ? 'healthy' : (${currentHp >= derived.maxHitPoints / 4} ? 'bloodied' : '')"
+             th:style="'width:' + (${currentHp * 100 / derived.maxHitPoints}) + '%'"></div>
+      </div>
+      <div class="temp-hp" th:if="${draft.tempHp > 0}">
+        Temp HP: <span id="temp-hp" th:text="${draft.tempHp}">0</span>
+      </div>
+      <div class="hp-buttons">
+        <button class="hp-btn heal" onclick="heal()">+ Heal</button>
+        <button class="hp-btn damage" onclick="damage()">- Damage</button>
+        <button class="hp-btn" onclick="setTempHp()">Temp HP</button>
+        <button class="hp-btn" onclick="useHitDie()">Hit Die</button>
+      </div>
+      <div class="rest-buttons">
+        <button class="rest-btn short" onclick="shortRest()">Short Rest</button>
+        <button class="rest-btn long" onclick="longRest()">Long Rest</button>
+      </div>
+    </div>
+
+    <!-- Death Saves (shown when at 0 HP) -->
+    <div class="play-card" id="death-saves-card" th:style="${draft.currentHp == 0} ? '' : 'display:none'">
+      <div class="play-card-title">Death Saving Throws</div>
+      <div class="death-saves">
+        <div class="save-group">
+          <div class="save-label">Successes</div>
+          <div class="save-pips">
+            <div class="save-pip success" th:classappend="${draft.deathSaveSuccesses >= 1} ? 'filled' : ''" onclick="deathSave('success', 1)"></div>
+            <div class="save-pip success" th:classappend="${draft.deathSaveSuccesses >= 2} ? 'filled' : ''" onclick="deathSave('success', 2)"></div>
+            <div class="save-pip success" th:classappend="${draft.deathSaveSuccesses >= 3} ? 'filled' : ''" onclick="deathSave('success', 3)"></div>
+          </div>
+        </div>
+        <div class="save-group">
+          <div class="save-label">Failures</div>
+          <div class="save-pips">
+            <div class="save-pip failure" th:classappend="${draft.deathSaveFailures >= 1} ? 'filled' : ''" onclick="deathSave('failure', 1)"></div>
+            <div class="save-pip failure" th:classappend="${draft.deathSaveFailures >= 2} ? 'filled' : ''" onclick="deathSave('failure', 2)"></div>
+            <div class="save-pip failure" th:classappend="${draft.deathSaveFailures >= 3} ? 'filled' : ''" onclick="deathSave('failure', 3)"></div>
+          </div>
+        </div>
+      </div>
+      <div class="death-status stable" th:if="${draft.stable}">Stabilized!</div>
+      <div class="death-status dead" th:if="${draft.dead}">Dead</div>
+      <div style="text-align:center;margin-top:12px">
+        <button class="hp-btn" onclick="resetDeathSaves()">Reset</button>
+      </div>
+    </div>
+
+    <!-- Conditions -->
+    <div class="play-card">
+      <div class="play-card-title">Conditions</div>
+      <div class="conditions-list" id="conditions-list">
+        <th:block th:each="cond : ${draft.conditions}">
+          <div class="condition-tag" th:data-id="${cond.id}" th:title="${cond.description}">
+            <span th:text="${cond.name}">Poisoned</span>
+            <span class="rounds" th:if="${cond.remainingRounds > 0}" th:text="'(' + ${cond.remainingRounds} + 'r)'"></span>
+            <span class="remove" onclick="removeCondition(this.parentElement.dataset.id)">×</span>
+          </div>
+        </th:block>
+        <div th:if="${draft.conditions.isEmpty()}" style="color:var(--cream-dim);font-size:.85rem">No active conditions</div>
+      </div>
+      <div class="add-condition">
+        <select id="condition-select">
+          <option value="">Add condition...</option>
+          <option value="Blinded">Blinded</option>
+          <option value="Charmed">Charmed</option>
+          <option value="Deafened">Deafened</option>
+          <option value="Frightened">Frightened</option>
+          <option value="Grappled">Grappled</option>
+          <option value="Incapacitated">Incapacitated</option>
+          <option value="Invisible">Invisible</option>
+          <option value="Paralyzed">Paralyzed</option>
+          <option value="Petrified">Petrified</option>
+          <option value="Poisoned">Poisoned</option>
+          <option value="Prone">Prone</option>
+          <option value="Restrained">Restrained</option>
+          <option value="Stunned">Stunned</option>
+          <option value="Unconscious">Unconscious</option>
+          <option value="Exhaustion">Exhaustion</option>
+        </select>
+        <input type="number" id="condition-rounds" placeholder="Rounds" min="-1" value="-1" title="Rounds (-1 = indefinite)"/>
+        <button class="hp-btn" onclick="addCondition()">+</button>
+      </div>
+      <div style="margin-top:12px;text-align:center">
+        <button class="hp-btn" onclick="tickConditions()" title="Reduce all condition durations by 1 round">Next Round</button>
+      </div>
+    </div>
+
+    <!-- Concentration -->
+    <div class="play-card" th:if="${derived.spellcaster}">
+      <div class="play-card-title">Concentration</div>
+      <div class="concentration-box" th:if="${draft.concentratingOn != null and !draft.concentratingOn.isEmpty()}">
+        <div class="concentration-spell">
+          <span th:text="${draft.concentratingOn}">Spell Name</span>
+          <span class="concentration-break" onclick="breakConcentration()">Break ×</span>
+        </div>
+      </div>
+      <div th:if="${draft.concentratingOn == null or draft.concentratingOn.isEmpty()}">
+        <div style="color:var(--cream-dim);font-size:.85rem;margin-bottom:12px">Not concentrating on any spell</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <select id="concentration-spell" style="flex:1;padding:6px 10px;border:1px solid var(--border);background:rgba(0,0,0,.3);color:var(--cream);border-radius:4px;font-family:'Crimson Text',serif">
+          <option value="">Select spell...</option>
+          <th:block th:each="spell : ${draft.chosenSpells}">
+            <option th:value="${spell}" th:text="${spell}">Spell</option>
+          </th:block>
+        </select>
+        <button class="hp-btn" onclick="setConcentration()">Set</button>
+      </div>
+    </div>
+
+    <!-- Spell Slots -->
+    <div class="play-card" th:if="${maxSlots != null}">
+      <div class="play-card-title">Spell Slots</div>
+      <div class="slots-grid">
+        <th:block th:each="i : ${#numbers.sequence(0, 8)}">
+          <div class="slot-group" th:if="${maxSlots[i] > 0}">
+            <div class="slot-level" th:text="'Lvl ' + (${i} + 1)">Lvl 1</div>
+            <div class="slot-pips">
+              <th:block th:each="j : ${#numbers.sequence(1, maxSlots[i])}">
+                <div class="slot-pip"
+                     th:classappend="${j > usedSlots[i]} ? 'available' : ''"
+                     th:data-level="${i + 1}"
+                     th:data-index="${j}"
+                     onclick="toggleSlot(this)"></div>
+              </th:block>
+            </div>
+          </div>
+        </th:block>
+      </div>
+    </div>
+
+    <!-- Quick Stats & Dice -->
+    <div class="play-card">
+      <div class="play-card-title">Quick Roll</div>
+      <div class="stats-mini">
+        <th:block th:each="stat : ${ {'STR','DEX','CON','INT','WIS','CHA'} }">
+          <div class="stat-mini" th:data-stat="${stat}" th:data-mod="${derived.modifiers.get(stat)}" onclick="rollStat(this)">
+            <div class="stat-mini-abbr" th:text="${stat}">STR</div>
+            <div class="stat-mini-mod" th:text="${derived.modifiers.get(stat) >= 0} ? '+' + ${derived.modifiers.get(stat)} : ${derived.modifiers.get(stat)}">+0</div>
+          </div>
+        </th:block>
+      </div>
+      <div class="dice-grid">
+        <button class="dice-btn" onclick="rollDice(4)">d4</button>
+        <button class="dice-btn" onclick="rollDice(6)">d6</button>
+        <button class="dice-btn" onclick="rollDice(8)">d8</button>
+        <button class="dice-btn" onclick="rollDice(10)">d10</button>
+        <button class="dice-btn" onclick="rollDice(12)">d12</button>
+        <button class="dice-btn" onclick="rollDice(20)">d20</button>
+        <button class="dice-btn" onclick="rollDice(100)">d100</button>
+        <button class="dice-btn" onclick="rollCustom()">Custom</button>
+      </div>
+      <div class="dice-result" id="dice-result">
+        <div class="dice-total">—</div>
+        <div class="dice-breakdown">Click to roll</div>
+      </div>
+    </div>
+
+    <!-- Core Stats Reference -->
+    <div class="play-card">
+      <div class="play-card-title">Combat Stats</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;text-align:center">
+        <div>
+          <div style="font-family:'Cinzel',serif;font-size:.7rem;color:var(--gold-dim)">AC</div>
+          <div style="font-family:'Cinzel Decorative',serif;font-size:1.8rem;color:var(--cream)" th:text="${derived.armorClass}">10</div>
+        </div>
+        <div>
+          <div style="font-family:'Cinzel',serif;font-size:.7rem;color:var(--gold-dim)">Initiative</div>
+          <div style="font-family:'Cinzel Decorative',serif;font-size:1.8rem;color:var(--cream)" th:text="${derived.initiative >= 0} ? '+' + ${derived.initiative} : ${derived.initiative}">+0</div>
+        </div>
+        <div>
+          <div style="font-family:'Cinzel',serif;font-size:.7rem;color:var(--gold-dim)">Speed</div>
+          <div style="font-family:'Cinzel Decorative',serif;font-size:1.8rem;color:var(--cream)" th:text="${derived.speed}">30</div>
+        </div>
+      </div>
+      <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+        <div style="font-family:'Cinzel',serif;font-size:.75rem;color:var(--gold-dim);margin-bottom:8px">Hit Dice</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-family:'Cinzel',serif;font-size:1.2rem;color:var(--cream)"
+                th:text="(${draft.level} - ${draft.usedHitDice}) + 'd' + ${derived.hitDice}">1d8</span>
+          <span style="font-size:.8rem;color:var(--cream-dim)" th:text="'(' + ${draft.level - draft.usedHitDice} + ' remaining)'"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script th:inline="javascript">
+const maxHp = /*[[${derived.maxHitPoints}]]*/ 10;
+
+function heal() {
+    const amount = prompt('Heal how much?', '1');
+    if (amount && !isNaN(amount)) {
+        fetch('/play/hp/heal', { method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body: 'amount=' + amount })
+            .then(r => r.json())
+            .then(data => updateHpDisplay(data.currentHp));
+    }
+}
+
+function damage() {
+    const amount = prompt('Take how much damage?', '1');
+    if (amount && !isNaN(amount)) {
+        fetch('/play/hp/damage', { method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body: 'amount=' + amount })
+            .then(r => r.json())
+            .then(data => {
+                updateHpDisplay(data.currentHp);
+                if (document.getElementById('temp-hp')) document.getElementById('temp-hp').textContent = data.tempHp;
+                // Show death saves card if at 0 HP
+                const deathCard = document.getElementById('death-saves-card');
+                if (deathCard) deathCard.style.display = data.currentHp === 0 ? '' : 'none';
+                // Check concentration if taking damage
+                if (parseInt(amount) > 0) {
+                    checkConcentration(parseInt(amount));
+                }
+            });
+    }
+}
+
+function setTempHp() {
+    const amount = prompt('Set temporary HP to:', '0');
+    if (amount && !isNaN(amount)) {
+        fetch('/play/hp/temp', { method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body: 'temp=' + amount })
+            .then(r => r.json())
+            .then(data => location.reload());
+    }
+}
+
+function useHitDie() {
+    fetch('/play/hitdice/use', { method: 'POST' })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                const roll = Math.floor(Math.random() * data.hitDie) + 1;
+                const healing = Math.max(1, roll + data.conMod);
+                alert(`Hit Die: ${roll} + ${data.conMod} CON = ${healing} HP healed\n${data.remaining} hit dice remaining`);
+                fetch('/play/hp/heal', { method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body: 'amount=' + healing })
+                    .then(r => r.json())
+                    .then(d => updateHpDisplay(d.currentHp));
+            } else {
+                alert(data.message);
+            }
+        });
+}
+
+function updateHpDisplay(hp) {
+    document.getElementById('hp-current').textContent = hp;
+    const pct = Math.min(100, (hp / maxHp) * 100);
+    const fill = document.getElementById('hp-fill');
+    fill.style.width = pct + '%';
+    fill.className = 'hp-fill ' + (pct >= 50 ? 'healthy' : pct >= 25 ? 'bloodied' : '');
+}
+
+function toggleSlot(el) {
+    const level = el.dataset.level;
+    const isAvailable = el.classList.contains('available');
+    const endpoint = isAvailable ? '/play/slots/use' : '/play/slots/restore';
+    fetch(endpoint, { method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body: 'level=' + level })
+        .then(() => location.reload());
+}
+
+function shortRest() {
+    if (confirm('Take a short rest?')) {
+        fetch('/play/rest/short', { method: 'POST' })
+            .then(r => r.json())
+            .then(data => { alert(data.message); location.reload(); });
+    }
+}
+
+function longRest() {
+    if (confirm('Take a long rest? This will restore HP and spell slots.')) {
+        fetch('/play/rest/long', { method: 'POST' })
+            .then(r => r.json())
+            .then(data => { alert(data.message); location.reload(); });
+    }
+}
+
+function rollDice(sides) {
+    const roll = Math.floor(Math.random() * sides) + 1;
+    showRoll(roll, `1d${sides}`);
+}
+
+function rollStat(el) {
+    const stat = el.dataset.stat;
+    const mod = parseInt(el.dataset.mod);
+    const roll = Math.floor(Math.random() * 20) + 1;
+    const total = roll + mod;
+    showRoll(total, `d20 (${roll}) ${mod >= 0 ? '+' : ''}${mod} ${stat}`);
+}
+
+function rollCustom() {
+    const input = prompt('Enter dice (e.g., 2d6+3):', '1d20');
+    if (!input) return;
+    const match = input.match(/(\d*)d(\d+)([+-]\d+)?/i);
+    if (!match) { alert('Invalid format'); return; }
+    const count = parseInt(match[1]) || 1;
+    const sides = parseInt(match[2]);
+    const bonus = parseInt(match[3]) || 0;
+    let total = bonus;
+    const rolls = [];
+    for (let i = 0; i < count; i++) {
+        const r = Math.floor(Math.random() * sides) + 1;
+        rolls.push(r);
+        total += r;
+    }
+    showRoll(total, `${count}d${sides}${bonus ? (bonus > 0 ? '+' : '') + bonus : ''} = [${rolls.join(', ')}]${bonus ? (bonus > 0 ? '+' : '') + bonus : ''}`);
+}
+
+function showRoll(total, breakdown) {
+    const el = document.getElementById('dice-result');
+    el.innerHTML = `<div class="dice-total">${total}</div><div class="dice-breakdown">${breakdown}</div>`;
+    el.style.animation = 'none';
+    el.offsetHeight;
+    el.style.animation = 'pulse .3s ease';
+}
+
+// ── Death Saves ────────────────────────────────────────────────────────────
+function deathSave(type, target) {
+    const endpoint = type === 'success' ? '/play/deathsaves/success' : '/play/deathsaves/failure';
+    fetch(endpoint, { method: 'POST' })
+        .then(r => r.json())
+        .then(data => {
+            // Update pips
+            document.querySelectorAll('.save-pip.success').forEach((pip, i) => {
+                pip.classList.toggle('filled', i < data.successes);
+            });
+            document.querySelectorAll('.save-pip.failure').forEach((pip, i) => {
+                pip.classList.toggle('filled', i < data.failures);
+            });
+            if (data.stable) alert('You are stabilized!');
+            if (data.dead) alert('Your character has died.');
+        });
+}
+
+function resetDeathSaves() {
+    fetch('/play/deathsaves/reset', { method: 'POST' })
+        .then(() => {
+            document.querySelectorAll('.save-pip').forEach(pip => pip.classList.remove('filled'));
+        });
+}
+
+// ── Conditions ─────────────────────────────────────────────────────────────
+function addCondition() {
+    const select = document.getElementById('condition-select');
+    const name = select.value;
+    if (!name) return;
+    const rounds = parseInt(document.getElementById('condition-rounds').value) || -1;
+
+    fetch('/play/conditions/add', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: `name=${encodeURIComponent(name)}&rounds=${rounds}`
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        }
+    });
+    select.value = '';
+}
+
+function removeCondition(conditionId) {
+    fetch('/play/conditions/remove', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'conditionId=' + conditionId
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            document.querySelector(`.condition-tag[data-id="${conditionId}"]`).remove();
+            if (document.querySelectorAll('.condition-tag').length === 0) {
+                document.getElementById('conditions-list').innerHTML = '<div style="color:var(--cream-dim);font-size:.85rem">No active conditions</div>';
+            }
+        }
+    });
+}
+
+function tickConditions() {
+    fetch('/play/conditions/tick', { method: 'POST' })
+        .then(r => r.json())
+        .then(data => {
+            if (data.expired.length > 0) {
+                alert('Conditions expired: ' + data.expired.join(', '));
+            }
+            location.reload();
+        });
+}
+
+// ── Concentration ──────────────────────────────────────────────────────────
+function setConcentration() {
+    const spell = document.getElementById('concentration-spell').value;
+    if (!spell) return;
+
+    fetch('/play/concentration/set', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'spell=' + encodeURIComponent(spell)
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) location.reload();
+    });
+}
+
+function breakConcentration() {
+    if (!confirm('Break concentration?')) return;
+    fetch('/play/concentration/break', { method: 'POST' })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) location.reload();
+        });
+}
+
+function checkConcentration(damage) {
+    fetch(`/play/concentration/check?damage=${damage}`)
+        .then(r => r.json())
+        .then(data => {
+            if (data.required) {
+                const result = confirm(
+                    `Concentration check required!\n\n` +
+                    `Spell: ${data.spell}\n` +
+                    `DC: ${data.dc}\n` +
+                    `Your CON save bonus: ${data.bonus >= 0 ? '+' : ''}${data.bonus}\n\n` +
+                    `Did you pass? (OK = passed, Cancel = failed)`
+                );
+                if (!result) {
+                    breakConcentration();
+                }
+            }
+        });
+}
+
+// Register service worker
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>

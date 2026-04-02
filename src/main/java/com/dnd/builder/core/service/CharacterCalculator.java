@@ -64,7 +64,10 @@ public class CharacterCalculator {
         // ── 1. Final scores ──────────────────────────────────────────────────
         var finalScores = new LinkedHashMap<String, Integer>();
         for (var entry : draft.getBaseScores().entrySet()) {
-            finalScores.put(entry.getKey(), entry.getValue() + getRacialBonus(draft, entry.getKey()));
+            int base = entry.getValue();
+            int racial = getRacialBonus(draft, entry.getKey());
+            int asi = getAsiBonus(draft, entry.getKey());
+            finalScores.put(entry.getKey(), Math.min(20, base + racial + asi)); // Cap at 20
         }
         ds.setFinalScores(finalScores);
 
@@ -230,6 +233,36 @@ public class CharacterCalculator {
     }
 
     public static int modifier(int score) { return (score - 10) / 2; }
+
+    /** Sum of all ASI bonuses from asiChoices for a given stat */
+    public int getAsiBonus(CharacterDraft draft, String statKey) {
+        int bonus = 0;
+        if (draft.getAsiChoices() != null) {
+            for (var choice : draft.getAsiChoices()) {
+                if (choice.statIncreases() != null) {
+                    bonus += choice.statIncreases().getOrDefault(statKey, 0);
+                }
+            }
+        }
+        return bonus;
+    }
+
+    /** Get ASI levels the character has reached based on class and current level */
+    public List<Integer> getAvailableAsiLevels(CharacterDraft draft) {
+        var classDef = classRepository.findById(draft.getCharacterClass());
+        if (classDef == null || classDef.getAsiLevels() == null) {
+            return List.of();
+        }
+        return classDef.getAsiLevels().stream()
+            .filter(lvl -> lvl <= draft.getLevel())
+            .toList();
+    }
+
+    /** Check if character has made ASI choice for a given level */
+    public boolean hasAsiChoiceForLevel(CharacterDraft draft, int level) {
+        if (draft.getAsiChoices() == null) return false;
+        return draft.getAsiChoices().stream().anyMatch(c -> c.level() == level);
+    }
 
     private String ordinal(int n) {
         return switch (n) {

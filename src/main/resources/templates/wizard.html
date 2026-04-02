@@ -3,6 +3,13 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="theme-color" content="#c9a440"/>
+<meta name="description" content="Build and manage D&D 5e characters step-by-step"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Character Forge"/>
+<link rel="manifest" href="/manifest.json"/>
+<link rel="apple-touch-icon" href="/icons/icon-192.svg"/>
 <title th:text="'Character Forge — Step ' + ${step} + ' of ' + ${totalSteps}">Character Forge</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet"/>
@@ -553,6 +560,210 @@ rippleStyle.textContent = `
 `;
 document.head.appendChild(rippleStyle);
 
+// ─── Spell Tooltip System ──────────────────────────────────────────────────────
+const SpellTooltip = {
+    tooltip: null,
+    init() {
+        if (this.tooltip) return;
+        this.tooltip = document.createElement('div');
+        this.tooltip.id = 'spell-tooltip';
+        this.tooltip.style.cssText = `
+            position: fixed; z-index: 10000; max-width: 380px; padding: 16px;
+            background: linear-gradient(135deg, #1a1408 0%, #251d0e 100%);
+            border: 2px solid var(--gold); border-radius: 8px;
+            box-shadow: 0 8px 32px rgba(0,0,0,.8), inset 0 1px 0 rgba(201,164,64,.2);
+            font-family: 'Crimson Text', serif; font-size: .95rem; color: var(--cream);
+            opacity: 0; pointer-events: none; transition: opacity .2s ease;
+            backdrop-filter: blur(10px);
+        `;
+        document.body.appendChild(this.tooltip);
+    },
+    show(el, e) {
+        this.init();
+        const name = el.dataset.spellName || 'Unknown';
+        const level = el.dataset.spellLevel;
+        const school = el.dataset.spellSchool || '';
+        const time = el.dataset.spellTime || '';
+        const range = el.dataset.spellRange || '';
+        const duration = el.dataset.spellDuration || '';
+        const components = el.dataset.spellComponents || '';
+        const conc = el.dataset.spellConc === 'true';
+        const ritual = el.dataset.spellRitual === 'true';
+        const desc = el.dataset.spellDesc || 'No description available.';
+
+        const levelText = level === '0' ? 'Cantrip' : `Level ${level}`;
+        const tags = [];
+        if (conc) tags.push('<span class="tt-tag conc">Concentration</span>');
+        if (ritual) tags.push('<span class="tt-tag ritual">Ritual</span>');
+
+        this.tooltip.innerHTML = `
+            <div class="tt-header">
+                <span class="tt-name">${name}</span>
+                <span class="tt-level">${levelText}</span>
+            </div>
+            <div class="tt-school">${school}</div>
+            ${tags.length ? '<div class="tt-tags">' + tags.join('') + '</div>' : ''}
+            <div class="tt-stats">
+                <div><strong>Casting Time:</strong> ${time}</div>
+                <div><strong>Range:</strong> ${range}</div>
+                <div><strong>Duration:</strong> ${duration}</div>
+                <div><strong>Components:</strong> ${components}</div>
+            </div>
+            <div class="tt-desc">${desc}</div>
+        `;
+
+        // Position tooltip
+        const rect = el.getBoundingClientRect();
+        const ttRect = this.tooltip.getBoundingClientRect();
+        let left = rect.left + rect.width / 2 - 190;
+        let top = rect.bottom + 10;
+
+        // Keep on screen
+        if (left < 10) left = 10;
+        if (left + 380 > window.innerWidth) left = window.innerWidth - 390;
+        if (top + 300 > window.innerHeight) top = rect.top - 310;
+
+        this.tooltip.style.left = left + 'px';
+        this.tooltip.style.top = top + 'px';
+        this.tooltip.style.opacity = '1';
+    },
+    hide() {
+        if (this.tooltip) this.tooltip.style.opacity = '0';
+    }
+};
+
+// Attach tooltip events to spell chips
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.spell-chip').forEach(chip => {
+        chip.addEventListener('mouseenter', (e) => SpellTooltip.show(chip, e));
+        chip.addEventListener('mouseleave', () => SpellTooltip.hide());
+        chip.addEventListener('click', (e) => {
+            e.preventDefault();
+            SpellTooltip.show(chip, e);
+            setTimeout(() => SpellTooltip.hide(), 5000);
+        });
+    });
+});
+
+// Add tooltip styles
+const tooltipStyles = document.createElement('style');
+tooltipStyles.textContent = `
+    .spell-chip {
+        display: inline-flex; align-items: center; gap: 6px;
+        background: linear-gradient(135deg, rgba(201,164,64,.15) 0%, rgba(201,164,64,.05) 100%);
+        border: 1px solid var(--border); border-radius: 4px;
+        padding: 4px 10px; margin: 3px; cursor: pointer;
+        transition: all .2s ease; position: relative;
+    }
+    .spell-chip:hover {
+        background: linear-gradient(135deg, rgba(201,164,64,.25) 0%, rgba(201,164,64,.1) 100%);
+        border-color: var(--gold); transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(201,164,64,.2);
+    }
+    .spell-chip-name { font-family: 'Cinzel', serif; font-size: .8rem; color: var(--cream); }
+    .spell-chip-level {
+        font-family: 'Cinzel', serif; font-size: .65rem; font-weight: 700;
+        background: var(--gold-dim); color: var(--bg); padding: 1px 5px;
+        border-radius: 2px; min-width: 14px; text-align: center;
+    }
+    .spell-chip-tag {
+        font-size: .6rem; font-weight: 700; padding: 1px 4px;
+        border-radius: 2px; background: rgba(139,120,60,.3);
+        color: var(--gold); text-transform: uppercase;
+    }
+
+    #spell-tooltip .tt-header {
+        display: flex; justify-content: space-between; align-items: center;
+        border-bottom: 1px solid var(--border); padding-bottom: 8px; margin-bottom: 8px;
+    }
+    #spell-tooltip .tt-name {
+        font-family: 'Cinzel Decorative', serif; font-size: 1.1rem;
+        color: var(--gold); font-weight: 700;
+    }
+    #spell-tooltip .tt-level {
+        font-family: 'Cinzel', serif; font-size: .75rem; color: var(--cream-dim);
+        background: rgba(201,164,64,.15); padding: 2px 8px; border-radius: 3px;
+    }
+    #spell-tooltip .tt-school {
+        font-style: italic; color: var(--gold-dim); font-size: .85rem; margin-bottom: 8px;
+    }
+    #spell-tooltip .tt-tags { margin-bottom: 10px; }
+    #spell-tooltip .tt-tag {
+        display: inline-block; font-size: .7rem; font-weight: 600;
+        padding: 2px 8px; border-radius: 3px; margin-right: 6px;
+        text-transform: uppercase; letter-spacing: .05em;
+    }
+    #spell-tooltip .tt-tag.conc { background: rgba(180,100,30,.3); color: #e8a040; }
+    #spell-tooltip .tt-tag.ritual { background: rgba(80,140,180,.3); color: #80c0e0; }
+    #spell-tooltip .tt-stats {
+        display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px;
+        font-size: .85rem; color: var(--cream-dim); margin-bottom: 12px;
+        padding: 10px; background: rgba(0,0,0,.2); border-radius: 4px;
+    }
+    #spell-tooltip .tt-stats strong { color: var(--gold-dim); }
+    #spell-tooltip .tt-desc {
+        font-size: .9rem; line-height: 1.5; color: var(--cream);
+        max-height: 150px; overflow-y: auto; padding-right: 8px;
+    }
+    #spell-tooltip .tt-desc::-webkit-scrollbar { width: 4px; }
+    #spell-tooltip .tt-desc::-webkit-scrollbar-thumb { background: var(--gold-dim); border-radius: 2px; }
+
+    /* Feature Cards */
+    .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 12px;
+        margin-top: 12px;
+    }
+    .feature-card {
+        background: linear-gradient(135deg, rgba(201,164,64,.08) 0%, rgba(201,164,64,.02) 100%);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 12px 14px;
+        transition: all .2s ease;
+    }
+    .feature-card:hover {
+        border-color: var(--gold-dim);
+        box-shadow: 0 2px 12px rgba(201,164,64,.15);
+    }
+    .feature-card.subclass {
+        background: linear-gradient(135deg, rgba(100,140,200,.08) 0%, rgba(100,140,200,.02) 100%);
+    }
+    .feature-card.subclass:hover {
+        border-color: rgba(100,140,200,.5);
+        box-shadow: 0 2px 12px rgba(100,140,200,.15);
+    }
+    .feature-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 6px;
+    }
+    .feature-card .feature-name {
+        font-family: 'Cinzel', serif;
+        font-size: .9rem;
+        font-weight: 600;
+        color: var(--gold);
+    }
+    .feature-level {
+        font-family: 'Cinzel', serif;
+        font-size: .65rem;
+        font-weight: 600;
+        background: rgba(201,164,64,.2);
+        color: var(--gold-dim);
+        padding: 2px 8px;
+        border-radius: 3px;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+    }
+    .feature-desc {
+        font-size: .85rem;
+        color: var(--cream-dim);
+        line-height: 1.5;
+    }
+`;
+document.head.appendChild(tooltipStyles);
+
 // ─── Auto-save Indicator (visual only) ─────────────────────────────────────────
 let saveIndicator = null;
 function showSaveIndicator() {
@@ -585,6 +796,15 @@ document.querySelectorAll('.step-dot').forEach((dot, i) => {
 });
 
 /*]]>*/
+
+// Register service worker for PWA
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+            .then(reg => console.log('SW registered:', reg.scope))
+            .catch(err => console.log('SW registration failed:', err));
+    });
+}
 </script>
 </body>
 </html>

@@ -373,4 +373,302 @@ class InMemoryClassRepositoryTest {
         assertNotNull(repository.findById("warlock"));
         assertNotNull(repository.findById("wizard"));
     }
+
+    @Nested
+    @DisplayName("Half Caster Spell Slots")
+    class HalfCasterSlots {
+
+        @Test
+        @DisplayName("Level 1 half caster has no slots")
+        void level1NoSlots() {
+            int[] slots = ClassRepository.halfCasterSlots(1);
+            assertEquals(0, slots[0]);
+        }
+
+        @Test
+        @DisplayName("Level 2 half caster has 2 first-level slots")
+        void level2Slots() {
+            int[] slots = ClassRepository.halfCasterSlots(2);
+            assertEquals(2, slots[0]);
+            assertEquals(0, slots[1]);
+        }
+
+        @Test
+        @DisplayName("Level 5 half caster has 4 first-level, 2 second-level slots")
+        void level5Slots() {
+            int[] slots = ClassRepository.halfCasterSlots(5);
+            assertEquals(4, slots[0]);
+            assertEquals(2, slots[1]);
+            assertEquals(0, slots[2]);
+        }
+
+        @Test
+        @DisplayName("Level 20 half caster has 5th-level slots")
+        void level20Slots() {
+            int[] slots = ClassRepository.halfCasterSlots(20);
+            assertEquals(4, slots[0]); // 1st
+            assertEquals(3, slots[1]); // 2nd
+            assertEquals(3, slots[2]); // 3rd
+            assertEquals(3, slots[3]); // 4th
+            assertEquals(2, slots[4]); // 5th
+        }
+    }
+
+    @Nested
+    @DisplayName("Max Spell Level")
+    class MaxSpellLevel {
+
+        @ParameterizedTest
+        @CsvSource({
+            "wizard, 1, 1",
+            "wizard, 3, 2",
+            "wizard, 5, 3",
+            "wizard, 9, 5",
+            "wizard, 17, 9",
+            "wizard, 20, 9"
+        })
+        @DisplayName("Full caster max spell level")
+        void fullCasterMaxLevel(String classId, int level, int expectedMaxLevel) {
+            assertEquals(expectedMaxLevel, ClassRepository.maxSpellLevel(classId, level));
+        }
+
+        @ParameterizedTest
+        @CsvSource({
+            "warlock, 1, 1",
+            "warlock, 3, 2",
+            "warlock, 5, 3",
+            "warlock, 7, 4",
+            "warlock, 9, 5",
+            "warlock, 20, 5"
+        })
+        @DisplayName("Warlock max spell level (pact magic caps at 5)")
+        void warlockMaxLevel(String classId, int level, int expectedMaxLevel) {
+            assertEquals(expectedMaxLevel, ClassRepository.maxSpellLevel(classId, level));
+        }
+
+        @ParameterizedTest
+        @CsvSource({
+            "paladin, 1, 0",
+            "paladin, 2, 1",
+            "paladin, 5, 2",
+            "paladin, 9, 3",
+            "paladin, 13, 4",
+            "paladin, 17, 5",
+            "ranger, 2, 1",
+            "ranger, 20, 5"
+        })
+        @DisplayName("Half caster max spell level")
+        void halfCasterMaxLevel(String classId, int level, int expectedMaxLevel) {
+            assertEquals(expectedMaxLevel, ClassRepository.maxSpellLevel(classId, level));
+        }
+
+        @Test
+        @DisplayName("Non-casters have max spell level 0")
+        void nonCasterMaxLevel() {
+            assertEquals(0, ClassRepository.maxSpellLevel("fighter", 20));
+            assertEquals(0, ClassRepository.maxSpellLevel("barbarian", 20));
+            assertEquals(0, ClassRepository.maxSpellLevel("rogue", 20));
+            assertEquals(0, ClassRepository.maxSpellLevel("monk", 20));
+        }
+
+        @Test
+        @DisplayName("Null class returns 0")
+        void nullClassMaxLevel() {
+            assertEquals(0, ClassRepository.maxSpellLevel(null, 10));
+        }
+    }
+
+    @Nested
+    @DisplayName("Cantrips Known")
+    class CantripsKnown {
+
+        @ParameterizedTest
+        @CsvSource({
+            "bard, 1, 2", "bard, 4, 3", "bard, 10, 4",
+            "cleric, 1, 3", "cleric, 4, 4", "cleric, 10, 5",
+            "druid, 1, 2", "druid, 4, 3", "druid, 10, 4",
+            "sorcerer, 1, 4", "sorcerer, 4, 5", "sorcerer, 10, 6",
+            "warlock, 1, 2", "warlock, 4, 3", "warlock, 10, 4",
+            "wizard, 1, 3", "wizard, 4, 4", "wizard, 10, 5"
+        })
+        @DisplayName("Cantrips known scales by level")
+        void cantripsScaling(String classId, int level, int expectedCantrips) {
+            assertEquals(expectedCantrips, ClassRepository.cantripsKnown(classId, level));
+        }
+
+        @Test
+        @DisplayName("Non-casters have 0 cantrips")
+        void nonCasterCantrips() {
+            assertEquals(0, ClassRepository.cantripsKnown("fighter", 10));
+            assertEquals(0, ClassRepository.cantripsKnown("barbarian", 10));
+        }
+
+        @Test
+        @DisplayName("Null class returns 0 cantrips")
+        void nullClassCantrips() {
+            assertEquals(0, ClassRepository.cantripsKnown(null, 10));
+        }
+    }
+
+    @Nested
+    @DisplayName("Spells Known")
+    class SpellsKnown {
+
+        @ParameterizedTest
+        @CsvSource({
+            "bard, 1, 4",
+            "bard, 5, 8",
+            "bard, 10, 13",
+            "sorcerer, 1, 2",
+            "sorcerer, 5, 6",
+            "warlock, 1, 2",
+            "warlock, 10, 11"
+        })
+        @DisplayName("Known casters: spells known scales by level")
+        void knownCasterSpells(String classId, int level, int expectedSpells) {
+            assertEquals(expectedSpells, ClassRepository.spellsKnown(classId, level));
+        }
+
+        @ParameterizedTest
+        @CsvSource({
+            "ranger, 1, 0",
+            "ranger, 2, 2",
+            "ranger, 3, 3",
+            "ranger, 5, 4",
+            "ranger, 11, 7",
+            "ranger, 19, 11"
+        })
+        @DisplayName("Ranger spells known follows unique progression")
+        void rangerSpellsKnown(String classId, int level, int expectedSpells) {
+            assertEquals(expectedSpells, ClassRepository.spellsKnown(classId, level));
+        }
+
+        @Test
+        @DisplayName("Prepared casters return 0 spells known")
+        void preparedCastersNoSpellsKnown() {
+            assertEquals(0, ClassRepository.spellsKnown("cleric", 10));
+            assertEquals(0, ClassRepository.spellsKnown("wizard", 10));
+            assertEquals(0, ClassRepository.spellsKnown("druid", 10));
+            assertEquals(0, ClassRepository.spellsKnown("paladin", 10));
+        }
+    }
+
+    @Nested
+    @DisplayName("Max Prepared Spells")
+    class MaxPrepared {
+
+        @ParameterizedTest
+        @CsvSource({
+            "cleric, 5, 3, 8",   // level 5, +3 WIS = 5 + 3 = 8
+            "cleric, 10, 4, 14", // level 10, +4 WIS = 10 + 4 = 14
+            "druid, 5, 3, 8",
+            "wizard, 5, 4, 9"    // level 5, +4 INT = 5 + 4 = 9
+        })
+        @DisplayName("Full casters: level + ability mod")
+        void fullCasterPrepared(String classId, int level, int abilityMod, int expectedMax) {
+            assertEquals(expectedMax, ClassRepository.maxPrepared(classId, level, abilityMod));
+        }
+
+        @ParameterizedTest
+        @CsvSource({
+            "paladin, 5, 3, 5",   // level 5 / 2 + 3 = 5
+            "paladin, 10, 4, 9"  // level 10 / 2 + 4 = 9
+        })
+        @DisplayName("Paladin: half level + ability mod")
+        void paladinPrepared(String classId, int level, int abilityMod, int expectedMax) {
+            assertEquals(expectedMax, ClassRepository.maxPrepared(classId, level, abilityMod));
+        }
+
+        @Test
+        @DisplayName("Minimum 1 prepared spell")
+        void minimumOnePrepared() {
+            assertEquals(1, ClassRepository.maxPrepared("cleric", 1, -2));
+            assertEquals(1, ClassRepository.maxPrepared("wizard", 1, -5));
+        }
+
+        @Test
+        @DisplayName("Known casters return 0 max prepared")
+        void knownCastersNoPrepared() {
+            assertEquals(0, ClassRepository.maxPrepared("bard", 10, 5));
+            assertEquals(0, ClassRepository.maxPrepared("sorcerer", 10, 5));
+            assertEquals(0, ClassRepository.maxPrepared("warlock", 10, 5));
+        }
+    }
+
+    @Nested
+    @DisplayName("Class Features")
+    class ClassFeatures {
+
+        @Test
+        @DisplayName("All classes have features")
+        void allClassesHaveFeatures() {
+            for (var cd : repository.findAll()) {
+                assertNotNull(cd.getFeatures(), cd.getId() + " should have features");
+                assertFalse(cd.getFeatures().isEmpty(), cd.getId() + " should have at least one feature");
+            }
+        }
+
+        @Test
+        @DisplayName("Fighter has Second Wind at level 1")
+        void fighterSecondWind() {
+            var fighter = repository.findById("fighter");
+            var level1Features = fighter.getFeatures().stream()
+                    .filter(f -> f.level() == 1)
+                    .toList();
+            assertTrue(level1Features.stream().anyMatch(f -> f.name().equals("Second Wind")));
+        }
+
+        @Test
+        @DisplayName("Wizard has Arcane Recovery at level 1")
+        void wizardArcaneRecovery() {
+            var wizard = repository.findById("wizard");
+            var level1Features = wizard.getFeatures().stream()
+                    .filter(f -> f.level() == 1)
+                    .toList();
+            assertTrue(level1Features.stream().anyMatch(f -> f.name().equals("Arcane Recovery")));
+        }
+
+        @Test
+        @DisplayName("Barbarian has Rage at level 1")
+        void barbarianRage() {
+            var barbarian = repository.findById("barbarian");
+            var level1Features = barbarian.getFeatures().stream()
+                    .filter(f -> f.level() == 1)
+                    .toList();
+            assertTrue(level1Features.stream().anyMatch(f -> f.name().equals("Rage")));
+        }
+    }
+
+    @Nested
+    @DisplayName("ASI Levels")
+    class AsiLevels {
+
+        @Test
+        @DisplayName("Standard ASI levels for most classes")
+        void standardAsiLevels() {
+            var expected = List.of(4, 8, 12, 16, 19);
+            assertEquals(expected, repository.findById("wizard").getAsiLevels());
+            assertEquals(expected, repository.findById("barbarian").getAsiLevels());
+            assertEquals(expected, repository.findById("cleric").getAsiLevels());
+        }
+
+        @Test
+        @DisplayName("Fighter has extra ASI at levels 6 and 14")
+        void fighterExtraAsi() {
+            var fighter = repository.findById("fighter");
+            var asiLevels = fighter.getAsiLevels();
+            assertTrue(asiLevels.contains(6), "Fighter should have ASI at level 6");
+            assertTrue(asiLevels.contains(14), "Fighter should have ASI at level 14");
+            assertEquals(7, asiLevels.size(), "Fighter should have 7 ASI levels");
+        }
+
+        @Test
+        @DisplayName("Rogue has extra ASI at level 10")
+        void rogueExtraAsi() {
+            var rogue = repository.findById("rogue");
+            var asiLevels = rogue.getAsiLevels();
+            assertTrue(asiLevels.contains(10), "Rogue should have ASI at level 10");
+            assertEquals(6, asiLevels.size(), "Rogue should have 6 ASI levels");
+        }
+    }
 }

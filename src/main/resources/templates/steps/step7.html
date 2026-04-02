@@ -19,13 +19,14 @@
         <br>
         <strong>Slots:</strong> <span th:text="${derived.spellSlotSummary}"></span>
         <span th:if="${isPreparedCaster}"> · Prepared caster — you can swap spells on a long rest</span>
-        <span th:if="${isWizard}"> · Spellbook — choose <strong th:text="${spellcasting.spellbookSizeAtL1}"></strong> spells to copy in</span>
+        <span th:if="${isWizard}"> · Spellbook — choose <strong th:text="${spellbookSize}"></strong> spells to copy in</span>
       </div>
 
-      <div th:if="${spellcasting.cantripsAtL1 > 0}">
+      <!-- Cantrips Section -->
+      <div th:if="${cantripsLimit > 0}">
         <div class="section-head">Cantrips</div>
         <div class="spell-count">
-          Choose <span class="cnt" th:text="${spellcasting.cantripsAtL1}">2</span> cantrips
+          Choose <span class="cnt" th:text="${cantripsLimit}">2</span> cantrips
           &nbsp;|&nbsp; Selected: <span class="cnt" id="cantrip-count">0</span>
         </div>
         <div class="spell-grid">
@@ -33,7 +34,7 @@
             <div class="spell-card">
               <input type="checkbox" name="cantrips" th:value="${spell.id}" th:id="'c_'+${spell.id}"
                      th:checked="${draft.chosenCantrips.contains(spell.id)}"
-                     th:data-max="${spellcasting.cantripsAtL1}" class="cantrip-cb" onchange="countSpells('cantrip-cb','cantrip-count')"/>
+                     th:data-max="${cantripsLimit}" class="cantrip-cb" onchange="countSpells('cantrip-cb','cantrip-count')"/>
               <label th:for="'c_'+${spell.id}">
                 <span class="spell-name" th:text="${spell.name}">Spell</span>
                 <span class="spell-meta" th:text="${spell.school} + ' · ' + ${spell.castingTime}"></span>
@@ -44,80 +45,130 @@
         </div>
       </div>
 
-      <div th:if="${!isPreparedCaster and !isWizard and spellcasting.spellsKnownAtL1 > 0}" style="margin-top:20px">
-        <div class="section-head">Known Spells (1st Level)</div>
+      <!-- Known Caster Spells (Bard, Sorcerer, Warlock, Ranger) -->
+      <div th:if="${isKnownCaster}" style="margin-top:20px">
+        <div class="section-head">Known Spells</div>
         <div class="spell-count">
-          Choose <span class="cnt" th:text="${spellcasting.spellsKnownAtL1}">2</span> spells
+          Choose <span class="cnt" th:text="${spellsKnownLimit}">4</span> spells total (any level you have slots for)
           &nbsp;|&nbsp; Selected: <span class="cnt" id="spell-count">0</span>
         </div>
-        <div class="spell-grid">
-          <th:block th:each="spell : ${level1Spells}">
-            <div class="spell-card">
-              <input type="checkbox" name="spells" th:value="${spell.id}" th:id="'s_'+${spell.id}"
-                     th:checked="${draft.chosenSpells.contains(spell.id)}"
-                     th:data-max="${spellcasting.spellsKnownAtL1}" class="spell1-cb" onchange="countSpells('spell1-cb','spell-count')"/>
-              <label th:for="'s_'+${spell.id}">
-                <span class="spell-name" th:text="${spell.name}">Spell</span>
-                <span class="spell-meta" th:text="${spell.school} + ' · ' + ${spell.range}"></span>
-                <span th:if="${spell.concentration}" class="spell-conc">[C]</span>
-                <span th:if="${spell.ritual}" class="spell-conc">[R]</span>
-              </label>
+
+        <th:block th:each="entry : ${spellsByLevel}">
+          <div class="spell-level-group" style="margin-top:16px">
+            <div class="spell-level-header" th:text="'Level ' + ${entry.key} + ' Spells'"></div>
+            <div class="spell-grid">
+              <th:block th:each="spell : ${entry.value}">
+                <div class="spell-card">
+                  <input type="checkbox" name="spells" th:value="${spell.id}" th:id="'s_'+${spell.id}"
+                         th:checked="${draft.chosenSpells.contains(spell.id)}"
+                         th:data-max="${spellsKnownLimit}" class="spell-cb" onchange="countSpells('spell-cb','spell-count')"/>
+                  <label th:for="'s_'+${spell.id}">
+                    <span class="spell-name" th:text="${spell.name}">Spell</span>
+                    <span class="spell-meta" th:text="${spell.school} + ' · ' + ${spell.range}"></span>
+                    <span th:if="${spell.concentration}" class="spell-conc">[C]</span>
+                    <span th:if="${spell.ritual}" class="spell-conc">[R]</span>
+                  </label>
+                </div>
+              </th:block>
             </div>
-          </th:block>
-        </div>
+          </div>
+        </th:block>
       </div>
 
+      <!-- Prepared Caster Spells (Cleric, Druid, Paladin) -->
       <div th:if="${isPreparedCaster}" style="margin-top:20px">
-        <div class="section-head">Spell List — 1st Level</div>
-        <div class="info-box" style="margin-bottom:10px">
-          Prepared casters can access their full class list. Select the spells you want to have prepared at level 1.
+        <div class="section-head">Prepared Spells</div>
+        <div class="spell-count">
+          You can prepare up to <span class="cnt" th:text="${maxPrepared}">4</span> spells.
+          Access your full class list — swap on long rest.
+          &nbsp;|&nbsp; Prepared: <span class="cnt" id="prepared-count">0</span>
         </div>
-        <div class="spell-grid">
-          <th:block th:each="spell : ${level1Spells}">
-            <div class="spell-card">
-              <input type="checkbox" name="spells" th:value="${spell.id}" th:id="'sp_'+${spell.id}"
-                     th:checked="${draft.chosenSpells.contains(spell.id)}"/>
-              <label th:for="'sp_'+${spell.id}">
-                <span class="spell-name" th:text="${spell.name}">Spell</span>
-                <span class="spell-meta" th:text="${spell.school} + ' · ' + ${spell.castingTime}"></span>
-                <span th:if="${spell.concentration}" class="spell-conc">[C]</span>
-              </label>
+
+        <th:block th:each="entry : ${spellsByLevel}">
+          <div class="spell-level-group" style="margin-top:16px">
+            <div class="spell-level-header" th:text="'Level ' + ${entry.key} + ' Spells'"></div>
+            <div class="spell-grid">
+              <th:block th:each="spell : ${entry.value}">
+                <div class="spell-card">
+                  <input type="checkbox" name="spells" th:value="${spell.id}" th:id="'sp_'+${spell.id}"
+                         th:checked="${draft.chosenSpells.contains(spell.id)}"
+                         th:data-max="${maxPrepared}" class="prepared-cb" onchange="countSpells('prepared-cb','prepared-count')"/>
+                  <label th:for="'sp_'+${spell.id}">
+                    <span class="spell-name" th:text="${spell.name}">Spell</span>
+                    <span class="spell-meta" th:text="${spell.school} + ' · ' + ${spell.castingTime}"></span>
+                    <span th:if="${spell.concentration}" class="spell-conc">[C]</span>
+                    <span th:if="${spell.ritual}" class="spell-conc">[R]</span>
+                  </label>
+                </div>
+              </th:block>
             </div>
-          </th:block>
-        </div>
+          </div>
+        </th:block>
       </div>
 
+      <!-- Wizard Spellbook -->
       <div th:if="${isWizard}" style="margin-top:20px">
         <div class="section-head">Spellbook</div>
         <div class="spell-count">
-          Add <span class="cnt" th:text="${spellcasting.spellbookSizeAtL1}">6</span> spells
-          &nbsp;|&nbsp; Added: <span class="cnt" id="spellbook-count">0</span>
+          Your spellbook holds <span class="cnt" th:text="${spellbookSize}">6</span> spells.
+          Each day, prepare INT mod + wizard level from your spellbook.
+          &nbsp;|&nbsp; In book: <span class="cnt" id="spellbook-count">0</span>
         </div>
-        <div class="spell-grid">
-          <th:block th:each="spell : ${level1Spells}">
-            <div class="spell-card">
-              <input type="checkbox" name="spellbook" th:value="${spell.id}" th:id="'sb_'+${spell.id}"
-                     th:checked="${draft.spellbookSpells.contains(spell.id)}"
-                     th:data-max="${spellcasting.spellbookSizeAtL1}" class="spellbook-cb" onchange="countSpells('spellbook-cb','spellbook-count')"/>
-              <label th:for="'sb_'+${spell.id}">
-                <span class="spell-name" th:text="${spell.name}">Spell</span>
-                <span class="spell-meta" th:text="${spell.school} + ' · ' + ${spell.range}"></span>
-                <span th:if="${spell.concentration}" class="spell-conc">[C]</span>
-                <span th:if="${spell.ritual}" class="spell-conc">[R]</span>
-              </label>
+
+        <th:block th:each="entry : ${spellsByLevel}">
+          <div class="spell-level-group" style="margin-top:16px">
+            <div class="spell-level-header" th:text="'Level ' + ${entry.key} + ' Spells'"></div>
+            <div class="spell-grid">
+              <th:block th:each="spell : ${entry.value}">
+                <div class="spell-card">
+                  <input type="checkbox" name="spellbook" th:value="${spell.id}" th:id="'sb_'+${spell.id}"
+                         th:checked="${draft.spellbookSpells.contains(spell.id)}"
+                         th:data-max="${spellbookSize}" class="spellbook-cb" onchange="countSpells('spellbook-cb','spellbook-count')"/>
+                  <label th:for="'sb_'+${spell.id}">
+                    <span class="spell-name" th:text="${spell.name}">Spell</span>
+                    <span class="spell-meta" th:text="${spell.school} + ' · ' + ${spell.range}"></span>
+                    <span th:if="${spell.concentration}" class="spell-conc">[C]</span>
+                    <span th:if="${spell.ritual}" class="spell-conc">[R]</span>
+                  </label>
+                </div>
+              </th:block>
             </div>
-          </th:block>
-        </div>
+          </div>
+        </th:block>
       </div>
     </div>
 
     <div class="btn-row">
-      <a th:href="${draft.variantHuman} ? '/step/6' : '/step/5'" class="btn btn-prev">← Back</a>
+      <a href="/step/6" class="btn btn-prev">← ASI/Feats</a>
       <button type="submit" class="btn btn-next">Next: Equipment →</button>
     </div>
   </div>
 </div>
 </form>
+
+<script th:inline="javascript">
+function countSpells(cbClass, countId) {
+  var cbs = document.querySelectorAll('.' + cbClass);
+  var count = 0;
+  cbs.forEach(function(cb) { if (cb.checked) count++; });
+  document.getElementById(countId).textContent = count;
+}
+
+// Initialize counts on page load
+document.addEventListener('DOMContentLoaded', function() {
+  ['cantrip-cb', 'spell-cb', 'prepared-cb', 'spellbook-cb'].forEach(function(cls) {
+    var countId = cls.replace('-cb', '-count');
+    if (document.getElementById(countId)) {
+      countSpells(cls, countId);
+    }
+  });
+});
+</script>
+
+<style>
+.spell-level-group { border-left: 3px solid var(--gold-dim); padding-left: 12px; }
+.spell-level-header { font-family: 'Cinzel', serif; font-size: 1rem; color: var(--gold); margin-bottom: 8px; }
+</style>
 </div>
 </body>
 </html>

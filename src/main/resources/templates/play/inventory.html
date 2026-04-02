@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title th:text="${draft.characterName != null and !draft.characterName.isEmpty()} ? ${draft.characterName} + ' — Inventory' : 'Inventory'">Inventory</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="/css/wizard.css"/>
+<style>
+.inv-container { max-width: 1000px; margin: 0 auto; padding: 20px; }
+.inv-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+.inv-title { font-family: 'Cinzel Decorative', serif; font-size: 1.5rem; color: var(--gold); }
+.inv-nav { display: flex; gap: 12px; }
+.inv-nav a, .inv-nav button { padding: 8px 16px; border: 1px solid var(--border); background: rgba(0,0,0,.3); color: var(--cream); border-radius: 4px; text-decoration: none; font-family: 'Cinzel', serif; font-size: .85rem; cursor: pointer; transition: all .2s; }
+.inv-nav a:hover, .inv-nav button:hover { border-color: var(--gold); background: rgba(201,164,64,.1); }
+
+/* Currency */
+.currency-bar { display: flex; gap: 16px; margin-bottom: 24px; padding: 16px; background: linear-gradient(135deg, rgba(201,164,64,.1) 0%, rgba(201,164,64,.02) 100%); border: 1px solid var(--border); border-radius: 8px; flex-wrap: wrap; }
+.currency-item { display: flex; align-items: center; gap: 6px; }
+.currency-icon { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: .7rem; font-weight: bold; }
+.currency-icon.pp { background: linear-gradient(135deg, #a0a0a0, #e0e0e0); color: #333; }
+.currency-icon.gp { background: linear-gradient(135deg, #b8860b, #ffd700); color: #333; }
+.currency-icon.ep { background: linear-gradient(135deg, #607080, #a0b0c0); color: #333; }
+.currency-icon.sp { background: linear-gradient(135deg, #808080, #c0c0c0); color: #333; }
+.currency-icon.cp { background: linear-gradient(135deg, #8b4513, #cd853f); color: #fff; }
+.currency-val { font-family: 'Cinzel', serif; font-size: 1rem; color: var(--cream); min-width: 40px; }
+.currency-label { font-size: .75rem; color: var(--cream-dim); }
+
+/* Items */
+.inv-section { margin-bottom: 24px; }
+.inv-section-title { font-family: 'Cinzel', serif; font-size: 1rem; color: var(--gold); margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+.items-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+.item-card { background: linear-gradient(135deg, rgba(37,29,14,.95) 0%, rgba(25,20,10,.95) 100%); border: 1px solid var(--border); border-radius: 6px; padding: 12px; transition: all .2s; }
+.item-card:hover { border-color: var(--gold-dim); }
+.item-card.equipped { border-color: var(--gold); background: linear-gradient(135deg, rgba(201,164,64,.15) 0%, rgba(201,164,64,.05) 100%); }
+.item-card.attuned { box-shadow: 0 0 10px rgba(100,140,200,.3); }
+.item-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+.item-name { font-family: 'Cinzel', serif; font-size: .9rem; color: var(--cream); }
+.item-rarity { font-size: .65rem; padding: 2px 6px; border-radius: 3px; text-transform: uppercase; letter-spacing: .05em; }
+.item-rarity.common { background: rgba(150,150,150,.2); color: #a0a0a0; }
+.item-rarity.uncommon { background: rgba(30,120,30,.2); color: #4a9c4a; }
+.item-rarity.rare { background: rgba(30,80,180,.2); color: #5080d0; }
+.item-rarity.very-rare { background: rgba(140,50,180,.2); color: #a050c0; }
+.item-rarity.legendary { background: rgba(200,120,20,.2); color: #e0a020; }
+.item-rarity.artifact { background: rgba(200,50,50,.2); color: #e05050; }
+.item-category { font-size: .75rem; color: var(--cream-dim); margin-bottom: 6px; }
+.item-desc { font-size: .8rem; color: var(--cream-dim); line-height: 1.4; margin-bottom: 8px; }
+.item-stats { font-size: .75rem; color: var(--gold-dim); margin-bottom: 8px; }
+.item-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.item-btn { padding: 4px 10px; border: 1px solid var(--border); background: rgba(0,0,0,.3); color: var(--cream-dim); border-radius: 3px; font-size: .75rem; cursor: pointer; transition: all .2s; }
+.item-btn:hover { border-color: var(--gold); color: var(--cream); }
+.item-btn.active { background: rgba(201,164,64,.2); border-color: var(--gold); color: var(--gold); }
+
+/* Add Item Modal */
+.modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.8); z-index: 1000; align-items: center; justify-content: center; }
+.modal-overlay.active { display: flex; }
+.modal-content { background: linear-gradient(135deg, #1a1408 0%, #251d0e 100%); border: 2px solid var(--gold); border-radius: 8px; padding: 24px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; }
+.modal-title { font-family: 'Cinzel Decorative', serif; font-size: 1.2rem; color: var(--gold); margin-bottom: 16px; }
+.form-group { margin-bottom: 12px; }
+.form-label { display: block; font-family: 'Cinzel', serif; font-size: .8rem; color: var(--cream-dim); margin-bottom: 4px; }
+.form-input, .form-select { width: 100%; padding: 8px 12px; background: rgba(0,0,0,.3); border: 1px solid var(--border); border-radius: 4px; color: var(--cream); font-family: 'Crimson Text', serif; font-size: .9rem; }
+.form-input:focus, .form-select:focus { outline: none; border-color: var(--gold); }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.modal-actions { display: flex; gap: 12px; margin-top: 20px; }
+.modal-btn { flex: 1; padding: 10px; border: 1px solid var(--border); background: rgba(0,0,0,.3); color: var(--cream); border-radius: 4px; font-family: 'Cinzel', serif; cursor: pointer; transition: all .2s; }
+.modal-btn:hover { border-color: var(--gold); }
+.modal-btn.primary { background: rgba(201,164,64,.2); border-color: var(--gold); }
+
+/* Attunement indicator */
+.attunement-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; padding: 8px 12px; background: rgba(100,140,200,.1); border: 1px solid rgba(100,140,200,.3); border-radius: 4px; }
+.attunement-label { font-family: 'Cinzel', serif; font-size: .8rem; color: #80a0c0; }
+.attunement-slots { display: flex; gap: 6px; }
+.attunement-slot { width: 18px; height: 18px; border: 2px solid rgba(100,140,200,.5); border-radius: 50%; }
+.attunement-slot.filled { background: #80a0c0; }
+
+.empty-state { text-align: center; padding: 40px; color: var(--cream-dim); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="site-title">Character Forge</div>
+  <div class="site-sub">Inventory & Equipment</div>
+</header>
+
+<div class="inv-container">
+  <div class="inv-header">
+    <div class="inv-title" th:text="${draft.characterName != null and !draft.characterName.isEmpty()} ? ${draft.characterName} + '''s Inventory' : 'Inventory'">Inventory</div>
+    <div class="inv-nav">
+      <button onclick="showAddItemModal()">+ Add Item</button>
+      <a href="/play">Dashboard</a>
+      <a href="/step/9">Character Sheet</a>
+    </div>
+  </div>
+
+  <!-- Currency -->
+  <div class="currency-bar" onclick="editCurrency()">
+    <div class="currency-item">
+      <div class="currency-icon pp">PP</div>
+      <span class="currency-val" th:text="${draft.platinum}">0</span>
+    </div>
+    <div class="currency-item">
+      <div class="currency-icon gp">GP</div>
+      <span class="currency-val" th:text="${draft.gold}">0</span>
+    </div>
+    <div class="currency-item">
+      <div class="currency-icon ep">EP</div>
+      <span class="currency-val" th:text="${draft.electrum}">0</span>
+    </div>
+    <div class="currency-item">
+      <div class="currency-icon sp">SP</div>
+      <span class="currency-val" th:text="${draft.silver}">0</span>
+    </div>
+    <div class="currency-item">
+      <div class="currency-icon cp">CP</div>
+      <span class="currency-val" th:text="${draft.copper}">0</span>
+    </div>
+    <div style="flex:1;text-align:right;font-size:.75rem;color:var(--cream-dim)">(Click to edit)</div>
+  </div>
+
+  <!-- Attunement -->
+  <div class="attunement-bar">
+    <span class="attunement-label">Attunement Slots:</span>
+    <div class="attunement-slots">
+      <div class="attunement-slot" th:classappend="${attunedCount >= 1} ? 'filled' : ''"></div>
+      <div class="attunement-slot" th:classappend="${attunedCount >= 2} ? 'filled' : ''"></div>
+      <div class="attunement-slot" th:classappend="${attunedCount >= 3} ? 'filled' : ''"></div>
+    </div>
+    <span style="font-size:.75rem;color:var(--cream-dim)" th:text="${attunedCount} + ' / 3 used'"></span>
+  </div>
+
+  <!-- Equipped Items -->
+  <div class="inv-section" th:if="${!draft.inventory.isEmpty()}">
+    <div class="inv-section-title">Equipped Items</div>
+    <div class="items-grid">
+      <th:block th:each="item : ${draft.inventory}">
+        <div th:if="${item.equipped}" class="item-card equipped" th:classappend="${item.attuned} ? 'attuned' : ''" th:data-id="${item.id}">
+          <div class="item-header">
+            <span class="item-name" th:text="${item.name}">Item</span>
+            <span class="item-rarity" th:classappend="${item.rarity}" th:text="${item.rarity}">common</span>
+          </div>
+          <div class="item-category" th:text="${item.category}">Weapon</div>
+          <div th:if="${item.description}" class="item-desc" th:text="${item.description}">Description</div>
+          <div class="item-stats">
+            <span th:if="${item.acBonus != 0}" th:text="'AC +' + ${item.acBonus}">AC +1</span>
+            <span th:if="${item.attackBonus != 0}" th:text="'Attack +' + ${item.attackBonus}">Atk +1</span>
+            <span th:if="${item.damageBonus != 0}" th:text="'Damage +' + ${item.damageBonus}">Dmg +1</span>
+          </div>
+          <div class="item-actions">
+            <button class="item-btn active" onclick="toggleEquip(this, false)">Unequip</button>
+            <button th:if="${item.requiresAttunement}" class="item-btn" th:classappend="${item.attuned} ? 'active' : ''" onclick="toggleAttune(this)" th:text="${item.attuned} ? 'Attuned' : 'Attune'">Attune</button>
+            <button class="item-btn" onclick="removeItem(this)">Drop</button>
+          </div>
+        </div>
+      </th:block>
+    </div>
+  </div>
+
+  <!-- Inventory Items -->
+  <div class="inv-section">
+    <div class="inv-section-title">Inventory</div>
+    <div class="items-grid" th:if="${!draft.inventory.isEmpty()}">
+      <th:block th:each="item : ${draft.inventory}">
+        <div th:unless="${item.equipped}" class="item-card" th:data-id="${item.id}">
+          <div class="item-header">
+            <span class="item-name" th:text="${item.name}">Item</span>
+            <span class="item-rarity" th:classappend="${item.rarity}" th:text="${item.rarity}">common</span>
+          </div>
+          <div class="item-category" th:text="${item.category}">Misc</div>
+          <div th:if="${item.description}" class="item-desc" th:text="${item.description}">Description</div>
+          <div class="item-stats">
+            <span th:if="${item.quantity > 1}" th:text="'Qty: ' + ${item.quantity}">Qty: 1</span>
+            <span th:if="${item.acBonus != 0}" th:text="'AC +' + ${item.acBonus}">AC +1</span>
+            <span th:if="${item.attackBonus != 0}" th:text="'Attack +' + ${item.attackBonus}">Atk +1</span>
+          </div>
+          <div class="item-actions">
+            <button class="item-btn" onclick="toggleEquip(this, true)">Equip</button>
+            <button class="item-btn" onclick="removeItem(this)">Drop</button>
+          </div>
+        </div>
+      </th:block>
+    </div>
+    <div th:if="${draft.inventory.isEmpty()}" class="empty-state">
+      No items in inventory. Click "+ Add Item" to add campaign loot.
+    </div>
+  </div>
+</div>
+
+<!-- Add Item Modal -->
+<div class="modal-overlay" id="add-item-modal">
+  <div class="modal-content">
+    <div class="modal-title">Add Item</div>
+    <div class="form-group">
+      <label class="form-label">Item Name *</label>
+      <input type="text" class="form-input" id="item-name" placeholder="Longsword +1">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Category</label>
+        <select class="form-select" id="item-category">
+          <option value="weapon">Weapon</option>
+          <option value="armor">Armor</option>
+          <option value="shield">Shield</option>
+          <option value="wondrous">Wondrous Item</option>
+          <option value="ring">Ring</option>
+          <option value="potion">Potion</option>
+          <option value="scroll">Scroll</option>
+          <option value="wand">Wand/Rod/Staff</option>
+          <option value="misc">Miscellaneous</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Rarity</label>
+        <select class="form-select" id="item-rarity">
+          <option value="common">Common</option>
+          <option value="uncommon">Uncommon</option>
+          <option value="rare">Rare</option>
+          <option value="very-rare">Very Rare</option>
+          <option value="legendary">Legendary</option>
+          <option value="artifact">Artifact</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description</label>
+      <input type="text" class="form-input" id="item-desc" placeholder="A magical longsword that glows faintly blue...">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">AC Bonus</label>
+        <input type="number" class="form-input" id="item-ac" value="0">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Attack Bonus</label>
+        <input type="number" class="form-input" id="item-attack" value="0">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Damage Bonus</label>
+        <input type="number" class="form-input" id="item-damage" value="0">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Quantity</label>
+        <input type="number" class="form-input" id="item-qty" value="1" min="1">
+      </div>
+    </div>
+    <div class="form-group">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+        <input type="checkbox" id="item-attunement">
+        <span class="form-label" style="margin:0">Requires Attunement</span>
+      </label>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn" onclick="closeModal()">Cancel</button>
+      <button class="modal-btn primary" onclick="addItem()">Add Item</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function showAddItemModal() {
+    document.getElementById('add-item-modal').classList.add('active');
+}
+
+function closeModal() {
+    document.getElementById('add-item-modal').classList.remove('active');
+}
+
+function addItem() {
+    const item = {
+        name: document.getElementById('item-name').value,
+        category: document.getElementById('item-category').value,
+        rarity: document.getElementById('item-rarity').value,
+        description: document.getElementById('item-desc').value,
+        acBonus: parseInt(document.getElementById('item-ac').value) || 0,
+        attackBonus: parseInt(document.getElementById('item-attack').value) || 0,
+        damageBonus: parseInt(document.getElementById('item-damage').value) || 0,
+        quantity: parseInt(document.getElementById('item-qty').value) || 1,
+        requiresAttunement: document.getElementById('item-attunement').checked
+    };
+
+    if (!item.name) { alert('Please enter an item name'); return; }
+
+    fetch('/play/inventory/add', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(item)
+    })
+    .then(r => r.json())
+    .then(data => { if (data.success) location.reload(); });
+}
+
+function toggleEquip(btn, equip) {
+    const card = btn.closest('.item-card');
+    const itemId = card.dataset.id;
+    fetch('/play/inventory/equip', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'itemId=' + itemId + '&equipped=' + equip
+    })
+    .then(() => location.reload());
+}
+
+function toggleAttune(btn) {
+    const card = btn.closest('.item-card');
+    const itemId = card.dataset.id;
+    const currentlyAttuned = btn.classList.contains('active');
+    fetch('/play/inventory/attune', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'itemId=' + itemId + '&attuned=' + !currentlyAttuned
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) location.reload();
+        else alert(data.error);
+    });
+}
+
+function removeItem(btn) {
+    if (!confirm('Drop this item?')) return;
+    const card = btn.closest('.item-card');
+    const itemId = card.dataset.id;
+    fetch('/play/inventory/remove', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'itemId=' + itemId
+    })
+    .then(() => location.reload());
+}
+
+function editCurrency() {
+    const pp = prompt('Platinum:', document.querySelector('.currency-icon.pp').nextElementSibling.textContent);
+    if (pp === null) return;
+    const gp = prompt('Gold:', document.querySelector('.currency-icon.gp').nextElementSibling.textContent);
+    if (gp === null) return;
+    const ep = prompt('Electrum:', document.querySelector('.currency-icon.ep').nextElementSibling.textContent);
+    if (ep === null) return;
+    const sp = prompt('Silver:', document.querySelector('.currency-icon.sp').nextElementSibling.textContent);
+    if (sp === null) return;
+    const cp = prompt('Copper:', document.querySelector('.currency-icon.cp').nextElementSibling.textContent);
+    if (cp === null) return;
+
+    fetch('/play/currency/update', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: `platinum=${pp}&gold=${gp}&electrum=${ep}&silver=${sp}&copper=${cp}`
+    })
+    .then(() => location.reload());
+}
+
+// Close modal on escape or click outside
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+document.getElementById('add-item-modal').addEventListener('click', e => { if (e.target.classList.contains('modal-overlay')) closeModal(); });
+</script>
+</body>
+</html>

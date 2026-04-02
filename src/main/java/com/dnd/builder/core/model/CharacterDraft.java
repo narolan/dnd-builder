@@ -33,10 +33,12 @@ public class CharacterDraft {
     /** All skill proficiencies: class choices + background fixed */
     private List<String> skillProficiencies = new ArrayList<>();
 
-    // ── Step 6: Feats (Variant Human only at L1, or L4+ ASI choice) ─────────
-    /** Chosen feat ID, empty if took ASI instead */
+    // ── Step 6: ASI/Feats (Variant Human at L1, plus levels 4, 8, 12, 16, 19, etc.) ─────────
+    /** List of ASI/Feat choices made at each ASI level */
+    private List<AsiChoice> asiChoices = new ArrayList<>();
+    /** Legacy: Chosen feat ID for Variant Human L1 feat (kept for backwards compatibility) */
     private String chosenFeatId = "";
-    /** For feats/ASIs that grant ability score increases */
+    /** Legacy: For feats/ASIs that grant ability score increases */
     private Map<String, Integer> featAsiChoices = new LinkedHashMap<>();
 
     // ── Step 7: Spells ───────────────────────────────────────────────────────
@@ -48,6 +50,37 @@ public class CharacterDraft {
     // ── Step 8: Equipment ────────────────────────────────────────────────────
     /** slotId → chosen option label */
     private Map<String, String> equipmentChoices = new LinkedHashMap<>();
+
+    // ── Campaign Inventory ───────────────────────────────────────────────────
+    /** Items acquired during campaign play */
+    private List<InventoryItem> inventory = new ArrayList<>();
+    /** Gold pieces */
+    private int gold = 0;
+    /** Silver pieces */
+    private int silver = 0;
+    /** Copper pieces */
+    private int copper = 0;
+    /** Platinum pieces */
+    private int platinum = 0;
+    /** Electrum pieces */
+    private int electrum = 0;
+
+    // ── Session Tracking (for combat/rest) ───────────────────────────────────
+    private int currentHp = -1;  // -1 means use max HP
+    private int tempHp = 0;
+    private int usedHitDice = 0;
+    /** Spell slots used: index = spell level - 1 */
+    private int[] usedSpellSlots = new int[9];
+
+    // ── Combat State ─────────────────────────────────────────────────────────
+    /** Active conditions affecting the character */
+    private List<ActiveCondition> conditions = new ArrayList<>();
+    /** Death save successes (0-3) */
+    private int deathSaveSuccesses = 0;
+    /** Death save failures (0-3) */
+    private int deathSaveFailures = 0;
+    /** Spell currently being concentrated on (null if none) */
+    private String concentratingOn = null;
 
     // ── Tracking ─────────────────────────────────────────────────────────────
     private int highestStepReached = 1;
@@ -95,6 +128,9 @@ public class CharacterDraft {
     public List<String> getSkillProficiencies() { return skillProficiencies; }
     public void setSkillProficiencies(List<String> skillProficiencies) { this.skillProficiencies = skillProficiencies != null ? skillProficiencies : new java.util.ArrayList<>(); }
 
+    public List<AsiChoice> getAsiChoices() { return asiChoices; }
+    public void setAsiChoices(List<AsiChoice> asiChoices) { this.asiChoices = asiChoices != null ? asiChoices : new ArrayList<>(); }
+
     public String getChosenFeatId() { return chosenFeatId; }
     public void setChosenFeatId(String chosenFeatId) { this.chosenFeatId = chosenFeatId != null ? chosenFeatId : ""; }
 
@@ -112,6 +148,55 @@ public class CharacterDraft {
 
     public Map<String, String> getEquipmentChoices() { return equipmentChoices; }
     public void setEquipmentChoices(Map<String, String> equipmentChoices) { this.equipmentChoices = equipmentChoices != null ? equipmentChoices : new java.util.LinkedHashMap<>(); }
+
+    public List<InventoryItem> getInventory() { return inventory; }
+    public void setInventory(List<InventoryItem> inventory) { this.inventory = inventory != null ? inventory : new ArrayList<>(); }
+
+    public int getGold() { return gold; }
+    public void setGold(int gold) { this.gold = gold; }
+    public int getSilver() { return silver; }
+    public void setSilver(int silver) { this.silver = silver; }
+    public int getCopper() { return copper; }
+    public void setCopper(int copper) { this.copper = copper; }
+    public int getPlatinum() { return platinum; }
+    public void setPlatinum(int platinum) { this.platinum = platinum; }
+    public int getElectrum() { return electrum; }
+    public void setElectrum(int electrum) { this.electrum = electrum; }
+
+    public int getCurrentHp() { return currentHp; }
+    public void setCurrentHp(int currentHp) { this.currentHp = currentHp; }
+    public int getTempHp() { return tempHp; }
+    public void setTempHp(int tempHp) { this.tempHp = tempHp; }
+    public int getUsedHitDice() { return usedHitDice; }
+    public void setUsedHitDice(int usedHitDice) { this.usedHitDice = usedHitDice; }
+    public int[] getUsedSpellSlots() { return usedSpellSlots; }
+    public void setUsedSpellSlots(int[] usedSpellSlots) { this.usedSpellSlots = usedSpellSlots != null ? usedSpellSlots : new int[9]; }
+
+    // ── Inventory Helpers ────────────────────────────────────────────────────
+    public void addItem(InventoryItem item) { this.inventory.add(item); }
+    public void removeItem(String itemId) { this.inventory.removeIf(i -> i.getId().equals(itemId)); }
+    public int getAttunedCount() { return (int) inventory.stream().filter(InventoryItem::isAttuned).count(); }
+    public boolean canAttune() { return getAttunedCount() < 3; }
+
+    // ── Combat State Accessors ───────────────────────────────────────────────
+    public List<ActiveCondition> getConditions() { return conditions; }
+    public void setConditions(List<ActiveCondition> conditions) { this.conditions = conditions != null ? conditions : new ArrayList<>(); }
+    public void addCondition(ActiveCondition condition) { this.conditions.add(condition); }
+    public void removeCondition(String conditionId) { this.conditions.removeIf(c -> c.getId().equals(conditionId)); }
+    public boolean hasCondition(String name) { return conditions.stream().anyMatch(c -> c.getName().equalsIgnoreCase(name)); }
+
+    public int getDeathSaveSuccesses() { return deathSaveSuccesses; }
+    public void setDeathSaveSuccesses(int deathSaveSuccesses) { this.deathSaveSuccesses = Math.max(0, Math.min(3, deathSaveSuccesses)); }
+    public int getDeathSaveFailures() { return deathSaveFailures; }
+    public void setDeathSaveFailures(int deathSaveFailures) { this.deathSaveFailures = Math.max(0, Math.min(3, deathSaveFailures)); }
+    public void resetDeathSaves() { this.deathSaveSuccesses = 0; this.deathSaveFailures = 0; }
+    public boolean isStable() { return deathSaveSuccesses >= 3; }
+    public boolean isDead() { return deathSaveFailures >= 3; }
+
+    public String getConcentratingOn() { return concentratingOn; }
+    public void setConcentratingOn(String spell) { this.concentratingOn = spell; }
+    public boolean isConcentrating() { return concentratingOn != null && !concentratingOn.isEmpty(); }
+    public void breakConcentration() { this.concentratingOn = null; }
 
     public int getHighestStepReached() { return highestStepReached; }
     public void setHighestStepReached(int highestStepReached) { this.highestStepReached = highestStepReached; }

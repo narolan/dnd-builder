@@ -43,6 +43,12 @@ public class ClassDefinition {
     // Starting wealth (gold pieces) as alternative to equipment
     private int startingGold;
 
+    /** Levels at which ASI/Feat choice is granted (e.g., [4,8,12,16,19] for most classes) */
+    private List<Integer> asiLevels;
+
+    /** Class features by level */
+    private List<ClassFeature> features;
+
     public ClassDefinition() {}
 
     // ── Getters & Setters ────────────────────────────────────────────────────
@@ -76,6 +82,10 @@ public class ClassDefinition {
     public void setSubclassNote(String s) { this.subclassNote = s; }
     public int getStartingGold() { return startingGold; }
     public void setStartingGold(int g) { this.startingGold = g; }
+    public List<Integer> getAsiLevels() { return asiLevels; }
+    public void setAsiLevels(List<Integer> a) { this.asiLevels = a; }
+    public List<ClassFeature> getFeatures() { return features; }
+    public void setFeatures(List<ClassFeature> f) { this.features = f; }
 
     // ── Inner: SpellcastingInfo ───────────────────────────────────────────────
     public static class SpellcastingInfo {

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <rect width="192" height="192" fill="#1a1408"/>
+  <circle cx="96" cy="96" r="70" fill="none" stroke="#c9a440" stroke-width="4"/>
+  <polygon points="96,36 116,76 160,80 128,112 136,156 96,136 56,156 64,112 32,80 76,76" fill="#c9a440"/>
+  <text x="96" y="106" font-family="serif" font-size="24" font-weight="bold" fill="#1a1408" text-anchor="middle">D20</text>
+</svg>
