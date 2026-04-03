@@ -564,6 +564,77 @@ public class PlayModeController {
         return result;
     }
 
+    @PostMapping("/levelup")
+    @ResponseBody
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> levelUp(@RequestBody Map<String, Object> body,
+                                       HttpSession session,
+                                       jakarta.servlet.http.HttpServletResponse response) {
+        CharacterDraft draft = getDraft(session);
+        if (draft == null || draft.getCharacterClass().isEmpty()) {
+            response.setStatus(400);
+            return Map.of("success", false, "error", "No character in session");
+        }
+        if (draft.getLevel() >= 20) {
+            response.setStatus(400);
+            return Map.of("success", false, "error", "Already at maximum level");
+        }
+
+        int newLevel = draft.getLevel() + 1;
+        draft.setLevel(newLevel);
+
+        // ASI / Feat
+        String asiType = (String) body.get("asiType");
+        if (asiType != null && !asiType.isEmpty()) {
+            if ("feat".equals(asiType)) {
+                String featId = (String) body.get("featId");
+                if (featId != null && !featId.isEmpty()) {
+                    draft.getAsiChoices().add(AsiChoice.feat(newLevel, featId, Map.of()));
+                }
+            } else {
+                var statIncreases = new LinkedHashMap<String, Integer>();
+                String mode  = (String) body.get("asiMode");
+                String stat1 = (String) body.get("asiStat1");
+                String stat2 = (String) body.get("asiStat2");
+                if ("single".equals(mode) && stat1 != null && !stat1.isEmpty()) {
+                    statIncreases.put(stat1, 2);
+                } else if ("split".equals(mode)) {
+                    if (stat1 != null && !stat1.isEmpty()) statIncreases.merge(stat1, 1, Integer::sum);
+                    if (stat2 != null && !stat2.isEmpty()) statIncreases.merge(stat2, 1, Integer::sum);
+                }
+                if (!statIncreases.isEmpty()) {
+                    draft.getAsiChoices().add(AsiChoice.asi(newLevel, statIncreases));
+                }
+            }
+        }
+
+        // Subclass
+        String subclassId = (String) body.get("subclassId");
+        if (subclassId != null && !subclassId.isEmpty()) {
+            draft.setSubclassId(subclassId);
+        }
+
+        // New cantrips
+        List<String> newCantrips = (List<String>) body.getOrDefault("newCantrips", List.of());
+        if (newCantrips != null) draft.getChosenCantrips().addAll(newCantrips);
+
+        // New spells
+        List<String> newSpells = (List<String>) body.getOrDefault("newSpells", List.of());
+        if (newSpells != null) draft.getChosenSpells().addAll(newSpells);
+
+        // Wizard spellbook
+        List<String> spellbookAdditions = (List<String>) body.getOrDefault("spellbookAdditions", List.of());
+        if (spellbookAdditions != null) draft.getSpellbookSpells().addAll(spellbookAdditions);
+
+        var derived = calculator.calculate(draft);
+        var result  = new LinkedHashMap<String, Object>();
+        result.put("success",  true);
+        result.put("newLevel", newLevel);
+        result.put("draft",    draft);
+        result.put("derived",  derived);
+        return result;
+    }
+
     private String buildSlotSummary(int[] slots) {
         var parts = new ArrayList<String>();
         for (int i = 0; i < slots.length; i++) {

@@ -602,6 +602,189 @@ class PlayModeControllerTest {
             assertEquals(400, resp.getStatus());
             assertTrue(result.containsKey("error"));
         }
+
+        // ── POST /play/levelup ────────────────────────────────────────────────────
+
+        @Test
+        @DisplayName("levelUp increments character level")
+        void levelUpIncrementsLevel() {
+            draft.setCharacterClass("barbarian");
+            draft.setLevel(1);
+
+            var body = new java.util.HashMap<String, Object>();
+            body.put("newSpells", List.of());
+            body.put("newCantrips", List.of());
+            body.put("spellbookAdditions", List.of());
+
+            Map<String, Object> result = controller.levelUp(body, session, new MockHttpServletResponse());
+
+            assertEquals(true, result.get("success"));
+            assertEquals(2, result.get("newLevel"));
+            assertEquals(2, draft.getLevel());
+        }
+
+        @Test
+        @DisplayName("levelUp applies +2 ASI to one stat")
+        void levelUpAppliesSingleAsi() {
+            draft.setCharacterClass("fighter");
+            draft.setLevel(3);  // levelling to 4 (ASI)
+
+            var body = new java.util.HashMap<String, Object>();
+            body.put("asiType", "asi");
+            body.put("asiMode", "single");
+            body.put("asiStat1", "STR");
+            body.put("newSpells", List.of());
+            body.put("newCantrips", List.of());
+            body.put("spellbookAdditions", List.of());
+
+            controller.levelUp(body, session, new MockHttpServletResponse());
+
+            assertEquals(4, draft.getLevel());
+            assertEquals(1, draft.getAsiChoices().size());
+            assertEquals("STR", draft.getAsiChoices().get(0).statIncreases().keySet().iterator().next());
+            assertEquals(2, draft.getAsiChoices().get(0).statIncreases().get("STR"));
+        }
+
+        @Test
+        @DisplayName("levelUp applies +1/+1 split ASI")
+        void levelUpAppliesSplitAsi() {
+            draft.setCharacterClass("fighter");
+            draft.setLevel(3);
+
+            var body = new java.util.HashMap<String, Object>();
+            body.put("asiType", "asi");
+            body.put("asiMode", "split");
+            body.put("asiStat1", "STR");
+            body.put("asiStat2", "CON");
+            body.put("newSpells", List.of());
+            body.put("newCantrips", List.of());
+            body.put("spellbookAdditions", List.of());
+
+            controller.levelUp(body, session, new MockHttpServletResponse());
+
+            var increases = draft.getAsiChoices().get(0).statIncreases();
+            assertEquals(1, increases.get("STR"));
+            assertEquals(1, increases.get("CON"));
+        }
+
+        @Test
+        @DisplayName("levelUp applies feat choice")
+        void levelUpAppliesFeat() {
+            draft.setCharacterClass("fighter");
+            draft.setLevel(3);
+
+            var body = new java.util.HashMap<String, Object>();
+            body.put("asiType", "feat");
+            body.put("featId", "alert");
+            body.put("newSpells", List.of());
+            body.put("newCantrips", List.of());
+            body.put("spellbookAdditions", List.of());
+
+            controller.levelUp(body, session, new MockHttpServletResponse());
+
+            assertEquals(1, draft.getAsiChoices().size());
+            assertEquals("feat", draft.getAsiChoices().get(0).type());
+            assertEquals("alert", draft.getAsiChoices().get(0).featId());
+        }
+
+        @Test
+        @DisplayName("levelUp sets subclass")
+        void levelUpSetsSubclass() {
+            draft.setCharacterClass("fighter");
+            draft.setSubclassId("");
+            draft.setLevel(2);  // levelling to 3 (Fighter subclass level)
+
+            var body = new java.util.HashMap<String, Object>();
+            body.put("subclassId", "champion");
+            body.put("newSpells", List.of());
+            body.put("newCantrips", List.of());
+            body.put("spellbookAdditions", List.of());
+
+            controller.levelUp(body, session, new MockHttpServletResponse());
+
+            assertEquals("champion", draft.getSubclassId());
+        }
+
+        @Test
+        @DisplayName("levelUp appends new spells to chosenSpells")
+        void levelUpAddsNewSpells() {
+            draft.setCharacterClass("warlock");
+            draft.setLevel(1);
+
+            var body = new java.util.HashMap<String, Object>();
+            body.put("newSpells", List.of("hex", "hellish_rebuke"));
+            body.put("newCantrips", List.of());
+            body.put("spellbookAdditions", List.of());
+
+            controller.levelUp(body, session, new MockHttpServletResponse());
+
+            assertTrue(draft.getChosenSpells().contains("hex"));
+            assertTrue(draft.getChosenSpells().contains("hellish_rebuke"));
+        }
+
+        @Test
+        @DisplayName("levelUp appends new cantrips to chosenCantrips")
+        void levelUpAddsCantrips() {
+            draft.setCharacterClass("wizard");
+            draft.setLevel(3);  // wizard gains cantrip at 4
+
+            var body = new java.util.HashMap<String, Object>();
+            body.put("newCantrips", List.of("prestidigitation"));
+            body.put("newSpells", List.of());
+            body.put("spellbookAdditions", List.of());
+
+            controller.levelUp(body, session, new MockHttpServletResponse());
+
+            assertTrue(draft.getChosenCantrips().contains("prestidigitation"));
+        }
+
+        @Test
+        @DisplayName("levelUp appends wizard spellbook additions")
+        void levelUpAddsSpellbookSpells() {
+            draft.setCharacterClass("wizard");
+            draft.setLevel(1);
+
+            var body = new java.util.HashMap<String, Object>();
+            body.put("spellbookAdditions", List.of("detect_magic", "identify"));
+            body.put("newSpells", List.of());
+            body.put("newCantrips", List.of());
+
+            controller.levelUp(body, session, new MockHttpServletResponse());
+
+            assertTrue(draft.getSpellbookSpells().contains("detect_magic"));
+            assertTrue(draft.getSpellbookSpells().contains("identify"));
+        }
+
+        @Test
+        @DisplayName("levelUp returns 400 at level 20")
+        void levelUpRefusesAt20() {
+            draft.setLevel(20);
+            var resp = new MockHttpServletResponse();
+
+            Map<String, Object> result = controller.levelUp(Map.of(
+                "newSpells", List.of(), "newCantrips", List.of(), "spellbookAdditions", List.of()
+            ), session, resp);
+
+            assertEquals(400, resp.getStatus());
+            assertEquals(false, result.get("success"));
+        }
+
+        @Test
+        @DisplayName("levelUp returns updated draft and derived stats")
+        void levelUpReturnsDerivedStats() {
+            draft.setCharacterClass("fighter");
+            draft.setLevel(1);
+
+            var body = new java.util.HashMap<String, Object>();
+            body.put("newSpells", List.of());
+            body.put("newCantrips", List.of());
+            body.put("spellbookAdditions", List.of());
+
+            Map<String, Object> result = controller.levelUp(body, session, new MockHttpServletResponse());
+
+            assertNotNull(result.get("draft"));
+            assertNotNull(result.get("derived"));
+        }
     }
 
     @Nested
