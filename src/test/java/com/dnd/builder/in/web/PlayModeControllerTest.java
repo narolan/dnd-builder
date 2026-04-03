@@ -515,6 +515,8 @@ class PlayModeControllerTest {
             assertEquals(0, result.get("newSpellsCount"));
             assertEquals(0, result.get("wizardSpellbookGain"));
             assertTrue(result.get("hpGain") instanceof Integer);
+            assertEquals(false, result.get("spellSlotsChanged"));
+            assertEquals("", result.get("newSpellSlotSummary"));
         }
 
         @Test

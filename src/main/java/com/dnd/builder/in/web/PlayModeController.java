@@ -2,12 +2,17 @@ package com.dnd.builder.in.web;
 
 import com.dnd.builder.core.model.*;
 import com.dnd.builder.core.port.out.ClassRepository;
+import com.dnd.builder.core.port.out.FeatRepository;
+import com.dnd.builder.core.port.out.SpellRepository;
 import com.dnd.builder.core.service.CharacterCalculator;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -22,12 +27,12 @@ public class PlayModeController {
 
     private final CharacterCalculator calculator;
     private final ClassRepository classRepository;
-    private final com.dnd.builder.core.port.out.SpellRepository spellRepository;
-    private final com.dnd.builder.core.port.out.FeatRepository  featRepository;
+    private final SpellRepository spellRepository;
+    private final FeatRepository  featRepository;
 
     public PlayModeController(CharacterCalculator calculator, ClassRepository classRepository,
-                              com.dnd.builder.core.port.out.SpellRepository spellRepository,
-                              com.dnd.builder.core.port.out.FeatRepository featRepository) {
+                              SpellRepository spellRepository,
+                              FeatRepository featRepository) {
         this.calculator      = calculator;
         this.classRepository = classRepository;
         this.spellRepository = spellRepository;
@@ -335,7 +340,7 @@ public class PlayModeController {
     @ResponseBody
     public Map<String, Object> tickConditions(HttpSession session) {
         CharacterDraft draft = getDraft(session);
-        var expired = new java.util.ArrayList<String>();
+        var expired = new ArrayList<String>();
         draft.getConditions().removeIf(c -> {
             if (c.tick()) {
                 expired.add(c.getName());
@@ -466,7 +471,7 @@ public class PlayModeController {
         // HP gain for next level: average roll + CON mod
         var derived = calculator.calculate(draft);
         int conMod  = derived.getModifiers().get("CON");
-        int hpGain  = (classDef.getHitDie() / 2 + 1) + conMod;
+        int hpGain  = Math.max(1, (classDef.getHitDie() / 2 + 1) + conMod);
 
         // Proficiency bonus
         boolean profBonusChanged =
@@ -485,12 +490,12 @@ public class PlayModeController {
             } else if ("half".equals(sc.getType())) {
                 int[] o = ClassRepository.halfCasterSlots(currentLevel);
                 int[] n = ClassRepository.halfCasterSlots(newLevel);
-                spellSlotsChanged = !java.util.Arrays.equals(o, n);
+                spellSlotsChanged = !Arrays.equals(o, n);
                 if (spellSlotsChanged) newSpellSlotSummary = buildSlotSummary(n);
             } else {
                 int[] o = ClassRepository.fullCasterSlots(currentLevel);
                 int[] n = ClassRepository.fullCasterSlots(newLevel);
-                spellSlotsChanged = !java.util.Arrays.equals(o, n);
+                spellSlotsChanged = !Arrays.equals(o, n);
                 if (spellSlotsChanged) newSpellSlotSummary = buildSlotSummary(n);
             }
         }
@@ -537,7 +542,7 @@ public class PlayModeController {
         var availableSubclasses = needsSubclass && classDef.getSubclasses() != null
                                     ? classDef.getSubclasses() : List.of();
 
-        var result = new java.util.LinkedHashMap<String, Object>();
+        var result = new LinkedHashMap<String, Object>();
         result.put("currentLevel",        currentLevel);
         result.put("newLevel",            newLevel);
         result.put("newFeatures",         newFeatures);
@@ -560,7 +565,7 @@ public class PlayModeController {
     }
 
     private String buildSlotSummary(int[] slots) {
-        var parts = new java.util.ArrayList<String>();
+        var parts = new ArrayList<String>();
         for (int i = 0; i < slots.length; i++) {
             if (slots[i] > 0) parts.add(slots[i] + "×" + ordinal(i + 1));
         }
