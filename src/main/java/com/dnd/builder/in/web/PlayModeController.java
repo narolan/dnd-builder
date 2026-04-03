@@ -566,7 +566,6 @@ public class PlayModeController {
 
     @PostMapping("/levelup")
     @ResponseBody
-    @SuppressWarnings("unchecked")
     public Map<String, Object> levelUp(@RequestBody Map<String, Object> body,
                                        HttpSession session,
                                        jakarta.servlet.http.HttpServletResponse response) {
@@ -614,17 +613,18 @@ public class PlayModeController {
             draft.setSubclassId(subclassId);
         }
 
-        // New cantrips
-        List<String> newCantrips = (List<String>) body.getOrDefault("newCantrips", List.of());
-        if (newCantrips != null) draft.getChosenCantrips().addAll(newCantrips);
+        // Safe casts: Spring's Jackson deserializes JSON arrays as List<String>
+        @SuppressWarnings("unchecked") List<String> newCantrips =
+            (List<String>) body.getOrDefault("newCantrips", List.of());
+        draft.getChosenCantrips().addAll(newCantrips);
 
-        // New spells
-        List<String> newSpells = (List<String>) body.getOrDefault("newSpells", List.of());
-        if (newSpells != null) draft.getChosenSpells().addAll(newSpells);
+        @SuppressWarnings("unchecked") List<String> newSpells =
+            (List<String>) body.getOrDefault("newSpells", List.of());
+        draft.getChosenSpells().addAll(newSpells);
 
-        // Wizard spellbook
-        List<String> spellbookAdditions = (List<String>) body.getOrDefault("spellbookAdditions", List.of());
-        if (spellbookAdditions != null) draft.getSpellbookSpells().addAll(spellbookAdditions);
+        @SuppressWarnings("unchecked") List<String> spellbookAdditions =
+            (List<String>) body.getOrDefault("spellbookAdditions", List.of());
+        draft.getSpellbookSpells().addAll(spellbookAdditions);
 
         var derived = calculator.calculate(draft);
         var result  = new LinkedHashMap<String, Object>();

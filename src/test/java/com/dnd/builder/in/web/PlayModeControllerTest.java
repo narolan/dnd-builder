@@ -770,6 +770,21 @@ class PlayModeControllerTest {
         }
 
         @Test
+        @DisplayName("levelUp returns 400 when no character in session")
+        void levelUpNoCharacterInSession() {
+            var resp = new MockHttpServletResponse();
+            var body = new java.util.HashMap<String, Object>();
+            body.put("newSpells", List.of());
+            body.put("newCantrips", List.of());
+            body.put("spellbookAdditions", List.of());
+
+            Map<String, Object> result = controller.levelUp(body, new MockHttpSession(), resp);
+
+            assertEquals(400, resp.getStatus());
+            assertEquals(false, result.get("success"));
+        }
+
+        @Test
         @DisplayName("levelUp returns updated draft and derived stats")
         void levelUpReturnsDerivedStats() {
             draft.setCharacterClass("fighter");
