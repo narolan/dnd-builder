@@ -41,6 +41,14 @@ public class CharacterDraft {
     /** Legacy: For feats/ASIs that grant ability score increases */
     private Map<String, Integer> featAsiChoices = new LinkedHashMap<>();
 
+    // ── Level-Up Choices ─────────────────────────────────────────────────────
+    private List<String> expertiseSkills     = new ArrayList<>();
+    private String       pactBoon            = "";
+    private List<String> eldritchInvocations = new ArrayList<>();
+    private List<String> metamagicOptions    = new ArrayList<>();
+    private List<String> favoredEnemies      = new ArrayList<>();
+    private List<String> favoredTerrains     = new ArrayList<>();
+
     // ── Step 7: Spells ───────────────────────────────────────────────────────
     private List<String> chosenCantrips = new ArrayList<>();
     private List<String> chosenSpells   = new ArrayList<>();
@@ -136,6 +144,24 @@ public class CharacterDraft {
 
     public Map<String, Integer> getFeatAsiChoices() { return featAsiChoices; }
     public void setFeatAsiChoices(Map<String, Integer> featAsiChoices) { this.featAsiChoices = featAsiChoices != null ? featAsiChoices : new java.util.LinkedHashMap<>(); }
+
+    public List<String> getExpertiseSkills() { return expertiseSkills; }
+    public void setExpertiseSkills(List<String> expertiseSkills) { this.expertiseSkills = expertiseSkills != null ? expertiseSkills : new java.util.ArrayList<>(); }
+
+    public String getPactBoon() { return pactBoon; }
+    public void setPactBoon(String pactBoon) { this.pactBoon = pactBoon != null ? pactBoon : ""; }
+
+    public List<String> getEldritchInvocations() { return eldritchInvocations; }
+    public void setEldritchInvocations(List<String> eldritchInvocations) { this.eldritchInvocations = eldritchInvocations != null ? eldritchInvocations : new java.util.ArrayList<>(); }
+
+    public List<String> getMetamagicOptions() { return metamagicOptions; }
+    public void setMetamagicOptions(List<String> metamagicOptions) { this.metamagicOptions = metamagicOptions != null ? metamagicOptions : new java.util.ArrayList<>(); }
+
+    public List<String> getFavoredEnemies() { return favoredEnemies; }
+    public void setFavoredEnemies(List<String> favoredEnemies) { this.favoredEnemies = favoredEnemies != null ? favoredEnemies : new java.util.ArrayList<>(); }
+
+    public List<String> getFavoredTerrains() { return favoredTerrains; }
+    public void setFavoredTerrains(List<String> favoredTerrains) { this.favoredTerrains = favoredTerrains != null ? favoredTerrains : new java.util.ArrayList<>(); }
 
     public List<String> getChosenCantrips() { return chosenCantrips; }
     public void setChosenCantrips(List<String> chosenCantrips) { this.chosenCantrips = chosenCantrips != null ? chosenCantrips : new java.util.ArrayList<>(); }
