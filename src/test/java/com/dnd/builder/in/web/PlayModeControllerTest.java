@@ -978,15 +978,18 @@ class PlayModeControllerTest {
         }
 
         @Test
-        @DisplayName("Invocations filtered by pact requirement")
+        @DisplayName("Invocations filtered by pact requirement — pact-restricted inv hidden when pact differs")
         void invocationFilteredByPactBoon() {
-            draft.setPactBoon("tome");
-            var result = options("warlock", 1);
+            // Warlock at level 5 (so level-prereqs are not a factor — all L5 invocations eligible).
+            // Pact = "blade". Chain-only invocation (voice_of_chain_master) must be absent.
+            // Blade invocation (thirsting_blade, minLevel 5) must be present.
+            draft.setPactBoon("blade");
+            var result = options("warlock", 4);  // levels to 5
             @SuppressWarnings("unchecked") var invs = (java.util.List<Map<String, String>>) result.get("availableInvocations");
-            boolean hasTomeInv  = invs.stream().anyMatch(i -> "book_of_ancient_secrets".equals(i.get("id")));
             boolean hasBladeInv = invs.stream().anyMatch(i -> "thirsting_blade".equals(i.get("id")));
-            assertTrue(hasTomeInv,  "book_of_ancient_secrets (tome) should appear");
-            assertFalse(hasBladeInv,"thirsting_blade (blade, requires level 5) should not appear");
+            boolean hasChainInv = invs.stream().anyMatch(i -> "voice_of_chain_master".equals(i.get("id")));
+            assertTrue(hasBladeInv,  "thirsting_blade (blade pact, level 5) should appear for a blade warlock at level 5");
+            assertFalse(hasChainInv, "voice_of_chain_master (chain pact) should NOT appear for a blade warlock");
         }
 
         @Test
@@ -1078,6 +1081,14 @@ class PlayModeControllerTest {
         }
 
         @Test
+        @DisplayName("Non-Ranger class: no favored enemy or natural explorer")
+        void rangerChoicesNotOfferedForOtherClasses() {
+            var result = options("fighter", 5);
+            assertEquals(false, result.get("needsFavoredEnemy"));
+            assertEquals(false, result.get("needsNaturalExplorer"));
+        }
+
+        @Test
         @DisplayName("POST favored enemy added to draft")
         void rangerFavoredEnemyApplied() {
             var body = new java.util.HashMap<String, Object>();
@@ -1101,6 +1112,13 @@ class PlayModeControllerTest {
         @DisplayName("Barbarian L1→2: preparedSpellsGain is 0")
         void preparedSpellsGainZeroForBarbarian() {
             var result = options("barbarian", 1);
+            assertEquals(0, result.get("preparedSpellsGain"));
+        }
+
+        @Test
+        @DisplayName("Paladin L1→2: preparedSpellsGain is 0 (half-caster, no slots yet)")
+        void preparedSpellsGainZeroForPaladin() {
+            var result = options("paladin", 1);
             assertEquals(0, result.get("preparedSpellsGain"));
         }
 

@@ -173,7 +173,7 @@ const LevelUp = (() => {
         `<button type="button" class="lu-pick" data-id="${s.id}" data-type="spell"
                  data-max="${o.newSpellsCount}" style="${_spellBtnStyle()}"
                  onclick="LevelUp._toggleSpell(this)">${s.name}
-           <span style="font-size:.7rem;opacity:.7">(${s.level}th)</span></button>`
+           <span style="font-size:.7rem;opacity:.7">(${_ordinal(s.level)})</span></button>`
       ).join('');
       html += _section(`New Spell${o.newSpellsCount > 1 ? 's' : ''} — Pick ${o.newSpellsCount}`,
         `<div style="display:flex;flex-wrap:wrap;gap:6px">${btns}</div>`);
@@ -185,7 +185,7 @@ const LevelUp = (() => {
         `<button type="button" class="lu-pick" data-id="${s.id}" data-type="spellbook"
                  data-max="${o.wizardSpellbookGain}" style="${_spellBtnStyle()}"
                  onclick="LevelUp._toggleSpell(this)">${s.name}
-           <span style="font-size:.7rem;opacity:.7">(${s.level}th)</span></button>`
+           <span style="font-size:.7rem;opacity:.7">(${_ordinal(s.level)})</span></button>`
       ).join('');
       html += _section(`Add ${o.wizardSpellbookGain} Spells to Spellbook`,
         `<div style="display:flex;flex-wrap:wrap;gap:6px">${btns}</div>`);

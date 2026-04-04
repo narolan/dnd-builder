@@ -699,7 +699,7 @@ public class PlayModeController {
 
         // ── Prepared Caster: spell prep gain + new spell level unlock ─────────
         boolean isPreparedCaster = sc != null && sc.isPrepareSpells();
-        int preparedSpellsGain = isPreparedCaster ? 1 : 0;
+        int preparedSpellsGain = (isPreparedCaster && !"half".equals(sc.getType())) ? 1 : 0;
         int currentMaxSlotLevel = 0, newMaxSlotLevel = 0;
         if (isPreparedCaster && !"half".equals(sc.getType())) {
             int[] curSlots = ClassRepository.fullCasterSlots(currentLevel);
