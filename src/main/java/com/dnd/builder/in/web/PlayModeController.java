@@ -583,13 +583,8 @@ public class PlayModeController {
         int newCantripsCount = Math.max(0,
             ClassRepository.cantripsKnown(classId, newLevel) - ClassRepository.cantripsKnown(classId, currentLevel));
 
-        // Spell gain (known-casters only; prepared casters get 0)
+        // Spell gain: deficit between target count and current known spells
         int newSpellsCount = 0;
-        if (sc != null && !sc.isPrepareSpells()) {
-            newSpellsCount = Math.max(0,
-                ClassRepository.spellsKnown(classId, newLevel) - ClassRepository.spellsKnown(classId, currentLevel));
-        }
-
         boolean isWizard = "wizard".equals(classId);
         int wizardSpellbookGain = isWizard && newLevel > 1 ? 2 : 0;
         int maxNewSpellLevel = ClassRepository.maxSpellLevel(classId, newLevel);
@@ -598,9 +593,15 @@ public class PlayModeController {
         boolean isFullPreparedCaster = !isWizard && sc != null
             && sc.isPrepareSpells() && !"half".equals(sc.getType());
 
-        // For full prepared casters, they gain 1 extra preparation slot per level
-        if (isFullPreparedCaster) {
-            newSpellsCount = 1;
+        if (sc != null && !sc.isPrepareSpells() && maxNewSpellLevel > 0) {
+            // Known casters: fill up to target spells known at new level
+            int target = ClassRepository.spellsKnown(classId, newLevel);
+            newSpellsCount = Math.max(0, target - draft.getChosenSpells().size());
+        } else if (isFullPreparedCaster) {
+            // Prepared casters (Cleric, Druid): fill up to new preparation count
+            int abilityMod = derived.getModifiers().getOrDefault(sc.getAbility(), 0);
+            int target = ClassRepository.maxPrepared(classId, newLevel, abilityMod);
+            newSpellsCount = Math.max(0, target - draft.getChosenSpells().size());
         }
 
         // Available cantrips (not already chosen)
@@ -610,23 +611,16 @@ public class PlayModeController {
                 .toList()
             : List.of();
 
-        // Available spells
-        // Full prepared casters: all class spells up to max level (not just the newest tier)
-        // Known/spellbook casters: only spells of the new max level
+        // Available spells — all spells up to max accessible level (not just the newly unlocked tier)
         int maxLvl = maxNewSpellLevel;
         var availableSpells = (newSpellsCount > 0 || wizardSpellbookGain > 0)
-            ? (isFullPreparedCaster
-                ? spellRepository.findByClass(classId, null).stream()
-                    .filter(s -> s.getLevel() > 0 && s.getLevel() <= maxLvl)
-                    .filter(s -> !draft.getChosenSpells().contains(s.getId()))
-                    .sorted(Comparator.comparingInt(com.dnd.builder.core.model.SpellDefinition::getLevel)
-                                      .thenComparing(com.dnd.builder.core.model.SpellDefinition::getName))
-                    .toList()
-                : spellRepository.findByClass(classId, maxNewSpellLevel).stream()
-                    .filter(s -> s.getLevel() > 0)
-                    .filter(s -> !draft.getChosenSpells().contains(s.getId())
-                              && !draft.getSpellbookSpells().contains(s.getId()))
-                    .toList())
+            ? spellRepository.findByClass(classId, null).stream()
+                .filter(s -> s.getLevel() > 0 && s.getLevel() <= maxLvl)
+                .filter(s -> !draft.getChosenSpells().contains(s.getId())
+                          && !draft.getSpellbookSpells().contains(s.getId()))
+                .sorted(Comparator.comparingInt(com.dnd.builder.core.model.SpellDefinition::getLevel)
+                                  .thenComparing(com.dnd.builder.core.model.SpellDefinition::getName))
+                .toList()
             : List.of();
 
         var availableFeats      = needsAsi       ? featRepository.findAll()         : List.of();

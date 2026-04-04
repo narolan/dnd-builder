@@ -1173,14 +1173,30 @@ class PlayModeControllerTest {
             assertTrue(draft.getChosenSpells().contains("eyebite"));
         }
 
+        // ── Known-caster availableSpells includes lower levels ────────────────
+
+        @Test
+        @DisplayName("Bard L3→4: availableSpells includes 1st-level spells, not just 2nd-level")
+        void knownCasterSpellPickerIncludesLowerLevels() {
+            // L4 bard unlocks 2nd-level spells; pool should contain 1st AND 2nd level
+            var result = options("bard", 3);
+            @SuppressWarnings("unchecked")
+            var spells = (java.util.List<com.dnd.builder.core.model.SpellDefinition>) result.get("availableSpells");
+            assertFalse(spells.isEmpty());
+            assertTrue(spells.stream().anyMatch(s -> s.getLevel() == 1),
+                "1st-level bard spells should be in the pool at level 4");
+            assertTrue(spells.stream().anyMatch(s -> s.getLevel() == 2),
+                "2nd-level bard spells should be in the pool at level 4");
+        }
+
         // ── Full Prepared Caster spell picker (Druid/Cleric) ──────────────────
 
         @Test
-        @DisplayName("Druid L1→2: isFullPreparedCaster=true, newSpellsCount=1, availableSpells non-empty")
+        @DisplayName("Druid L1→2: isFullPreparedCaster=true, newSpellsCount>0, availableSpells non-empty")
         void druidLevel2HasSpellPicker() {
             var result = options("druid", 1);
-            assertEquals(true,  result.get("isFullPreparedCaster"));
-            assertEquals(1,     result.get("newSpellsCount"));
+            assertEquals(true, result.get("isFullPreparedCaster"));
+            assertTrue((int) result.get("newSpellsCount") > 0, "Druid should be able to pick at least one spell");
             @SuppressWarnings("unchecked") var spells = (java.util.List<?>) result.get("availableSpells");
             assertFalse(spells.isEmpty(), "Druid should have available spells to pick from");
         }
@@ -1202,7 +1218,7 @@ class PlayModeControllerTest {
         void clericGetsSpellPickerEachLevel() {
             var result = options("cleric", 1);
             assertEquals(true, result.get("isFullPreparedCaster"));
-            assertEquals(1,    result.get("newSpellsCount"));
+            assertTrue((int) result.get("newSpellsCount") > 0, "Cleric should be able to pick at least one spell");
             @SuppressWarnings("unchecked") var spells = (java.util.List<?>) result.get("availableSpells");
             assertFalse(spells.isEmpty());
         }

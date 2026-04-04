@@ -96,6 +96,8 @@ RACES.forEach(r => RACES_MAP[r.id] = r);
 const STAT_NAMES = ['STR','DEX','CON','INT','WIS','CHA'];
 
 function raceChanged(raceId) {
+    const nextBtn = document.getElementById('btn-next');
+    if (nextBtn) nextBtn.disabled = !raceId;
     const race  = RACES_MAP[raceId];
     const tagsEl = document.getElementById('asi-tags');
     const flexEl = document.getElementById('flex-section');
@@ -178,6 +180,8 @@ function bgChanged(bgId) {
             ${tools ? `&nbsp;·&nbsp; Tools: <strong>${tools}</strong>` : ''}
         </div>`;
     box.style.display = 'block';
+    const nextBtn = document.getElementById('btn-next');
+    if (nextBtn) nextBtn.disabled = !bgId;
 }
 
 (function() {
@@ -193,6 +197,16 @@ const CLASSES = typeof CLASSES_RAW === 'string' ? JSON.parse(CLASSES_RAW) : (CLA
 const CLASSES_MAP = {};
 CLASSES.forEach(c => CLASSES_MAP[c.id] = c);
 
+function _validateClassNext() {
+    const nextBtn = document.getElementById('btn-next');
+    if (!nextBtn) return;
+    const classSelected = !!document.querySelector('input[name="characterClass"]:checked')?.value;
+    const subclassArea  = document.getElementById('subclass-area');
+    const subclassNeeded = subclassArea?.style.display !== 'none';
+    const subclassOk    = !subclassNeeded || !!document.querySelector('input[name="subclassId"]:checked');
+    nextBtn.disabled = !(classSelected && subclassOk);
+}
+
 function classChanged(classId) {
     const area      = document.getElementById('subclass-area');
     const head      = document.getElementById('subclass-head');
@@ -202,6 +216,7 @@ function classChanged(classId) {
     const cls = CLASSES_MAP[classId];
     if (!cls || !cls.subclasses || cls.subclasses.length === 0) {
         area.style.display = 'none';
+        _validateClassNext();
         return;
     }
 
@@ -213,7 +228,7 @@ function classChanged(classId) {
     grid.innerHTML = cls.subclasses.map(sub => `
         <div class="subclass-opt">
           <input type="radio" name="subclassId" value="${sub.id}" id="sub_${sub.id}"
-                 ${sub.id === prevSubclass ? 'checked' : ''}/>
+                 ${sub.id === prevSubclass ? 'checked' : ''} onchange="_validateClassNext()"/>
           <label for="sub_${sub.id}">
             <span class="subclass-name">${sub.name}</span>
             <span class="subclass-desc">${sub.description}</span>
@@ -221,6 +236,7 @@ function classChanged(classId) {
         </div>`).join('');
 
     area.style.display = 'block';
+    _validateClassNext();
 }
 
 (function() {

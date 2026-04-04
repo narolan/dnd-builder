@@ -197,6 +197,7 @@ input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-
 .btn-prev:hover{border-color:var(--gold-dim);color:var(--cream)}
 .btn-next{background:rgba(201,164,64,.15);border-color:var(--gold);color:var(--gold-lite)}
 .btn-next:hover{background:rgba(201,164,64,.25);color:var(--white)}
+.btn-next:disabled,.btn-next:disabled:hover{opacity:.4;cursor:not-allowed;pointer-events:none;transform:none;box-shadow:none}
 .btn-export{background:rgba(42,92,42,.3);border-color:var(--green-lite);color:var(--green-lite)}
 .btn-export:hover{background:rgba(42,92,42,.5);color:#7fcc7f}
 .btn-danger{background:transparent;border-color:var(--red);color:var(--red-lite)}

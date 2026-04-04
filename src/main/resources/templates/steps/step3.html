@@ -45,7 +45,8 @@
 
       <div class="btn-row">
         <a href="/step/2" class="btn btn-prev">← Class</a>
-        <button type="submit" class="btn btn-next">Next: Ability Scores →</button>
+        <button type="submit" id="btn-next" class="btn btn-next"
+                th:disabled="${draft.background == null or draft.background.isEmpty()}">Next: Ability Scores →</button>
       </div>
     </form>
   </div>

@@ -42,7 +42,8 @@
 
       <div class="btn-row">
         <a href="/step/1" class="btn btn-prev">← Race</a>
-        <button type="submit" class="btn btn-next">Next: Background →</button>
+        <button type="submit" id="btn-next" class="btn btn-next"
+                th:disabled="${draft.characterClass == null or draft.characterClass.isEmpty()}">Next: Background →</button>
       </div>
     </form>
   </div>

@@ -8,6 +8,7 @@
 const LevelUp = (() => {
   const STORAGE_KEY = 'characterForge_characters';
   let _charIndex = null;  // set when opened from /characters
+  let _options   = null;  // current level-up options; used by _validate()
 
   // ── Public ──────────────────────────────────────────────────────────────────
 
@@ -40,6 +41,7 @@ const LevelUp = (() => {
   // ── Modal rendering ──────────────────────────────────────────────────────────
 
   function _showModal(options) {
+    _options = options;
     document.getElementById('lu-modal')?.remove();
 
     const el = document.createElement('div');
@@ -64,9 +66,9 @@ const LevelUp = (() => {
         </div>
         <div id="lu-body" style="padding:20px 24px">${_buildBody(options)}</div>
         <div style="padding:16px 24px;border-top:1px solid rgba(201,164,64,.3);text-align:right">
-          <button id="lu-confirm-btn" onclick="LevelUp._confirm()"
+          <button id="lu-confirm-btn" onclick="LevelUp._confirm()" disabled
                   style="padding:10px 24px;border:1px solid #c9a440;background:rgba(201,164,64,.15);
-                         color:#c9a440;border-radius:4px;cursor:pointer;
+                         color:#c9a440;border-radius:4px;cursor:not-allowed;opacity:.4;
                          font-family:'Cinzel',serif;font-size:.9rem;transition:all .2s">
             Confirm Level Up
           </button>
@@ -332,6 +334,55 @@ const LevelUp = (() => {
            'font-family:"Crimson Text",serif;font-size:.9rem;transition:all .15s';
   }
 
+  // ── Validation ───────────────────────────────────────────────────────────────
+
+  function _count(type) {
+    return document.querySelectorAll(`.lu-pick[data-type="${type}"].lu-selected`).length;
+  }
+  function _val(id) {
+    return !!(document.getElementById(id)?.value);
+  }
+
+  function _validate() {
+    const o = _options;
+    if (!o) return;
+    let ok = true;
+
+    if (o.newSpellsCount    > 0) ok = ok && _count('spell')        >= o.newSpellsCount;
+    if (o.newCantripsCount  > 0) ok = ok && _count('cantrip')      >= o.newCantripsCount;
+    if (o.wizardSpellbookGain > 0) ok = ok && _count('spellbook')  >= o.wizardSpellbookGain;
+    if (o.needsMagicalSecrets)  ok = ok && _count('magical_secret') >= 2;
+    if (o.needsInvocations)     ok = ok && _count('invocation')    >= o.newInvocationsCount;
+    if (o.needsMetamagic)       ok = ok && _count('metamagic')     >= o.newMetamagicCount;
+    if (o.needsExpertise)       ok = ok && _count('expertise')     >= o.expertiseCount;
+    if (o.needsMysticArcanum)   ok = ok && _count('mystic_arcanum') >= 1;
+
+    if (o.needsSubclass)        ok = ok && _val('lu-subclass');
+    if (o.needsPactBoon)        ok = ok && _val('lu-pact-boon');
+    if (o.needsFavoredEnemy)    ok = ok && _val('lu-favored-enemy');
+    if (o.needsNaturalExplorer) ok = ok && _val('lu-natural-explorer');
+
+    if (o.needsAsi) {
+      const type = document.querySelector('input[name="lu-asi-type"]:checked')?.value;
+      if (!type) {
+        ok = false;
+      } else if (type === 'single') {
+        ok = ok && _val('lu-asi-stat1');
+      } else if (type === 'split') {
+        ok = ok && _val('lu-asi-split1') && _val('lu-asi-split2');
+      } else if (type === 'feat') {
+        ok = ok && _val('lu-feat-select');
+      }
+    }
+
+    const btn = document.getElementById('lu-confirm-btn');
+    if (btn) {
+      btn.disabled       = !ok;
+      btn.style.opacity  = ok ? '1'           : '0.4';
+      btn.style.cursor   = ok ? 'pointer'     : 'not-allowed';
+    }
+  }
+
   // ── Events ───────────────────────────────────────────────────────────────────
 
   function _wireEvents() {
@@ -340,8 +391,17 @@ const LevelUp = (() => {
         document.getElementById('lu-asi-single').style.display = r.value === 'single' ? '' : 'none';
         document.getElementById('lu-asi-split').style.display  = r.value === 'split'  ? '' : 'none';
         document.getElementById('lu-asi-feat').style.display   = r.value === 'feat'   ? '' : 'none';
+        _validate();
       });
     });
+
+    // Wire all select elements to re-validate on change
+    ['lu-asi-stat1','lu-asi-split1','lu-asi-split2','lu-feat-select',
+     'lu-subclass','lu-pact-boon','lu-favored-enemy','lu-natural-explorer']
+      .forEach(id => document.getElementById(id)?.addEventListener('change', _validate));
+
+    // Run initial validation (enables confirm if no choices are required)
+    _validate();
   }
 
   function _toggleSpell(btn) {
@@ -358,6 +418,7 @@ const LevelUp = (() => {
       btn.style.background = 'rgba(201,164,64,.2)';
       btn.style.borderColor = '#c9a440';
     }
+    _validate();
   }
 
   // ── Confirm ──────────────────────────────────────────────────────────────────

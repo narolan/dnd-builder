@@ -43,7 +43,8 @@
 
       <div class="btn-row">
         <div></div>
-        <button type="submit" class="btn btn-next">Next: Class →</button>
+        <button type="submit" id="btn-next" class="btn btn-next"
+                th:disabled="${draft.raceId == null or draft.raceId.isEmpty()}">Next: Class →</button>
       </div>
     </form>
   </div>
