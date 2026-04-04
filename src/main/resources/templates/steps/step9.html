@@ -31,6 +31,15 @@
       </div>
     </div>
 
+    <div th:if="${draft.level < 20}" style="margin-bottom:16px">
+      <button onclick="LevelUp.open()"
+              style="padding:8px 20px;border:1px solid #c9a440;background:rgba(201,164,64,.15);
+                     color:#c9a440;border-radius:4px;cursor:pointer;font-family:'Cinzel',serif;
+                     font-size:.85rem;transition:all .2s">
+        ⚔ Level Up (→ Level <span th:text="${draft.level + 1}">2</span>)
+      </button>
+    </div>
+
     <div class="sheet">
       <div>
         <div class="sheet-stat-grid">
