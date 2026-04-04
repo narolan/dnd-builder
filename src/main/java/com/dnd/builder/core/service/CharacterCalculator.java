@@ -293,6 +293,8 @@ public class CharacterCalculator {
      */
     private int resolveArmorAC(CharacterDraft draft, int dexMod, int defaultAC) {
         var slots = equipmentRepository.findByClass(draft.getCharacterClass());
+        int baseAc = defaultAC;
+        boolean shieldFound = false;
         for (var slot : slots) {
             String chosenOptionId = draft.getEquipmentChoices().get(slot.slotId());
             if (chosenOptionId == null) continue;
@@ -301,13 +303,14 @@ public class CharacterCalculator {
                     .map(EquipmentChoice::label)
                     .findFirst()
                     .orElse("");
-            if (label.contains("Chain mail"))      return 16;
-            if (label.contains("Scale mail"))      return 14 + Math.min(dexMod, 2);
-            if (label.contains("Leather armor"))   return 11 + dexMod;
-            if (label.contains("Studded leather")) return 12 + dexMod;
-            if (label.contains("Half plate"))      return 15 + Math.min(dexMod, 2);
+            if (label.contains("Chain mail"))      baseAc = Math.max(baseAc, 16);
+            else if (label.contains("Scale mail"))      baseAc = Math.max(baseAc, 14 + Math.min(dexMod, 2));
+            else if (label.contains("Leather armor"))   baseAc = Math.max(baseAc, 11 + dexMod);
+            else if (label.contains("Studded leather")) baseAc = Math.max(baseAc, 12 + dexMod);
+            else if (label.contains("Half plate"))      baseAc = Math.max(baseAc, 15 + Math.min(dexMod, 2));
+            if (label.toLowerCase().contains("shield")) shieldFound = true;
         }
-        return defaultAC;
+        return baseAc + (shieldFound ? 2 : 0);
     }
 
     /** Collect skill proficiency list valid for current class + background */

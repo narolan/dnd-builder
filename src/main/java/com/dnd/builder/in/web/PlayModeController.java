@@ -589,16 +589,15 @@ public class PlayModeController {
         int wizardSpellbookGain = isWizard && newLevel > 1 ? 2 : 0;
         int maxNewSpellLevel = ClassRepository.maxSpellLevel(classId, newLevel);
 
-        // Full prepared casters (Cleric, Druid): prepared=true, full caster, not wizard
-        boolean isFullPreparedCaster = !isWizard && sc != null
-            && sc.isPrepareSpells() && !"half".equals(sc.getType());
+        // Prepared casters (Cleric, Druid, Paladin): prepared=true, not wizard
+        boolean isFullPreparedCaster = !isWizard && sc != null && sc.isPrepareSpells();
 
         if (sc != null && !sc.isPrepareSpells() && maxNewSpellLevel > 0) {
             // Known casters: fill up to target spells known at new level
             int target = ClassRepository.spellsKnown(classId, newLevel);
             newSpellsCount = Math.max(0, target - draft.getChosenSpells().size());
-        } else if (isFullPreparedCaster) {
-            // Prepared casters (Cleric, Druid): fill up to new preparation count
+        } else if (isFullPreparedCaster && maxNewSpellLevel > 0) {
+            // Prepared casters (Cleric, Druid, Paladin): fill up to new preparation count
             int abilityMod = derived.getModifiers().getOrDefault(sc.getAbility(), 0);
             int target = ClassRepository.maxPrepared(classId, newLevel, abilityMod);
             newSpellsCount = Math.max(0, target - draft.getChosenSpells().size());
