@@ -1172,6 +1172,59 @@ class PlayModeControllerTest {
             post("warlock", 10, body);
             assertTrue(draft.getChosenSpells().contains("eyebite"));
         }
+
+        // ── Full Prepared Caster spell picker (Druid/Cleric) ──────────────────
+
+        @Test
+        @DisplayName("Druid L1→2: isFullPreparedCaster=true, newSpellsCount=1, availableSpells non-empty")
+        void druidLevel2HasSpellPicker() {
+            var result = options("druid", 1);
+            assertEquals(true,  result.get("isFullPreparedCaster"));
+            assertEquals(1,     result.get("newSpellsCount"));
+            @SuppressWarnings("unchecked") var spells = (java.util.List<?>) result.get("availableSpells");
+            assertFalse(spells.isEmpty(), "Druid should have available spells to pick from");
+        }
+
+        @Test
+        @DisplayName("Druid L2→3: availableSpells includes 2nd-level druid spells")
+        void druidLevel3UnlocksSecondLevelSpells() {
+            var result = options("druid", 2);
+            assertEquals(true, result.get("isFullPreparedCaster"));
+            @SuppressWarnings("unchecked")
+            var spells = (java.util.List<com.dnd.builder.core.model.SpellDefinition>) result.get("availableSpells");
+            assertFalse(spells.isEmpty());
+            assertTrue(spells.stream().anyMatch(s -> s.getLevel() == 2),
+                "2nd-level spells should be available at druid level 3");
+        }
+
+        @Test
+        @DisplayName("Cleric L1→2: isFullPreparedCaster=true, has spell picker")
+        void clericGetsSpellPickerEachLevel() {
+            var result = options("cleric", 1);
+            assertEquals(true, result.get("isFullPreparedCaster"));
+            assertEquals(1,    result.get("newSpellsCount"));
+            @SuppressWarnings("unchecked") var spells = (java.util.List<?>) result.get("availableSpells");
+            assertFalse(spells.isEmpty());
+        }
+
+        @Test
+        @DisplayName("Wizard L1→2: isFullPreparedCaster=false (uses separate spellbook picker)")
+        void wizardDoesNotGetPreparedPicker() {
+            var result = options("wizard", 1);
+            assertEquals(false, result.get("isFullPreparedCaster"));
+        }
+
+        @Test
+        @DisplayName("Druid availableSpells excludes already-known spells")
+        void druidSpellPickerExcludesKnownSpells() {
+            // pre-load a known druid spell so it shouldn't appear
+            draft.getChosenSpells().add("cure_wounds");
+            var result = options("druid", 1);
+            @SuppressWarnings("unchecked")
+            var spells = (java.util.List<com.dnd.builder.core.model.SpellDefinition>) result.get("availableSpells");
+            assertTrue(spells.stream().noneMatch(s -> "cure_wounds".equals(s.getId())),
+                "Already-known spell should not appear in picker");
+        }
     }
 
     @Nested

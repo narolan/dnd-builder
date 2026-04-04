@@ -594,6 +594,15 @@ public class PlayModeController {
         int wizardSpellbookGain = isWizard && newLevel > 1 ? 2 : 0;
         int maxNewSpellLevel = ClassRepository.maxSpellLevel(classId, newLevel);
 
+        // Full prepared casters (Cleric, Druid): prepared=true, full caster, not wizard
+        boolean isFullPreparedCaster = !isWizard && sc != null
+            && sc.isPrepareSpells() && !"half".equals(sc.getType());
+
+        // For full prepared casters, they gain 1 extra preparation slot per level
+        if (isFullPreparedCaster) {
+            newSpellsCount = 1;
+        }
+
         // Available cantrips (not already chosen)
         var availableCantrips = newCantripsCount > 0
             ? spellRepository.findCantripsForClass(classId).stream()
@@ -601,13 +610,23 @@ public class PlayModeController {
                 .toList()
             : List.of();
 
-        // Available spells (not already known, up to new max spell level)
+        // Available spells
+        // Full prepared casters: all class spells up to max level (not just the newest tier)
+        // Known/spellbook casters: only spells of the new max level
+        int maxLvl = maxNewSpellLevel;
         var availableSpells = (newSpellsCount > 0 || wizardSpellbookGain > 0)
-            ? spellRepository.findByClass(classId, maxNewSpellLevel).stream()
-                .filter(s -> s.getLevel() > 0)
-                .filter(s -> !draft.getChosenSpells().contains(s.getId())
-                          && !draft.getSpellbookSpells().contains(s.getId()))
-                .toList()
+            ? (isFullPreparedCaster
+                ? spellRepository.findByClass(classId, null).stream()
+                    .filter(s -> s.getLevel() > 0 && s.getLevel() <= maxLvl)
+                    .filter(s -> !draft.getChosenSpells().contains(s.getId()))
+                    .sorted(Comparator.comparingInt(com.dnd.builder.core.model.SpellDefinition::getLevel)
+                                      .thenComparing(com.dnd.builder.core.model.SpellDefinition::getName))
+                    .toList()
+                : spellRepository.findByClass(classId, maxNewSpellLevel).stream()
+                    .filter(s -> s.getLevel() > 0)
+                    .filter(s -> !draft.getChosenSpells().contains(s.getId())
+                              && !draft.getSpellbookSpells().contains(s.getId()))
+                    .toList())
             : List.of();
 
         var availableFeats      = needsAsi       ? featRepository.findAll()         : List.of();
@@ -631,8 +650,9 @@ public class PlayModeController {
         result.put("availableFeats",      availableFeats);
         result.put("availableSubclasses", availableSubclasses);
         result.put("maxNewSpellLevel",    maxNewSpellLevel);
-        result.put("isWizard",            isWizard);
-        result.put("wizardSpellbookGain", wizardSpellbookGain);
+        result.put("isWizard",               isWizard);
+        result.put("isFullPreparedCaster",   isFullPreparedCaster);
+        result.put("wizardSpellbookGain",    wizardSpellbookGain);
 
         // ── Expertise (Bard L3/10, Rogue L6) ─────────────────────────────────
         boolean needsExpertise = ("bard".equals(classId) && (newLevel == 3 || newLevel == 10))

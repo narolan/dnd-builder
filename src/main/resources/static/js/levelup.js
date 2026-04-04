@@ -169,14 +169,35 @@ const LevelUp = (() => {
 
     // ── New spells ─────────────────────────────────────────────────────────────
     if (o.newSpellsCount > 0) {
-      const btns = o.availableSpells.map(s =>
-        `<button type="button" class="lu-pick" data-id="${s.id}" data-type="spell"
+      if (o.isFullPreparedCaster) {
+        // Cleric/Druid: show all accessible spells grouped by level
+        const grouped = {};
+        (o.availableSpells || []).forEach(s => {
+          if (!grouped[s.level]) grouped[s.level] = [];
+          grouped[s.level].push(s);
+        });
+        let spellHtml = `<p style="margin:0 0 10px;font-size:.9rem;opacity:.8">Choose a spell to add to your prepared spells list:</p>`;
+        Object.keys(grouped).sort((a,b) => a-b).forEach(lvl => {
+          spellHtml += `<div style="margin-bottom:6px;font-size:.8rem;opacity:.7;text-transform:uppercase;letter-spacing:.05em">${_ordinal(+lvl)}-level</div>`;
+          spellHtml += `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">`;
+          grouped[lvl].forEach(s => {
+            spellHtml += `<button type="button" class="lu-pick" data-id="${s.id}" data-type="spell"
                  data-max="${o.newSpellsCount}" style="${_spellBtnStyle()}"
-                 onclick="LevelUp._toggleSpell(this)">${s.name}
-           <span style="font-size:.7rem;opacity:.7">(${_ordinal(s.level)})</span></button>`
-      ).join('');
-      html += _section(`New Spell${o.newSpellsCount > 1 ? 's' : ''} — Pick ${o.newSpellsCount}`,
-        `<div style="display:flex;flex-wrap:wrap;gap:6px">${btns}</div>`);
+                 onclick="LevelUp._toggleSpell(this)">${s.name}</button>`;
+          });
+          spellHtml += `</div>`;
+        });
+        html += _section(`Update Spell Preparation — Pick ${o.newSpellsCount}`, spellHtml);
+      } else {
+        const btns = o.availableSpells.map(s =>
+          `<button type="button" class="lu-pick" data-id="${s.id}" data-type="spell"
+                   data-max="${o.newSpellsCount}" style="${_spellBtnStyle()}"
+                   onclick="LevelUp._toggleSpell(this)">${s.name}
+             <span style="font-size:.7rem;opacity:.7">(${_ordinal(s.level)})</span></button>`
+        ).join('');
+        html += _section(`New Spell${o.newSpellsCount > 1 ? 's' : ''} — Pick ${o.newSpellsCount}`,
+          `<div style="display:flex;flex-wrap:wrap;gap:6px">${btns}</div>`);
+      }
     }
 
     // ── Wizard spellbook ───────────────────────────────────────────────────────
