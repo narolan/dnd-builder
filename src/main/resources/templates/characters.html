@@ -124,6 +124,7 @@ function renderCharacters() {
                 <div class="character-actions">
                     <button class="char-btn load" onclick="loadCharacter(${index})">Load</button>
                     <button class="char-btn" onclick="exportCharacter(${index})">Export</button>
+                    ${(char.level || 1) < 20 ? `<button class="char-btn" onclick="LevelUp.open(${index})" style="border-color:#c9a440;color:#c9a440">Level Up</button>` : ''}
                     <button class="char-btn delete" onclick="deleteCharacter(${index})">Delete</button>
                 </div>
             </div>
@@ -262,5 +263,6 @@ window.CharacterStorage = {
 // Initial render
 renderCharacters();
 </script>
+<script src="/js/levelup.js"></script>
 </body>
 </html>
