@@ -87,6 +87,10 @@ const LevelUp = (() => {
     `;
   }
 
+  function _ordinal(n) {
+    return ['','1st','2nd','3rd','4th','5th','6th','7th','8th','9th'][n] || (n + 'th');
+  }
+
   function _buildBody(o) {
     let html = '';
 
@@ -100,6 +104,8 @@ const LevelUp = (() => {
     gained.push(`<li>Hit point maximum: <strong>+${o.hpGain}</strong></li>`);
     if (o.profBonusChanged) gained.push(`<li>Proficiency bonus increased</li>`);
     if (o.spellSlotsChanged) gained.push(`<li>Spell slots: ${o.newSpellSlotSummary}</li>`);
+    if (o.preparedSpellsGain > 0) gained.push(`<li>You can now prepare one additional spell</li>`);
+    if (o.unlocksNewSpellLevel) gained.push(`<li>${_ordinal(o.newUnlockedSpellLevel)}-level spells are now accessible</li>`);
     html += _section('What you gained', `<ul style="margin:0;padding-left:20px;line-height:1.8">${gained.join('')}</ul>`);
 
     // ── Subclass ───────────────────────────────────────────────────────────────
@@ -185,6 +191,111 @@ const LevelUp = (() => {
         `<div style="display:flex;flex-wrap:wrap;gap:6px">${btns}</div>`);
     }
 
+    // ── Expertise ──────────────────────────────────────────────────────────────
+    if (o.needsExpertise) {
+      const btns = (o.eligibleExpertiseSkills || []).map(sk =>
+        `<button type="button" class="lu-pick" data-id="${sk}" data-type="expertise"
+                 data-max="${o.expertiseCount}" style="${_spellBtnStyle()}"
+                 onclick="LevelUp._toggleSpell(this)">${sk}</button>`
+      ).join('');
+      html += _section(`Expertise — Pick ${o.expertiseCount} Skills`,
+        `<p style="margin:0 0 10px;font-size:.9rem;opacity:.8">Choose skills to gain Expertise (doubled proficiency bonus):</p>
+         <div style="display:flex;flex-wrap:wrap;gap:6px">${btns}</div>`);
+    }
+
+    // ── Magical Secrets ────────────────────────────────────────────────────────
+    if (o.needsMagicalSecrets) {
+      const grouped = {};
+      (o.availableMagicalSecrets || []).forEach(sp => {
+        const k = sp.level;
+        if (!grouped[k]) grouped[k] = [];
+        grouped[k].push(sp);
+      });
+      let spellHtml = '';
+      Object.keys(grouped).sort((a,b) => a - b).forEach(lvl => {
+        spellHtml += `<div style="margin-bottom:8px"><span style="font-size:.8rem;color:#c9a440;opacity:.8">${_ordinal(+lvl)}-level</span><br>
+          <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">`;
+        grouped[lvl].forEach(sp => {
+          spellHtml += `<button type="button" class="lu-pick" data-id="${sp.id}" data-type="magical_secret"
+                                data-max="2" style="${_spellBtnStyle()}" onclick="LevelUp._toggleSpell(this)">${sp.name}</button>`;
+        });
+        spellHtml += '</div></div>';
+      });
+      html += _section('Magical Secrets — Pick 2 Spells from Any Class',
+        `<p style="margin:0 0 10px;font-size:.9rem;opacity:.8">These spells become part of your spells known:</p>${spellHtml}`);
+    }
+
+    // ── Pact Boon ──────────────────────────────────────────────────────────────
+    if (o.needsPactBoon) {
+      html += _section('Choose Your Pact Boon',
+        `<select id="lu-pact-boon" style="${_selectStyle()}">
+          <option value="">Select boon...</option>
+          <option value="chain">Pact of the Chain — Gain a familiar with special forms</option>
+          <option value="blade">Pact of the Blade — Summon a magical pact weapon</option>
+          <option value="tome">Pact of the Tome — Gain a Book of Shadows with 3 cantrips</option>
+        </select>`);
+    }
+
+    // ── Eldritch Invocations ───────────────────────────────────────────────────
+    if (o.needsInvocations) {
+      const btns = (o.availableInvocations || []).map(inv =>
+        `<button type="button" class="lu-pick" data-id="${inv.id}" data-type="invocation"
+                 data-max="${o.newInvocationsCount}" style="${_spellBtnStyle()}"
+                 title="${inv.desc}" onclick="LevelUp._toggleSpell(this)">${inv.name}</button>`
+      ).join('');
+      html += _section(`Eldritch Invocations — Pick ${o.newInvocationsCount}`,
+        `<p style="margin:0 0 10px;font-size:.9rem;opacity:.8">Hover for description. Filtered by level and pact requirements:</p>
+         <div style="display:flex;flex-wrap:wrap;gap:6px">${btns}</div>`);
+    }
+
+    // ── Metamagic ──────────────────────────────────────────────────────────────
+    if (o.needsMetamagic) {
+      const btns = (o.availableMetamagic || []).map(m =>
+        `<button type="button" class="lu-pick" data-id="${m.id}" data-type="metamagic"
+                 data-max="${o.newMetamagicCount}" style="${_spellBtnStyle()}"
+                 title="${m.desc}" onclick="LevelUp._toggleSpell(this)">${m.name}</button>`
+      ).join('');
+      html += _section(`Metamagic — Pick ${o.newMetamagicCount}`,
+        `<p style="margin:0 0 10px;font-size:.9rem;opacity:.8">Hover for description. Sorcery Points (SP) costs shown in description:</p>
+         <div style="display:flex;flex-wrap:wrap;gap:6px">${btns}</div>`);
+    }
+
+    // ── Ranger: Favored Enemy ──────────────────────────────────────────────────
+    if (o.needsFavoredEnemy) {
+      const opts = (o.favoredEnemyTypes || []).map(t =>
+        `<option value="${t}">${t}</option>`
+      ).join('');
+      html += _section('Additional Favored Enemy',
+        `<p style="margin:0 0 10px;font-size:.9rem;opacity:.8">Advantage on Survival to track and INT checks to recall information:</p>
+         <select id="lu-favored-enemy" style="${_selectStyle()}">
+           <option value="">Select enemy type...</option>${opts}
+         </select>`);
+    }
+
+    // ── Ranger: Natural Explorer ───────────────────────────────────────────────
+    if (o.needsNaturalExplorer) {
+      const opts = (o.naturalExplorerTerrains || []).map(t =>
+        `<option value="${t}">${t}</option>`
+      ).join('');
+      html += _section('Additional Favored Terrain',
+        `<p style="margin:0 0 10px;font-size:.9rem;opacity:.8">Gain natural explorer benefits in this terrain type:</p>
+         <select id="lu-natural-explorer" style="${_selectStyle()}">
+           <option value="">Select terrain...</option>${opts}
+         </select>`);
+    }
+
+    // ── Warlock: Mystic Arcanum ────────────────────────────────────────────────
+    if (o.needsMysticArcanum) {
+      const btns = (o.availableMysticArcanum || []).map(s =>
+        `<button type="button" class="lu-pick" data-id="${s.id}" data-type="mystic_arcanum"
+                 data-max="1" style="${_spellBtnStyle()}"
+                 onclick="LevelUp._toggleSpell(this)">${s.name}</button>`
+      ).join('');
+      html += _section(`Mystic Arcanum — Choose a ${_ordinal(o.mysticArcanumLevel)}-Level Spell`,
+        `<p style="margin:0 0 10px;font-size:.9rem;opacity:.8">Cast once per long rest without a spell slot:</p>
+         <div style="display:flex;flex-wrap:wrap;gap:6px">${btns}</div>`);
+    }
+
     return html;
   }
 
@@ -257,7 +368,9 @@ const LevelUp = (() => {
   function _gatherChoices() {
     const body = { newSpells: [], newCantrips: [], spellbookAdditions: [] };
 
+    // Spells: merge regular spell picks and magical secret picks
     document.querySelectorAll('.lu-pick.lu-selected[data-type="spell"]').forEach(b => body.newSpells.push(b.dataset.id));
+    document.querySelectorAll('.lu-pick.lu-selected[data-type="magical_secret"]').forEach(b => body.newSpells.push(b.dataset.id));
     document.querySelectorAll('.lu-pick.lu-selected[data-type="cantrip"]').forEach(b => body.newCantrips.push(b.dataset.id));
     document.querySelectorAll('.lu-pick.lu-selected[data-type="spellbook"]').forEach(b => body.spellbookAdditions.push(b.dataset.id));
 
@@ -278,6 +391,19 @@ const LevelUp = (() => {
 
     const subclassSel = document.getElementById('lu-subclass');
     if (subclassSel) body.subclassId = subclassSel.value || null;
+
+    // New choice types
+    body.expertiseSkills = [...document.querySelectorAll('.lu-pick.lu-selected[data-type="expertise"]')]
+      .map(b => b.dataset.id);
+    body.pactBoon        = document.getElementById('lu-pact-boon')?.value ?? '';
+    body.newInvocations  = [...document.querySelectorAll('.lu-pick.lu-selected[data-type="invocation"]')]
+      .map(b => b.dataset.id);
+    body.newMetamagic    = [...document.querySelectorAll('.lu-pick.lu-selected[data-type="metamagic"]')]
+      .map(b => b.dataset.id);
+    body.favoredEnemy    = document.getElementById('lu-favored-enemy')?.value ?? '';
+    body.naturalExplorer = document.getElementById('lu-natural-explorer')?.value ?? '';
+    body.mysticArcanumSpell = document.querySelector('.lu-pick.lu-selected[data-type="mystic_arcanum"]')
+      ?.dataset.id ?? '';
 
     return body;
   }
