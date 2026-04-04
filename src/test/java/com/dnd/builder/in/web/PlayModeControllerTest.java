@@ -803,6 +803,360 @@ class PlayModeControllerTest {
     }
 
     @Nested
+    @DisplayName("Level Up — Additional Choices")
+    class LevelUpChoices {
+
+        private Map<String, Object> options(String classId, int currentLevel) {
+            draft.setCharacterClass(classId);
+            draft.setLevel(currentLevel);
+            return controller.levelUpOptions(session, new MockHttpServletResponse());
+        }
+
+        private Map<String, Object> post(String classId, int currentLevel, Map<String, Object> body) {
+            draft.setCharacterClass(classId);
+            draft.setLevel(currentLevel);
+            return controller.levelUp(body, session, new MockHttpServletResponse());
+        }
+
+        // ── Expertise ──────────────────────────────────────────────────────────
+
+        @Test
+        @DisplayName("Bard L2→3: expertise offered with 2 slots")
+        void expertiseOfferedForBardLevel3() {
+            draft.setSkillProficiencies(List.of("Arcana", "History", "Persuasion"));
+            var result = options("bard", 2);
+            assertEquals(true, result.get("needsExpertise"));
+            assertEquals(2, result.get("expertiseCount"));
+            @SuppressWarnings("unchecked") var skills = (java.util.List<String>) result.get("eligibleExpertiseSkills");
+            assertFalse(skills.isEmpty());
+            assertTrue(skills.contains("Arcana"));
+        }
+
+        @Test
+        @DisplayName("Bard L1→2: expertise NOT offered")
+        void expertiseNotOfferedAtLevel2() {
+            var result = options("bard", 1);
+            assertEquals(false, result.get("needsExpertise"));
+        }
+
+        @Test
+        @DisplayName("POST expertise adds skills to draft")
+        void expertiseApplied() {
+            draft.setSkillProficiencies(List.of("Arcana", "History"));
+            var body = new java.util.HashMap<String, Object>();
+            body.put("expertiseSkills", List.of("Arcana", "History"));
+            post("bard", 2, body);
+            assertTrue(draft.getExpertiseSkills().contains("Arcana"));
+            assertTrue(draft.getExpertiseSkills().contains("History"));
+        }
+
+        @Test
+        @DisplayName("Rogue L5→6: expertise offered")
+        void expertiseOfferedForRogueLevel6() {
+            draft.setSkillProficiencies(List.of("Stealth", "Deception"));
+            var result = options("rogue", 5);
+            assertEquals(true, result.get("needsExpertise"));
+        }
+
+        @Test
+        @DisplayName("Expertise already chosen excluded from eligible skills")
+        void expertiseAlreadyChosenExcluded() {
+            draft.setSkillProficiencies(List.of("Arcana", "History", "Persuasion"));
+            draft.getExpertiseSkills().add("Arcana");
+            var result = options("bard", 2);
+            @SuppressWarnings("unchecked") var skills = (java.util.List<String>) result.get("eligibleExpertiseSkills");
+            assertFalse(skills.contains("Arcana"));
+            assertTrue(skills.contains("History"));
+        }
+
+        // ── Magical Secrets ────────────────────────────────────────────────────
+
+        @Test
+        @DisplayName("Bard L9→10: Magical Secrets offered")
+        void magicalSecretsOfferedAtLevel10() {
+            var result = options("bard", 9);
+            assertEquals(true, result.get("needsMagicalSecrets"));
+            @SuppressWarnings("unchecked") var spells = (java.util.List<?>) result.get("availableMagicalSecrets");
+            assertFalse(spells.isEmpty());
+        }
+
+        @Test
+        @DisplayName("Magical Secrets spells include non-bard classes")
+        void magicalSecretsIncludesAllClasses() {
+            var result = options("bard", 9);
+            @SuppressWarnings("unchecked") var spells = (java.util.List<com.dnd.builder.core.model.SpellDefinition>) result.get("availableMagicalSecrets");
+            // Should include wizard/sorcerer/etc spells — fireball is a wizard/sorcerer spell, not bard
+            boolean hasNonBard = spells.stream()
+                .anyMatch(s -> s.getClasses() != null && !s.getClasses().contains("bard"));
+            assertTrue(hasNonBard, "Magical Secrets should include spells from non-bard classes");
+        }
+
+        @Test
+        @DisplayName("Bard L1→2: Magical Secrets NOT offered")
+        void magicalSecretsNotOfferedEarly() {
+            var result = options("bard", 1);
+            assertEquals(false, result.get("needsMagicalSecrets"));
+        }
+
+        @Test
+        @DisplayName("POST: magical secret spells go into chosenSpells via newSpells field")
+        void magicalSecretsSpellsGoIntoChosenSpells() {
+            var body = new java.util.HashMap<String, Object>();
+            body.put("newSpells", List.of("fireball"));
+            post("bard", 9, body);
+            assertTrue(draft.getChosenSpells().contains("fireball"));
+        }
+
+        // ── Pact Boon ──────────────────────────────────────────────────────────
+
+        @Test
+        @DisplayName("Warlock L2→3: Pact Boon offered")
+        void pactBoonOfferedAtLevel3() {
+            var result = options("warlock", 2);
+            assertEquals(true, result.get("needsPactBoon"));
+        }
+
+        @Test
+        @DisplayName("Warlock L1→2: Pact Boon NOT offered")
+        void pactBoonNotOfferedEarly() {
+            var result = options("warlock", 1);
+            assertEquals(false, result.get("needsPactBoon"));
+        }
+
+        @Test
+        @DisplayName("Warlock already has pact: Pact Boon NOT offered again")
+        void pactBoonNotOfferedIfAlreadyChosen() {
+            draft.setPactBoon("blade");
+            var result = options("warlock", 2);
+            assertEquals(false, result.get("needsPactBoon"));
+        }
+
+        @Test
+        @DisplayName("POST pact boon sets draft.pactBoon")
+        void pactBoonApplied() {
+            var body = new java.util.HashMap<String, Object>();
+            body.put("pactBoon", "tome");
+            post("warlock", 2, body);
+            assertEquals("tome", draft.getPactBoon());
+        }
+
+        // ── Eldritch Invocations ───────────────────────────────────────────────
+
+        @Test
+        @DisplayName("Warlock L1→2: 2 invocations offered")
+        void invocationsOfferedAtLevel2() {
+            var result = options("warlock", 1);
+            assertEquals(true, result.get("needsInvocations"));
+            assertEquals(2, result.get("newInvocationsCount"));
+            @SuppressWarnings("unchecked") var invs = (java.util.List<?>) result.get("availableInvocations");
+            assertFalse(invs.isEmpty());
+        }
+
+        @Test
+        @DisplayName("Warlock L4→5: 1 more invocation offered")
+        void invocationsOfferedAtLevel5() {
+            var result = options("warlock", 4);
+            assertEquals(true, result.get("needsInvocations"));
+            assertEquals(1, result.get("newInvocationsCount"));
+        }
+
+        @Test
+        @DisplayName("Warlock L2→3: invocations NOT offered (L3 is Pact Boon only)")
+        void invocationsNotOfferedAtLevel3() {
+            var result = options("warlock", 2);
+            assertEquals(false, result.get("needsInvocations"));
+        }
+
+        @Test
+        @DisplayName("Invocations filtered by minLevel")
+        void invocationsFilteredByLevel() {
+            var result = options("warlock", 1);  // level 1 → level 2
+            @SuppressWarnings("unchecked") var invs = (java.util.List<Map<String, String>>) result.get("availableInvocations");
+            // mire_the_mind requires level 5 — should NOT appear at level 2
+            boolean hasMire = invs.stream().anyMatch(i -> "mire_the_mind".equals(i.get("id")));
+            assertFalse(hasMire, "Mire the Mind requires level 5, should not appear at level 2");
+        }
+
+        @Test
+        @DisplayName("Invocations filtered by pact requirement")
+        void invocationFilteredByPactBoon() {
+            draft.setPactBoon("tome");
+            var result = options("warlock", 1);
+            @SuppressWarnings("unchecked") var invs = (java.util.List<Map<String, String>>) result.get("availableInvocations");
+            boolean hasTomeInv  = invs.stream().anyMatch(i -> "book_of_ancient_secrets".equals(i.get("id")));
+            boolean hasBladeInv = invs.stream().anyMatch(i -> "thirsting_blade".equals(i.get("id")));
+            assertTrue(hasTomeInv,  "book_of_ancient_secrets (tome) should appear");
+            assertFalse(hasBladeInv,"thirsting_blade (blade, requires level 5) should not appear");
+        }
+
+        @Test
+        @DisplayName("Already-chosen invocations excluded from options")
+        void invocationAlreadyChosenNotOffered() {
+            draft.getEldritchInvocations().add("agonizing_blast");
+            var result = options("warlock", 1);
+            @SuppressWarnings("unchecked") var invs = (java.util.List<Map<String, String>>) result.get("availableInvocations");
+            boolean hasAgon = invs.stream().anyMatch(i -> "agonizing_blast".equals(i.get("id")));
+            assertFalse(hasAgon, "agonizing_blast already chosen, should not appear");
+        }
+
+        @Test
+        @DisplayName("POST invocations added to draft")
+        void invocationsApplied() {
+            var body = new java.util.HashMap<String, Object>();
+            body.put("newInvocations", List.of("agonizing_blast", "devils_sight"));
+            post("warlock", 1, body);
+            assertTrue(draft.getEldritchInvocations().contains("agonizing_blast"));
+            assertTrue(draft.getEldritchInvocations().contains("devils_sight"));
+        }
+
+        // ── Metamagic ──────────────────────────────────────────────────────────
+
+        @Test
+        @DisplayName("Sorcerer L2→3: 2 metamagic options offered")
+        void metamagicOfferedAtLevel3() {
+            var result = options("sorcerer", 2);
+            assertEquals(true, result.get("needsMetamagic"));
+            assertEquals(2, result.get("newMetamagicCount"));
+            @SuppressWarnings("unchecked") var opts = (java.util.List<?>) result.get("availableMetamagic");
+            assertEquals(10, opts.size());
+        }
+
+        @Test
+        @DisplayName("Sorcerer L9→10: 1 more metamagic offered")
+        void metamagicOfferedAtLevel10() {
+            var result = options("sorcerer", 9);
+            assertEquals(true, result.get("needsMetamagic"));
+            assertEquals(1, result.get("newMetamagicCount"));
+        }
+
+        @Test
+        @DisplayName("Sorcerer L1→2: metamagic NOT offered")
+        void metamagicNotOfferedEarly() {
+            var result = options("sorcerer", 1);
+            assertEquals(false, result.get("needsMetamagic"));
+        }
+
+        @Test
+        @DisplayName("Already-chosen metamagic excluded from options")
+        void metamagicAlreadyChosenExcluded() {
+            draft.getMetamagicOptions().add("careful");
+            var result = options("sorcerer", 2);
+            @SuppressWarnings("unchecked") var opts = (java.util.List<Map<String, String>>) result.get("availableMetamagic");
+            assertEquals(9, opts.size());
+            boolean hasCareful = opts.stream().anyMatch(m -> "careful".equals(m.get("id")));
+            assertFalse(hasCareful);
+        }
+
+        @Test
+        @DisplayName("POST metamagic added to draft")
+        void metamagicApplied() {
+            var body = new java.util.HashMap<String, Object>();
+            body.put("newMetamagic", List.of("careful", "quickened"));
+            post("sorcerer", 2, body);
+            assertTrue(draft.getMetamagicOptions().contains("careful"));
+            assertTrue(draft.getMetamagicOptions().contains("quickened"));
+        }
+
+        // ── Ranger ─────────────────────────────────────────────────────────────
+
+        @Test
+        @DisplayName("Ranger L5→6: Favored Enemy and Natural Explorer offered")
+        void rangerFavoredEnemyAndExplorerAtLevel6() {
+            var result = options("ranger", 5);
+            assertEquals(true, result.get("needsFavoredEnemy"));
+            assertEquals(true, result.get("needsNaturalExplorer"));
+            @SuppressWarnings("unchecked") var types = (java.util.List<String>) result.get("favoredEnemyTypes");
+            assertFalse(types.isEmpty());
+        }
+
+        @Test
+        @DisplayName("Ranger L9→10: only Natural Explorer offered")
+        void rangerNaturalExplorerOnlyAtLevel10() {
+            var result = options("ranger", 9);
+            assertEquals(false, result.get("needsFavoredEnemy"));
+            assertEquals(true,  result.get("needsNaturalExplorer"));
+        }
+
+        @Test
+        @DisplayName("POST favored enemy added to draft")
+        void rangerFavoredEnemyApplied() {
+            var body = new java.util.HashMap<String, Object>();
+            body.put("favoredEnemy", "Dragons");
+            body.put("naturalExplorer", "Forest");
+            post("ranger", 5, body);
+            assertTrue(draft.getFavoredEnemies().contains("Dragons"));
+            assertTrue(draft.getFavoredTerrains().contains("Forest"));
+        }
+
+        // ── Prepared Casters ───────────────────────────────────────────────────
+
+        @Test
+        @DisplayName("Druid L1→2: preparedSpellsGain is 1")
+        void preparedSpellsGainForDruid() {
+            var result = options("druid", 1);
+            assertEquals(1, result.get("preparedSpellsGain"));
+        }
+
+        @Test
+        @DisplayName("Barbarian L1→2: preparedSpellsGain is 0")
+        void preparedSpellsGainZeroForBarbarian() {
+            var result = options("barbarian", 1);
+            assertEquals(0, result.get("preparedSpellsGain"));
+        }
+
+        @Test
+        @DisplayName("Cleric L2→3: unlocks 2nd-level spells")
+        void unlocksNewSpellLevelAtLevel3() {
+            var result = options("cleric", 2);
+            assertEquals(true, result.get("unlocksNewSpellLevel"));
+            assertEquals(2, result.get("newUnlockedSpellLevel"));
+        }
+
+        @Test
+        @DisplayName("Cleric L1→2: does NOT unlock a new spell level")
+        void noNewSpellLevelAtLevel2() {
+            var result = options("cleric", 1);
+            assertEquals(false, result.get("unlocksNewSpellLevel"));
+        }
+
+        // ── Mystic Arcanum ─────────────────────────────────────────────────────
+
+        @Test
+        @DisplayName("Warlock L10→11: Mystic Arcanum (6th level) offered")
+        void mysticArcanumOfferedAtLevel11() {
+            var result = options("warlock", 10);
+            assertEquals(true, result.get("needsMysticArcanum"));
+            assertEquals(6, result.get("mysticArcanumLevel"));
+            @SuppressWarnings("unchecked") var spells = (java.util.List<?>) result.get("availableMysticArcanum");
+            assertFalse(spells.isEmpty());
+        }
+
+        @Test
+        @DisplayName("Warlock L12→13: Mystic Arcanum (7th level) offered")
+        void mysticArcanumLevel13is7th() {
+            var result = options("warlock", 12);
+            assertEquals(true, result.get("needsMysticArcanum"));
+            assertEquals(7, result.get("mysticArcanumLevel"));
+        }
+
+        @Test
+        @DisplayName("Warlock L9→10: Mystic Arcanum NOT offered")
+        void mysticArcanumNotOfferedAtLevel10() {
+            var result = options("warlock", 9);
+            assertEquals(false, result.get("needsMysticArcanum"));
+        }
+
+        @Test
+        @DisplayName("POST mysticArcanumSpell added to chosenSpells")
+        void mysticArcanumApplied() {
+            var body = new java.util.HashMap<String, Object>();
+            body.put("mysticArcanumSpell", "eyebite");
+            post("warlock", 10, body);
+            assertTrue(draft.getChosenSpells().contains("eyebite"));
+        }
+    }
+
+    @Nested
     @DisplayName("Concentration")
     class ConcentrationTests {
 
