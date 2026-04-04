@@ -4,6 +4,7 @@ import com.dnd.builder.core.model.SpellDefinition;
 import java.util.List;
 
 public interface SpellRepository {
+    List<SpellDefinition> getAllSpells();
     SpellDefinition findById(String id);
     List<SpellDefinition> findByClass(String classId, Integer maxLevel);
     List<SpellDefinition> findCantripsForClass(String classId);

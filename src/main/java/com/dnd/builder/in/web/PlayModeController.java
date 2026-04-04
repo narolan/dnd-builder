@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -632,6 +633,123 @@ public class PlayModeController {
         result.put("maxNewSpellLevel",    maxNewSpellLevel);
         result.put("isWizard",            isWizard);
         result.put("wizardSpellbookGain", wizardSpellbookGain);
+
+        // ── Expertise (Bard L3/10, Rogue L6) ─────────────────────────────────
+        boolean needsExpertise = ("bard".equals(classId) && (newLevel == 3 || newLevel == 10))
+                              || ("rogue".equals(classId) && newLevel == 6);
+        int expertiseCount = needsExpertise ? 2 : 0;
+        var eligibleExpertise = needsExpertise
+            ? derived.getAllSkillProficiencies().stream()
+                .filter(s -> !draft.getExpertiseSkills().contains(s))
+                .sorted()
+                .toList()
+            : List.<String>of();
+
+        // ── Magical Secrets (Bard L10/14/18) ─────────────────────────────────
+        boolean needsMagicalSecrets = "bard".equals(classId)
+            && (newLevel == 10 || newLevel == 14 || newLevel == 18);
+        var availableMagicalSecrets = needsMagicalSecrets
+            ? spellRepository.getAllSpells().stream()
+                .filter(sp -> sp.getLevel() > 0 && sp.getLevel() <= maxNewSpellLevel)
+                .filter(sp -> !draft.getChosenSpells().contains(sp.getId())
+                           && !draft.getChosenCantrips().contains(sp.getId()))
+                .sorted(Comparator.comparingInt(com.dnd.builder.core.model.SpellDefinition::getLevel)
+                                  .thenComparing(com.dnd.builder.core.model.SpellDefinition::getName))
+                .toList()
+            : List.of();
+
+        // ── Pact Boon (Warlock L3) ────────────────────────────────────────────
+        boolean needsPactBoon = "warlock".equals(classId) && newLevel == 3
+            && (draft.getPactBoon() == null || draft.getPactBoon().isBlank());
+
+        // ── Eldritch Invocations (Warlock) ────────────────────────────────────
+        int newInvocationsCount = 0;
+        if ("warlock".equals(classId)) {
+            if (newLevel == 2) newInvocationsCount = 2;
+            else if (List.of(5, 7, 9, 12, 15, 18).contains(newLevel)) newInvocationsCount = 1;
+        }
+        boolean needsInvocations = newInvocationsCount > 0;
+        var availableInvocations = needsInvocations
+            ? ELDRITCH_INVOCATIONS.stream()
+                .filter(inv -> Integer.parseInt(inv.get("minLevel")) <= newLevel)
+                .filter(inv -> !draft.getEldritchInvocations().contains(inv.get("id")))
+                .filter(inv -> {
+                    String req = inv.get("requiresPact");
+                    return req.isBlank() || req.equals(draft.getPactBoon());
+                })
+                .toList()
+            : List.<Map<String, String>>of();
+
+        // ── Metamagic (Sorcerer L3/10/17) ────────────────────────────────────
+        int newMetamagicCount = 0;
+        if ("sorcerer".equals(classId)) {
+            if (newLevel == 3) newMetamagicCount = 2;
+            else if (newLevel == 10 || newLevel == 17) newMetamagicCount = 1;
+        }
+        boolean needsMetamagic = newMetamagicCount > 0;
+        var availableMetamagic = needsMetamagic
+            ? METAMAGIC_OPTIONS.stream()
+                .filter(m -> !draft.getMetamagicOptions().contains(m.get("id")))
+                .toList()
+            : List.<Map<String, String>>of();
+
+        // ── Ranger: Favored Enemy / Natural Explorer ──────────────────────────
+        boolean needsFavoredEnemy    = "ranger".equals(classId) && (newLevel == 6 || newLevel == 14);
+        boolean needsNaturalExplorer = "ranger".equals(classId) && (newLevel == 6 || newLevel == 10 || newLevel == 14);
+
+        // ── Prepared Caster: spell prep gain + new spell level unlock ─────────
+        boolean isPreparedCaster = sc != null && sc.isPrepareSpells();
+        int preparedSpellsGain = isPreparedCaster ? 1 : 0;
+        int currentMaxSlotLevel = 0, newMaxSlotLevel = 0;
+        if (isPreparedCaster && !"half".equals(sc.getType())) {
+            int[] curSlots = ClassRepository.fullCasterSlots(currentLevel);
+            int[] newSlots = ClassRepository.fullCasterSlots(newLevel);
+            for (int i = 8; i >= 0; i--) {
+                if (curSlots[i] > 0 && currentMaxSlotLevel == 0) currentMaxSlotLevel = i + 1;
+                if (newSlots[i] > 0 && newMaxSlotLevel == 0) newMaxSlotLevel = i + 1;
+            }
+        }
+        boolean unlocksNewSpellLevel = newMaxSlotLevel > currentMaxSlotLevel;
+        int newUnlockedSpellLevel = unlocksNewSpellLevel ? newMaxSlotLevel : 0;
+
+        // ── Warlock Mystic Arcanum ────────────────────────────────────────────
+        int mysticArcanumLevel = 0;
+        if ("warlock".equals(classId)) {
+            mysticArcanumLevel = switch (newLevel) {
+                case 11 -> 6; case 13 -> 7; case 15 -> 8; case 17 -> 9;
+                default -> 0;
+            };
+        }
+        boolean needsMysticArcanum = mysticArcanumLevel > 0;
+        int finalMysticLevel = mysticArcanumLevel;
+        var availableMysticArcanum = needsMysticArcanum
+            ? spellRepository.findByClass("warlock", finalMysticLevel).stream()
+                .filter(sp -> !draft.getChosenSpells().contains(sp.getId()))
+                .toList()
+            : List.of();
+
+        result.put("needsExpertise",           needsExpertise);
+        result.put("expertiseCount",           expertiseCount);
+        result.put("eligibleExpertiseSkills",  eligibleExpertise);
+        result.put("needsMagicalSecrets",      needsMagicalSecrets);
+        result.put("availableMagicalSecrets",  availableMagicalSecrets);
+        result.put("needsPactBoon",            needsPactBoon);
+        result.put("needsInvocations",         needsInvocations);
+        result.put("newInvocationsCount",      newInvocationsCount);
+        result.put("availableInvocations",     availableInvocations);
+        result.put("needsMetamagic",           needsMetamagic);
+        result.put("newMetamagicCount",        newMetamagicCount);
+        result.put("availableMetamagic",       availableMetamagic);
+        result.put("needsFavoredEnemy",        needsFavoredEnemy);
+        result.put("needsNaturalExplorer",     needsNaturalExplorer);
+        result.put("favoredEnemyTypes",        needsFavoredEnemy   ? FAVORED_ENEMY_TYPES        : List.of());
+        result.put("naturalExplorerTerrains",  needsNaturalExplorer ? NATURAL_EXPLORER_TERRAINS : List.of());
+        result.put("preparedSpellsGain",       preparedSpellsGain);
+        result.put("unlocksNewSpellLevel",     unlocksNewSpellLevel);
+        result.put("newUnlockedSpellLevel",    newUnlockedSpellLevel);
+        result.put("needsMysticArcanum",       needsMysticArcanum);
+        result.put("mysticArcanumLevel",       mysticArcanumLevel);
+        result.put("availableMysticArcanum",   availableMysticArcanum);
         return result;
     }
 
@@ -696,6 +814,37 @@ public class PlayModeController {
         @SuppressWarnings("unchecked") List<String> spellbookAdditions =
             (List<String>) body.getOrDefault("spellbookAdditions", List.of());
         draft.getSpellbookSpells().addAll(spellbookAdditions);
+
+        // ── Expertise ─────────────────────────────────────────────────────────
+        @SuppressWarnings("unchecked") List<String> expertiseChoices =
+            (List<String>) body.getOrDefault("expertiseSkills", List.of());
+        draft.getExpertiseSkills().addAll(expertiseChoices);
+
+        // ── Pact Boon ──────────────────────────────────────────────────────────
+        String pactBoon = (String) body.getOrDefault("pactBoon", "");
+        if (pactBoon != null && !pactBoon.isBlank()) draft.setPactBoon(pactBoon);
+
+        // ── Eldritch Invocations ───────────────────────────────────────────────
+        @SuppressWarnings("unchecked") List<String> newInvocations =
+            (List<String>) body.getOrDefault("newInvocations", List.of());
+        draft.getEldritchInvocations().addAll(newInvocations);
+
+        // ── Metamagic ─────────────────────────────────────────────────────────
+        @SuppressWarnings("unchecked") List<String> newMetamagic =
+            (List<String>) body.getOrDefault("newMetamagic", List.of());
+        draft.getMetamagicOptions().addAll(newMetamagic);
+
+        // ── Favored Enemy / Natural Explorer ──────────────────────────────────
+        String newFavoredEnemy    = (String) body.getOrDefault("favoredEnemy", "");
+        String newNaturalExplorer = (String) body.getOrDefault("naturalExplorer", "");
+        if (newFavoredEnemy    != null && !newFavoredEnemy.isBlank())    draft.getFavoredEnemies().add(newFavoredEnemy);
+        if (newNaturalExplorer != null && !newNaturalExplorer.isBlank()) draft.getFavoredTerrains().add(newNaturalExplorer);
+
+        // ── Mystic Arcanum ────────────────────────────────────────────────────
+        String mysticArcanumSpell = (String) body.getOrDefault("mysticArcanumSpell", "");
+        if (mysticArcanumSpell != null && !mysticArcanumSpell.isBlank()) {
+            draft.getChosenSpells().add(mysticArcanumSpell);
+        }
 
         var derived = calculator.calculate(draft);
         var result  = new LinkedHashMap<String, Object>();
