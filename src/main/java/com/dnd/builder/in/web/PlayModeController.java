@@ -39,6 +39,77 @@ public class PlayModeController {
         this.featRepository  = featRepository;
     }
 
+    // ── Static data constants ─────────────────────────────────────────────────
+
+    private static final List<Map<String, String>> ELDRITCH_INVOCATIONS = List.of(
+        inv("agonizing_blast",          "Agonizing Blast",             "Add CHA mod to Eldritch Blast damage.",                                                                                     "0",  ""),
+        inv("armor_of_shadows",         "Armor of Shadows",            "Cast Mage Armor on yourself at will without expending a spell slot.",                                                        "0",  ""),
+        inv("beast_speech",             "Beast Speech",                "Cast Speak with Animals at will without expending a spell slot.",                                                            "0",  ""),
+        inv("beguiling_influence",      "Beguiling Influence",         "Gain proficiency in Deception and Persuasion.",                                                                             "0",  ""),
+        inv("book_of_ancient_secrets",  "Book of Ancient Secrets",     "Inscribe rituals into Pact of the Tome book and cast them.",                                                                "0",  "tome"),
+        inv("devils_sight",             "Devil's Sight",               "See normally in magical and nonmagical darkness to 120 ft.",                                                                "0",  ""),
+        inv("eldritch_sight",           "Eldritch Sight",              "Cast Detect Magic at will without expending a spell slot.",                                                                 "0",  ""),
+        inv("eldritch_spear",           "Eldritch Spear",              "Eldritch Blast range increases to 300 ft.",                                                                                 "0",  ""),
+        inv("eyes_of_rune_keeper",      "Eyes of the Rune Keeper",     "Read all writing.",                                                                                                        "0",  ""),
+        inv("fiendish_vigor",           "Fiendish Vigor",              "Cast False Life on yourself at will as a 1st-level spell.",                                                                 "0",  ""),
+        inv("gaze_of_two_minds",        "Gaze of Two Minds",           "Touch a willing creature to perceive through its senses.",                                                                  "0",  ""),
+        inv("mask_of_many_faces",       "Mask of Many Faces",          "Cast Disguise Self at will without expending a spell slot.",                                                                 "0",  ""),
+        inv("misty_visions",            "Misty Visions",               "Cast Silent Image at will without expending a spell slot.",                                                                  "0",  ""),
+        inv("repelling_blast",          "Repelling Blast",             "Eldritch Blast can push targets 10 ft away.",                                                                               "0",  ""),
+        inv("thief_of_five_fates",      "Thief of Five Fates",         "Cast Bane once using a spell slot.",                                                                                       "0",  ""),
+        inv("voice_of_chain_master",    "Voice of the Chain Master",   "Communicate telepathically with your Pact of the Chain familiar.",                                                          "0",  "chain"),
+        inv("mire_the_mind",            "Mire the Mind",               "Cast Slow once using a spell slot. Requires Warlock 5.",                                                                    "5",  ""),
+        inv("one_with_shadows",         "One with Shadows",            "In dim light or darkness, become invisible as an action.",                                                                   "5",  ""),
+        inv("sign_of_ill_omen",         "Sign of Ill Omen",            "Cast Bestow Curse once using a spell slot. Requires Warlock 5.",                                                            "5",  ""),
+        inv("thirsting_blade",          "Thirsting Blade",             "Attack twice with your pact weapon. Requires Warlock 5.",                                                                    "5",  "blade"),
+        inv("bewitching_whispers",      "Bewitching Whispers",         "Cast Compulsion once using a spell slot. Requires Warlock 7.",                                                              "7",  ""),
+        inv("dreadful_word",            "Dreadful Word",               "Cast Confusion once using a spell slot. Requires Warlock 7.",                                                               "7",  ""),
+        inv("sculptor_of_flesh",        "Sculptor of Flesh",           "Cast Polymorph once using a spell slot. Requires Warlock 7.",                                                               "7",  ""),
+        inv("ascendant_step",           "Ascendant Step",              "Cast Levitate on yourself at will. Requires Warlock 9.",                                                                     "9",  ""),
+        inv("minions_of_chaos",         "Minions of Chaos",            "Cast Conjure Elemental once using a spell slot. Requires Warlock 9.",                                                       "9",  ""),
+        inv("otherworldly_leap",        "Otherworldly Leap",           "Cast Jump on yourself at will. Requires Warlock 9.",                                                                        "9",  ""),
+        inv("whispers_of_the_grave",    "Whispers of the Grave",       "Cast Speak with Dead at will. Requires Warlock 9.",                                                                         "9",  ""),
+        inv("lifedrinker",              "Lifedrinker",                 "Add CHA mod as necrotic damage to pact weapon attacks. Requires Warlock 12.",                                               "12", "blade"),
+        inv("chains_of_carceri",        "Chains of Carceri",           "Cast Hold Monster at will on celestials, fiends, or elementals. Requires Warlock 15.",                                     "15", "chain"),
+        inv("master_of_myriad_forms",   "Master of Myriad Forms",      "Cast Alter Self at will. Requires Warlock 15.",                                                                             "15", ""),
+        inv("visions_of_distant_realms","Visions of Distant Realms",   "Cast Arcane Eye at will. Requires Warlock 15.",                                                                             "15", ""),
+        inv("witch_sight",              "Witch Sight",                 "See true form of any shapechanger or creature magically concealed within 30 ft. Requires Warlock 15.",                     "15", "")
+    );
+
+    private static final List<Map<String, String>> METAMAGIC_OPTIONS = List.of(
+        meta("careful",     "Careful Spell",     "Spend 1 SP: chosen creatures auto-succeed on saves against your spell."),
+        meta("distant",     "Distant Spell",     "Spend 1 SP: double a spell's range (or change touch to 30 ft)."),
+        meta("empowered",   "Empowered Spell",   "Spend 1 SP: reroll up to CHA mod damage dice (keep either result)."),
+        meta("extended",    "Extended Spell",    "Spend 1 SP: double a spell's duration (max 24 hours)."),
+        meta("heightened",  "Heightened Spell",  "Spend 3 SP: one target of a spell has disadvantage on its first save."),
+        meta("quickened",   "Quickened Spell",   "Spend 2 SP: change casting time from 1 action to 1 bonus action."),
+        meta("subtle",      "Subtle Spell",      "Spend 1 SP: cast a spell without verbal or somatic components."),
+        meta("twinned",     "Twinned Spell",     "Spend SP equal to spell level: target a second creature with a single-target spell."),
+        meta("seeking",     "Seeking Spell",     "Spend 2 SP: reroll a missed spell attack roll (TCoE)."),
+        meta("transmuted",  "Transmuted Spell",  "Spend 1 SP: change a spell's damage type among acid/cold/fire/lightning/poison/thunder (TCoE).")
+    );
+
+    private static final List<String> FAVORED_ENEMY_TYPES = List.of(
+        "Aberrations", "Beasts", "Celestials", "Constructs", "Dragons",
+        "Elementals", "Fey", "Fiends", "Giants", "Monstrosities",
+        "Oozes", "Plants", "Undead", "Two types of humanoids"
+    );
+
+    private static final List<String> NATURAL_EXPLORER_TERRAINS = List.of(
+        "Arctic", "Coast", "Desert", "Forest", "Grassland",
+        "Mountain", "Swamp", "Underdark"
+    );
+
+    private static Map<String, String> inv(String id, String name, String desc,
+                                            String minLevel, String requiresPact) {
+        return Map.of("id", id, "name", name, "desc", desc,
+                      "minLevel", minLevel, "requiresPact", requiresPact);
+    }
+
+    private static Map<String, String> meta(String id, String name, String desc) {
+        return Map.of("id", id, "name", name, "desc", desc);
+    }
+
     // ══════════════════════════════════════════════════════════════════════════
     // COMBAT DASHBOARD
     // ══════════════════════════════════════════════════════════════════════════
