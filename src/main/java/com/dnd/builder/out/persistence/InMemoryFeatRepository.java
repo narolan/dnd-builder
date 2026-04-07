@@ -153,6 +153,100 @@ public class InMemoryFeatRepository implements com.dnd.builder.core.port.out.Fea
             "Double range of attack-roll spells. Ignore half/three-quarters cover. Learn one ranged attack cantrip.",
             null, 0, null));
 
+        // ── XGtE Feats ──────────────────────────────────────────────────────────────
+        list.add(f("bountiful_luck",    "Bountiful Luck",       "Halfling",
+            "When an ally within 30 ft rolls a 1 on an attack, ability check, or saving throw, you can use your reaction to let them reroll, keeping the new result.",
+            null, 0, null));
+        list.add(f("dragon_fear",       "Dragon Fear",          "Dragonborn",
+            "+1 STR, CON, or CHA. When frightened, you can replace the breath weapon with a frightening roar: DC 8 + prof + CHA mod, creatures within 30 ft make WIS save or are frightened until end of your next turn.",
+            List.of("STR","CON","CHA"), 1, null));
+        list.add(f("dragon_hide",       "Dragon Hide",          "Dragonborn",
+            "+1 STR, CON, or CHA. Grow retractable claws (unarmed strike 1d4 slashing). Natural armor: AC = 13 + DEX mod (while unarmored).",
+            List.of("STR","CON","CHA"), 1, null));
+        list.add(f("drow_high_magic",   "Drow High Magic",      "Elf (drow)",
+            "Learn Detect Magic (at will), Levitate (once/long rest), and Dispel Magic (once/long rest). CHA is spellcasting ability.",
+            null, 0, null));
+        list.add(f("dwarven_fortitude", "Dwarven Fortitude",    "Dwarf",
+            "+1 CON (fixed). When taking the Dodge action, spend one hit die to heal (roll die + CON mod).",
+            null, 0, null));
+        list.add(f("elven_accuracy",    "Elven Accuracy",       "Elf or half-elf",
+            "+1 DEX, INT, WIS, or CHA. When you have advantage on an attack roll using DEX, INT, WIS, or CHA, you can reroll one of the dice once.",
+            List.of("DEX","INT","WIS","CHA"), 1, null));
+        list.add(f("fade_away",         "Fade Away",            "Gnome",
+            "+1 DEX or INT. When you take damage, use your reaction to turn invisible until the end of your next turn or until you attack/cast a spell (once/short or long rest).",
+            List.of("DEX","INT"), 1, null));
+        list.add(f("fey_teleportation", "Fey Teleportation",    "High elf",
+            "+1 INT or CHA. Learn Misty Step (cast once/short or long rest without a spell slot). Learn Sylvan.",
+            List.of("INT","CHA"), 1, null));
+        list.add(f("flames_of_phlegethos","Flames of Phlegethos","Tiefling",
+            "+1 INT or CHA. Reroll 1s on fire spell damage (must keep reroll). When you cast a fire spell, flames wreathe you until end of next turn (1d4 fire damage to touchers).",
+            List.of("INT","CHA"), 1, null));
+        list.add(f("infernal_constitution","Infernal Constitution","Tiefling",
+            "+1 CON (fixed). Resistance to cold and poison damage. Advantage on saving throws against being poisoned.",
+            null, 0, null));
+        list.add(f("orcish_fury",       "Orcish Fury",          "Half-orc",
+            "+1 STR or CON. Once per short/long rest, add one extra weapon damage die on a hit. When you use Relentless Endurance, you can immediately make one weapon attack as a reaction.",
+            List.of("STR","CON"), 1, null));
+        list.add(f("prodigy",           "Prodigy",              "Half-elf, half-orc, or human",
+            "Gain one skill proficiency, one tool proficiency, and one language. One skill you are proficient in gains expertise (double proficiency).",
+            null, 0, null));
+        list.add(f("second_chance",     "Second Chance",        "Halfling",
+            "+1 DEX, CON, or CHA. When a creature hits you, use your reaction to force it to reroll. Must use new roll. Recharges on initiative roll.",
+            List.of("DEX","CON","CHA"), 1, null));
+        list.add(f("squat_nimbleness", "Squat Nimbleness",      "Dwarf or small race",
+            "+1 STR or DEX. Speed increases by 5 ft. Proficiency in Acrobatics or Athletics. No longer subject to disadvantage from moving through larger creatures' spaces.",
+            List.of("STR","DEX"), 1, null));
+        list.add(f("wood_elf_magic",    "Wood Elf Magic",        "Wood elf",
+            "Learn Druidcraft cantrip. Learn one 1st-level druid spell, cast once/long rest without a spell slot. Learn one 2nd-level druid spell, cast once/long rest without a slot. WIS is spellcasting ability.",
+            null, 0, null));
+
+        // ── TCoE Feats ──────────────────────────────────────────────────────────────
+        list.add(f("artificer_initiate","Artificer Initiate",   "",
+            "Learn one cantrip and one 1st-level artificer spell (cast once/long rest). Gain proficiency with one type of artisan's tools. INT is spellcasting ability.",
+            null, 0, null));
+        list.add(f("chef",              "Chef",                  "",
+            "+1 CON or WIS. During a short rest, cook food that lets you or up to 5 allies regain extra hit points equal to your proficiency bonus. Prepare treats during a long rest (prof bonus times) that grant 1d8 THP.",
+            List.of("CON","WIS"), 1, null));
+        list.add(f("crusher",           "Crusher",               "",
+            "+1 STR or CON. When you deal bludgeoning damage, move target 5 ft to unoccupied space. Once per turn on a critical hit, grant advantage to all attacks vs target until start of your next turn.",
+            List.of("STR","CON"), 1, null));
+        list.add(f("eldritch_adept",    "Eldritch Adept",        "Spellcasting or Pact Magic",
+            "Learn one Eldritch Invocation of your choice (must meet prerequisites). If it requires a Pact Boon, you must have that boon. Can replace it when you gain a level.",
+            null, 0, null));
+        list.add(f("fey_touched",       "Fey Touched",           "",
+            "+1 INT, WIS, or CHA. Learn Misty Step and one 1st-level divination or enchantment spell. Cast each once/long rest for free. Can also cast using spell slots. Spellcasting ability is the stat boosted.",
+            List.of("INT","WIS","CHA"), 1, null));
+        list.add(f("fighting_initiate", "Fighting Initiate",     "Proficiency with a martial weapon",
+            "Learn one Fighting Style of your choice. When you gain a level, you can replace it with another Fighting Style.",
+            null, 0, null));
+        list.add(f("gunner",            "Gunner",                "",
+            "+1 DEX (fixed). Proficiency with firearms. Ignore the loading property of firearms. Being within 5 ft of a hostile creature doesn't impose disadvantage on ranged attack rolls with firearms.",
+            null, 0, null));
+        list.add(f("metamagic_adept",   "Metamagic Adept",       "Spellcasting or Pact Magic",
+            "Learn two Metamagic options. Gain 2 sorcery points (regain on long rest). Can spend sorcery points only on Metamagic.",
+            null, 0, null));
+        list.add(f("piercer",           "Piercer",               "",
+            "+1 STR or DEX. Once per turn when you deal piercing damage, reroll one damage die and use the higher result. On a critical hit, roll one additional piercing damage die.",
+            List.of("STR","DEX"), 1, null));
+        list.add(f("poisoner",          "Poisoner",              "",
+            "Ignore resistance to poison damage. Coat a weapon with poison as a bonus action using your poisoner's kit. Creatures hit must make DC 14 CON save or be poisoned until end of your next turn. Gain proficiency with the poisoner's kit.",
+            null, 0, null));
+        list.add(f("shadow_touched",    "Shadow Touched",        "",
+            "+1 INT, WIS, or CHA. Learn Invisibility and one 1st-level illusion or necromancy spell. Cast each once/long rest for free. Can also cast using spell slots. Spellcasting ability is the stat boosted.",
+            List.of("INT","WIS","CHA"), 1, null));
+        list.add(f("shield_training",   "Shield Training",       "",
+            "+1 STR, DEX, or CON. Gain proficiency with shields. In a turn where you put on or take off a shield, you can still make an attack.",
+            List.of("STR","DEX","CON"), 1, null));
+        list.add(f("slasher",           "Slasher",               "",
+            "+1 STR or DEX. Once per turn when you deal slashing damage, reduce target's speed by 10 ft until start of your next turn. On a critical hit, the target has disadvantage on attack rolls until start of your next turn.",
+            List.of("STR","DEX"), 1, null));
+        list.add(f("telekinetic",       "Telekinetic",           "",
+            "+1 INT, WIS, or CHA. Learn Mage Hand (or extend its range by 30 ft). As a bonus action, telekinetically push/pull a creature within 30 ft 5 ft toward or away from you (STR save vs 8 + prof + stat mod).",
+            List.of("INT","WIS","CHA"), 1, null));
+        list.add(f("telepathic",        "Telepathic",            "",
+            "+1 INT, WIS, or CHA. Speak telepathically to any creature you can see within 60 ft. Cast Detect Thoughts once/long rest without a spell slot. Spellcasting ability is the stat boosted.",
+            List.of("INT","WIS","CHA"), 1, null));
+
         return list;
     }
 

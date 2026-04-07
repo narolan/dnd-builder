@@ -61,6 +61,10 @@ public class CharacterCalculator {
     public DerivedStats calculate(CharacterDraft draft) {
         var ds = new DerivedStats();
 
+        // Pre-collect equipped inventory items once; used across multiple steps below
+        var equippedItems = draft.getInventory().stream()
+            .filter(InventoryItem::isEquipped).toList();
+
         // ── 1. Final scores ──────────────────────────────────────────────────
         var finalScores = new LinkedHashMap<String, Integer>();
         for (var entry : draft.getBaseScores().entrySet()) {
@@ -68,6 +72,13 @@ public class CharacterCalculator {
             int racial = getRacialBonus(draft, entry.getKey());
             int asi = getAsiBonus(draft, entry.getKey());
             finalScores.put(entry.getKey(), Math.min(20, base + racial + asi)); // Cap at 20
+        }
+        // Apply equipped item ability bonuses (e.g. Gauntlets of Ogre Power delta, Belt of Giant Strength)
+        for (var item : equippedItems) {
+            if (item.getAbilityBonuses() != null) {
+                item.getAbilityBonuses().forEach((stat, bonus) ->
+                    finalScores.computeIfPresent(stat, (k, v) -> v + bonus));
+            }
         }
         ds.setFinalScores(finalScores);
 
@@ -82,7 +93,9 @@ public class CharacterCalculator {
 
         // ── 4. Basic stats ───────────────────────────────────────────────────
         ds.setInitiative(mods.get("DEX"));
-        ds.setSpeed(RACE_SPEED.getOrDefault(draft.getRaceId(), 30));
+        int raceSpeed = RACE_SPEED.getOrDefault(draft.getRaceId(), 30);
+        int itemSpeedBonus = equippedItems.stream().mapToInt(InventoryItem::getSpeedBonus).sum();
+        ds.setSpeed(raceSpeed + itemSpeedBonus);
 
         // ── 5. HP ────────────────────────────────────────────────────────────
         var classDef = classRepository.findById(draft.getCharacterClass());
@@ -112,6 +125,9 @@ public class CharacterCalculator {
             ac = resolveArmorAC(draft, dexMod, ac);
             ds.setArmorClass(ac);
         }
+        // Apply AC bonuses from equipped items (rings, cloaks, etc.)
+        int itemAcBonus = equippedItems.stream().mapToInt(InventoryItem::getAcBonus).sum();
+        if (itemAcBonus != 0) ds.setArmorClass(ds.getArmorClass() + itemAcBonus);
 
         // ── 7. Saving throws ─────────────────────────────────────────────────
         var saveProfs = classDef != null ? classDef.getSavingThrows() : List.<String>of();
@@ -151,7 +167,8 @@ public class CharacterCalculator {
             ds.setSpellcastingAbility(sc.getAbility());
 
             int abilityMod = mods.get(sc.getAbility());
-            ds.setSpellSaveDC(8 + pb + abilityMod);
+            int itemSaveDcBonus = equippedItems.stream().mapToInt(InventoryItem::getSaveDcBonus).sum();
+            ds.setSpellSaveDC(8 + pb + abilityMod + itemSaveDcBonus);
             ds.setSpellAttackBonus(pb + abilityMod);
 
             // Spell slot summary

@@ -721,6 +721,9 @@ public class PlayModeController {
                 if (curSlots[i] > 0 && currentMaxSlotLevel == 0) currentMaxSlotLevel = i + 1;
                 if (newSlots[i] > 0 && newMaxSlotLevel == 0) newMaxSlotLevel = i + 1;
             }
+        } else if (sc != null && "half".equals(sc.getType())) {
+            currentMaxSlotLevel = ClassRepository.maxSpellLevel(classId, currentLevel);
+            newMaxSlotLevel     = ClassRepository.maxSpellLevel(classId, newLevel);
         }
         boolean unlocksNewSpellLevel = newMaxSlotLevel > currentMaxSlotLevel;
         int newUnlockedSpellLevel = unlocksNewSpellLevel ? newMaxSlotLevel : 0;

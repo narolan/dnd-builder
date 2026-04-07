@@ -22,9 +22,9 @@ class InMemoryBackgroundRepositoryTest {
     }
 
     @Test
-    @DisplayName("All 13 PHB backgrounds are present")
+    @DisplayName("All PHB + SCAG backgrounds are present")
     void allBackgroundsPresent() {
-        assertEquals(13, repository.findAll().size());
+        assertEquals(24, repository.findAll().size());
     }
 
     @Test

@@ -52,8 +52,8 @@ public interface ClassRepository {
                 Math.min(9, (level + 1) / 2);
             // Warlock: pact magic, max 5th level spells
             case "warlock" -> level < 3 ? 1 : level < 5 ? 2 : level < 7 ? 3 : level < 9 ? 4 : 5;
-            // Half casters: spell level = (character level - 1) / 2, max 5
-            case "paladin", "ranger" -> level < 2 ? 0 : Math.min(5, level / 4 + 1);
+            // Half casters: 1st at L2, 2nd at L5, 3rd at L9, 4th at L13, 5th at L17
+            case "paladin", "ranger" -> level < 2 ? 0 : level < 5 ? 1 : level < 9 ? 2 : level < 13 ? 3 : level < 17 ? 4 : 5;
             // Non-casters
             default -> 0;
         };
@@ -73,13 +73,24 @@ public interface ClassRepository {
         };
     }
 
-    /** Spells known for "known" casters (not prepared casters) */
+    /** Spells known for "known" casters (not prepared casters) — PHB lookup tables */
     static int spellsKnown(String classId, int level) {
         if (classId == null) return 0;
         return switch (classId) {
-            case "bard" -> level + 3; // 4 at L1, +1 per level (with swaps)
-            case "sorcerer" -> level + 1; // 2 at L1, +1 per level
-            case "warlock" -> level + 1; // 2 at L1, +1 per level
+            // PHB Bard table: +2 at Magical Secrets levels (10, 14, 18), plateaus at 20
+            case "bard" -> level <= 9 ? level + 3
+                : level <= 11 ? level + 4   // L10=14, L11=15
+                : level == 12 ? 15
+                : level == 13 ? 16
+                : level <= 15 ? level + 4   // L14=18, L15=19
+                : level <= 17 ? level + 3   // L16=19, L17=20
+                : 22;                        // L18-20=22
+            // PHB Sorcerer table: plateaus after L11 (2,3…11,12,12,13,13,14,14,15,15,15,15)
+            case "sorcerer" -> level < 12 ? level + 1 : level < 13 ? 12
+                : level < 15 ? 13 : level < 17 ? 14 : 15;
+            // PHB Warlock table: plateaus after L9 (2,3…10,10,11,11,12,12,13,13,14,14,15,15)
+            case "warlock" -> level < 10 ? level + 1 : level < 11 ? 10
+                : level < 13 ? 11 : level < 15 ? 12 : level < 17 ? 13 : level < 19 ? 14 : 15;
             case "ranger" -> level < 2 ? 0 : level < 3 ? 2 : level < 5 ? 3 : level < 7 ? 4 :
                 level < 9 ? 5 : level < 11 ? 6 : level < 13 ? 7 : level < 15 ? 8 :
                 level < 17 ? 9 : level < 19 ? 10 : 11;

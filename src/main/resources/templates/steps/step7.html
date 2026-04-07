@@ -63,6 +63,10 @@
       <!-- Known Caster Spells (Bard, Sorcerer, Warlock, Ranger) -->
       <div th:if="${isKnownCaster}" style="margin-top:20px">
         <div class="section-head">Known Spells</div>
+        <div th:if="${spellsKnownLimit == 0}" class="info-box">
+          Rangers don't learn spells until level 2.
+        </div>
+        <div th:if="${spellsKnownLimit > 0}">
         <div class="spell-count">
           Choose <span class="cnt" th:text="${spellsKnownLimit}">4</span> spells total (any level you have slots for)
           &nbsp;|&nbsp; Selected: <span class="cnt" id="spell-count">0</span>
@@ -103,6 +107,7 @@
             </div>
           </div>
         </th:block>
+        </div><!-- end th:if spellsKnownLimit > 0 -->
       </div>
 
       <!-- Prepared Caster Spells (Cleric, Druid, Paladin) -->

@@ -21,7 +21,8 @@ public class InMemoryBackgroundRepository implements com.dnd.builder.core.port.o
     public BackgroundDefinition findById(String id)        { return byId.get(id); }
 
     private List<BackgroundDefinition> buildBackgrounds() {
-        return List.of(
+        var list = new ArrayList<BackgroundDefinition>();
+        list.addAll(List.of(
             bg("acolyte",      "Acolyte",
                List.of("Insight","Religion"),
                List.of(), 2,
@@ -138,7 +139,99 @@ public class InMemoryBackgroundRepository implements com.dnd.builder.core.port.o
                "You know the secret patterns and flow of cities. You can find passages through a city that others would miss.",
                "You grew up on the streets of a city.",
                10)
-        );
+        ));
+
+        // ── SCAG Backgrounds ────────────────────────────────────────────────────────
+        list.add(bg("city_watch",          "City Watch",
+               List.of("Athletics","Insight"),
+               List.of(), 2,
+               "A uniform, a horn you can use to call for help, a set of manacles, a belt pouch with 10 gp",
+               "Watcher's Eye",
+               "Your experience in enforcing the law grants you the ability to find information about local criminals and their activities. You can find City Watch outposts and garrisons.",
+               "You have served the community where you grew up.",
+               10));
+        list.add(bg("clan_crafter",        "Clan Crafter",
+               List.of("History","Insight"),
+               List.of("Artisan's tools (one type)"), 1,
+               "A set of artisan's tools (one of your choice), a maker's mark chisel, a set of traveler's clothes, a pouch with 5 gp and a gem worth 10 gp",
+               "Respect of the Stout Folk",
+               "Dwarves and others who respect the craft will give you lodging and food among dwarven communities, and assist you in finding work.",
+               "You are a member of an artisan community, steeped in the old ways of crafting.",
+               15));
+        list.add(bg("cloistered_scholar",  "Cloistered Scholar",
+               List.of("History","Arcana"),
+               List.of(), 2,
+               "The scholar's robes of your cloister, a writing kit, a borrowed book on the subject of your current study, a belt pouch with 10 gp",
+               "Library Access",
+               "Though others must often endure extensive negotiations, you have free access to the library where you studied and most other libraries. Libraries may want you to share interesting lore.",
+               "You spent years learning the lore of the multiverse in a great library.",
+               10));
+        list.add(bg("courtier",            "Courtier",
+               List.of("Insight","Persuasion"),
+               List.of(), 2,
+               "A set of fine clothes and a belt pouch with 5 gp",
+               "Court Functionary",
+               "Your knowledge of how bureaucracies function lets you gain access to the records and inner workings of any noble court or government. You gain access to information almost all others are denied.",
+               "Your ability to mediate conflict and understand the motivations of others was cultivated at the highest levels of society.",
+               5));
+        list.add(bg("far_traveler",        "Far Traveler",
+               List.of("Insight","Perception"),
+               List.of("Musical instrument (one type)"), 1,
+               "One set of traveler's clothes, any one musical instrument or gaming set you are proficient with, a poorly drawn map from your homeland, a token from your homeland, a belt pouch with 5 gp",
+               "All Eyes on You",
+               "Your foreign origin attracts attention, making you memorable and sometimes opening doors as novelty. Merchants and scholars may seek you out for information about your homeland.",
+               "You came from a distant land far beyond the Sword Coast.",
+               5));
+        list.add(bg("inheritor",           "Inheritor",
+               List.of("Survival","History"),
+               List.of("Gaming set (one type)"), 0,
+               "A set of traveler's clothes, a signet, letter, or other mark of your inheritance, any trinket from your background, a belt pouch with 15 gp",
+               "Inheritance",
+               "Choose or randomly determine your inheritance from the Inheritor's Inheritance table. Work with your DM to decide its exact nature. Your inheritance may be sought by dangerous people.",
+               "You are heir to something of great value — not just in coin but in meaning and responsibility.",
+               15));
+        list.add(bg("knight_of_the_order", "Knight of the Order",
+               List.of("Persuasion","History"),
+               List.of("Musical instrument (one type)"), 1,
+               "A set of traveler's clothes, a signet, banner, or seal representing your place in the order, and a belt pouch with 10 gp",
+               "Knightly Regard",
+               "Those who share your order will extend you courtesy and temporary lodging. Your order may also provide tactical assistance if you face a major threat.",
+               "You have sworn service to a knightly order, dedicating yourself to its ideals.",
+               10));
+        list.add(bg("mercenary_veteran",   "Mercenary Veteran",
+               List.of("Athletics","Persuasion"),
+               List.of("Gaming set (one type)","Vehicles (land)"), 0,
+               "A uniform of your company (traveler's clothes in quality), an insignia of your rank, a gaming set of your choice, and a belt pouch with 10 gp",
+               "Mercenary Life",
+               "You know the mercenary life as only someone who has experienced it can. You are able to identify mercenary companies by their emblems and know how to find hiring halls.",
+               "You served as a paid soldier in a mercenary company.",
+               10));
+        list.add(bg("urban_bounty_hunter", "Urban Bounty Hunter",
+               List.of("Deception","Stealth"),
+               List.of("Thieves' tools","Gaming set (one type)"), 0,
+               "A set of clothes appropriate to your duties and a belt pouch with 20 gp",
+               "Ear to the Ground",
+               "You are in frequent contact with people in the segment of society that your quarry moves through. These people provide information about your targets.",
+               "You tracked down criminals and other fugitives for pay in an urban environment.",
+               20));
+        list.add(bg("uthgardt_tribe_member","Uthgardt Tribe Member",
+               List.of("Athletics","Survival"),
+               List.of("Musical instrument (one type)"), 1,
+               "A hunting trap, a totemic token or set of tattoos marking your tribal affiliation, a set of traveler's clothes, and a belt pouch with 10 gp",
+               "Uthgardt Heritage",
+               "You have an excellent knowledge of the Northern lands. You can find twice the normal food and water for yourself and up to 5 others per day. Uthgardt communities will give you shelter.",
+               "You are a member of one of the Uthgardt barbarian tribes of the North.",
+               10));
+        list.add(bg("waterdhavian_noble",  "Waterdhavian Noble",
+               List.of("History","Persuasion"),
+               List.of("Gaming set (one type)"), 1,
+               "A set of fine clothes, a signet ring or brooch, a scroll of pedigree, a skin of fine zzar or wine, a belt pouch with 20 gp",
+               "Kept in Style",
+               "While in Waterdeep or elsewhere in the North, your house pays your expenses. This covers a comfortable lifestyle. Your connections can provide access to noble estates and private clubs.",
+               "You are a member of one of the noble families of Waterdeep.",
+               20));
+
+        return list;
     }
 
     private BackgroundDefinition bg(String id, String name,

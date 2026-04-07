@@ -518,11 +518,11 @@ class InMemoryClassRepositoryTest {
         @CsvSource({
             "bard, 1, 4",
             "bard, 5, 8",
-            "bard, 10, 13",
+            "bard, 10, 14",
             "sorcerer, 1, 2",
             "sorcerer, 5, 6",
             "warlock, 1, 2",
-            "warlock, 10, 11"
+            "warlock, 10, 10"
         })
         @DisplayName("Known casters: spells known scales by level")
         void knownCasterSpells(String classId, int level, int expectedSpells) {
