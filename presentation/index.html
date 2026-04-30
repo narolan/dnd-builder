@@ -20,7 +20,9 @@
       --r-heading-text-transform: none;
       --r-heading-letter-spacing: -0.02em;
     }
-    body { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); }
+    .reveal-viewport {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%) !important;
+    }
     .reveal .slides section { text-align: left; }
     .reveal h1 { font-size: 2.4em; font-weight: 900; line-height: 1.1; }
     .reveal h2 { font-size: 1.9em; font-weight: 800; }
@@ -70,7 +72,7 @@
     .cycle-item  { background: rgba(255,255,255,0.07); border-radius: 6px; padding: 0.3em 0.7em; }
     .cycle-arrow { color: #58a6ff; font-size: 1.2em; }
 
-    /* ── Timeline (slide 18) ────────────────────── */
+    /* ── Timeline (slide 18) — prefix .tl- = timeline ── */
     .timeline { display: flex; flex-direction: column; gap: 0.6em; margin-top: 0.6em; }
     .tl-item  { display: flex; align-items: baseline; gap: 0.8em; }
     .tl-week  { font-weight: 700; min-width: 90px; font-size: 0.85em; }
@@ -93,6 +95,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/notes/notes.js"></script>
   <script>
     Reveal.initialize({
       hash: true,
@@ -104,21 +107,27 @@
       width: 1280,
       height: 720,
       margin: 0.08,
+      plugins: [ RevealNotes ],
     });
 
     /* Counter animation on slide 13 */
+    let rafId = null;
     Reveal.on('slidechanged', ({ currentSlide }) => {
       if (currentSlide.dataset.slide === 'the-number') {
         const el = currentSlide.querySelector('.stat-number');
+        if (!el) return;
+        if (rafId) cancelAnimationFrame(rafId);
         let start = null;
-        const from = 10, to = 30, duration = 1200;
+        const from = 0, to = 30, duration = 1200;
         const step = (ts) => {
           if (!start) start = ts;
-          const pct = Math.min((ts - start) / duration, 1);
+          const raw = Math.min((ts - start) / duration, 1);
+          const pct = 1 - Math.pow(1 - raw, 3);
           el.textContent = Math.round(from + (to - from) * pct) + '+';
-          if (pct < 1) requestAnimationFrame(step);
+          if (raw < 1) { rafId = requestAnimationFrame(step); }
+          else { rafId = null; }
         };
-        requestAnimationFrame(step);
+        rafId = requestAnimationFrame(step);
       }
     });
   </script>
