@@ -98,9 +98,49 @@
 .concentration-break { cursor: pointer; font-size: .8rem; color: #e05050; }
 
 /* Navigation */
-.play-nav { display: flex; gap: 12px; }
+.play-nav { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
 .play-nav a { padding: 8px 16px; border: 1px solid var(--border); background: rgba(0,0,0,.3); color: var(--cream); border-radius: 4px; text-decoration: none; font-family: 'Cinzel', serif; font-size: .85rem; transition: all .2s; }
 .play-nav a:hover { border-color: var(--gold); background: rgba(201,164,64,.1); }
+
+/* Save Button */
+.save-char-btn { padding: 8px 16px; border: 1px solid #4a9c4a; background: rgba(42,92,42,.2); color: #8cd88c; border-radius: 4px; cursor: pointer; font-family: 'Cinzel', serif; font-size: .85rem; transition: all .2s; }
+.save-char-btn:hover { background: rgba(42,92,42,.4); border-color: #6bc06b; }
+
+/* Saving Throws & Skills */
+.dash-section { margin-bottom: 0; }
+.dash-section-title { font-family: 'Cinzel', serif; font-size: .85rem; color: var(--gold-dim); margin-bottom: 10px; text-transform: uppercase; letter-spacing: .05em; }
+.save-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.save-row { display: flex; align-items: center; gap: 8px; padding: 5px 8px; background: rgba(0,0,0,.2); border-radius: 4px; cursor: pointer; transition: all .2s; }
+.save-row:hover { background: rgba(201,164,64,.1); border-color: var(--gold); }
+.save-row.proficient { font-weight: 600; color: var(--gold); }
+.save-row-label { font-family: 'Crimson Text', serif; font-size: .9rem; flex: 1; color: var(--cream); }
+.save-row.proficient .save-row-label { color: var(--gold); }
+.save-row-bonus { font-family: 'Cinzel', serif; font-size: .85rem; color: var(--cream); min-width: 32px; text-align: right; }
+.skill-list { display: flex; flex-direction: column; gap: 4px; max-height: 280px; overflow-y: auto; }
+.skill-row { display: flex; align-items: center; gap: 8px; padding: 4px 8px; background: rgba(0,0,0,.15); border-radius: 4px; cursor: pointer; transition: all .2s; }
+.skill-row:hover { background: rgba(201,164,64,.1); }
+.skill-row.proficient .skill-row-label { font-weight: 600; color: var(--gold); }
+.skill-row-label { font-family: 'Crimson Text', serif; font-size: .9rem; flex: 1; color: var(--cream); }
+.skill-row-bonus { font-family: 'Cinzel', serif; font-size: .8rem; min-width: 32px; text-align: right; color: var(--cream); }
+.roll-result-inline { font-family: 'Cinzel', serif; font-size: .8rem; color: var(--gold); margin-left: 4px; min-width: 28px; text-align: center; }
+.prof-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--gold); flex-shrink: 0; }
+.prof-dot.empty { background: transparent; border: 1px solid var(--border); }
+
+/* Class Resources */
+.resource-list { display: flex; flex-direction: column; gap: 10px; }
+.resource-row { display: flex; align-items: center; gap: 10px; }
+.resource-label { font-family: 'Crimson Text', serif; font-size: .95rem; color: var(--cream); flex: 1; }
+.resource-pips { display: flex; gap: 4px; flex-wrap: wrap; }
+.resource-pip { width: 18px; height: 18px; border: 2px solid var(--gold-dim); border-radius: 50%; cursor: pointer; transition: all .2s; background: var(--gold); }
+.resource-pip.empty { background: transparent; }
+.resource-pip:hover { transform: scale(1.15); border-color: var(--gold); }
+.resource-counter-btns { display: flex; gap: 4px; align-items: center; }
+.resource-counter-val { font-family: 'Cinzel', serif; font-size: 1.1rem; color: var(--cream); min-width: 28px; text-align: center; }
+.resource-btn { width: 26px; height: 26px; border: 1px solid var(--border); background: rgba(0,0,0,.3); color: var(--cream); border-radius: 4px; cursor: pointer; font-size: 1rem; line-height: 1; display: flex; align-items: center; justify-content: center; transition: all .2s; font-family: 'Cinzel', serif; }
+.resource-btn:hover { border-color: var(--gold); background: rgba(201,164,64,.1); }
+.resource-max { font-family: 'Crimson Text', serif; font-size: .75rem; color: var(--cream-dim); }
+.resource-restore-btn { padding: 3px 8px; border: 1px solid #4a9c4a; background: rgba(42,92,42,.2); color: #8cd88c; border-radius: 4px; cursor: pointer; font-family: 'Cinzel', serif; font-size: .7rem; transition: all .2s; }
+.resource-restore-btn:hover { background: rgba(42,92,42,.4); }
 </style>
 </head>
 <body>
@@ -117,6 +157,7 @@
       <a href="/play/inventory">Inventory</a>
       <a href="/step/9">Character Sheet</a>
       <a href="/characters">My Characters</a>
+      <button id="save-char-btn" class="save-char-btn" onclick="saveCharacter()">Save</button>
     <button th:if="${draft.level < 20}"
             onclick="LevelUp.open()"
             style="padding:6px 14px;border:1px solid #c9a440;background:rgba(201,164,64,.15);
@@ -138,7 +179,7 @@
       <div class="hp-bar">
         <div class="hp-fill" id="hp-fill"
              th:classappend="${currentHp >= derived.maxHitPoints / 2} ? 'healthy' : (${currentHp >= derived.maxHitPoints / 4} ? 'bloodied' : '')"
-             th:style="'width:' + (${currentHp * 100 / derived.maxHitPoints}) + '%'"></div>
+             th:style="'width:' + ${#numbers.formatDecimal(currentHp * 100.0 / derived.maxHitPoints, 1, 2)} + '%'"></div>
       </div>
       <div class="temp-hp" th:if="${draft.tempHp > 0}">
         Temp HP: <span id="temp-hp" th:text="${draft.tempHp}">0</span>
@@ -320,6 +361,188 @@
         </div>
       </div>
     </div>
+
+    <!-- Saving Throws -->
+    <div class="play-card">
+      <div class="play-card-title">Saving Throws</div>
+      <div class="save-grid">
+        <th:block th:each="stat : ${ {'STR','DEX','CON','INT','WIS','CHA'} }">
+          <div class="save-row"
+               th:classappend="${derived.savingThrowProficiencies != null and derived.savingThrowProficiencies.contains(stat)} ? 'proficient' : ''"
+               th:data-bonus="${derived.savingThrows != null ? derived.savingThrows.get(stat) : derived.modifiers.get(stat)}"
+               th:data-label="${stat} + ' Save'"
+               onclick="rollSaveThrow(this)">
+            <div class="prof-dot"
+                 th:classappend="${derived.savingThrowProficiencies != null and derived.savingThrowProficiencies.contains(stat)} ? '' : 'empty'"></div>
+            <span class="save-row-label" th:text="${stat}">STR</span>
+            <span class="save-row-bonus"
+                  th:text="${(derived.savingThrows != null ? derived.savingThrows.getOrDefault(stat, derived.modifiers.get(stat)) : derived.modifiers.get(stat)) >= 0}
+                           ? '+' + ${derived.savingThrows != null ? derived.savingThrows.getOrDefault(stat, derived.modifiers.get(stat)) : derived.modifiers.get(stat)}
+                           : ${derived.savingThrows != null ? derived.savingThrows.getOrDefault(stat, derived.modifiers.get(stat)) : derived.modifiers.get(stat)}">+0</span>
+            <span class="roll-result-inline" id="save-result-inline"></span>
+          </div>
+        </th:block>
+      </div>
+      <div id="save-roll-result" style="margin-top:12px;padding:8px;background:rgba(0,0,0,.3);border-radius:4px;text-align:center;display:none">
+        <span class="dice-total" style="font-size:1.4rem" id="save-roll-total">—</span>
+        <div class="dice-breakdown" id="save-roll-breakdown"></div>
+      </div>
+    </div>
+
+    <!-- Skills -->
+    <div class="play-card">
+      <div class="play-card-title">Skills</div>
+      <div class="skill-list">
+        <th:block th:each="entry : ${derived.skillBonuses}">
+          <div class="skill-row"
+               th:classappend="${derived.allSkillProficiencies != null and derived.allSkillProficiencies.contains(entry.key)} ? 'proficient' : ''"
+               th:data-bonus="${entry.value}"
+               th:data-label="${entry.key}"
+               onclick="rollSkill(this)">
+            <div class="prof-dot"
+                 th:classappend="${derived.allSkillProficiencies != null and derived.allSkillProficiencies.contains(entry.key)} ? '' : 'empty'"></div>
+            <span class="skill-row-label" th:text="${entry.key}">Athletics</span>
+            <span class="skill-row-bonus"
+                  th:text="${entry.value >= 0} ? '+' + ${entry.value} : ${entry.value}">+0</span>
+          </div>
+        </th:block>
+      </div>
+      <div id="skill-roll-result" style="margin-top:12px;padding:8px;background:rgba(0,0,0,.3);border-radius:4px;text-align:center;display:none">
+        <span class="dice-total" style="font-size:1.4rem" id="skill-roll-total">—</span>
+        <div class="dice-breakdown" id="skill-roll-breakdown"></div>
+      </div>
+    </div>
+
+    <!-- Class Resources -->
+    <div class="play-card" id="class-resources-card"
+         th:if="${draft.characterClass != null and !draft.characterClass.isEmpty()}">
+      <div class="play-card-title">Class Resources</div>
+      <div class="resource-list" id="resource-list">
+
+        <!-- Barbarian: Rage -->
+        <th:block th:if="${draft.characterClass == 'barbarian'}">
+          <div class="resource-row" id="resource-row-rage" th:data-resource="rage">
+            <span class="resource-label">Rage</span>
+            <div class="resource-counter-btns">
+              <button class="resource-btn" onclick="useResource('rage')">−</button>
+              <span class="resource-counter-val" id="res-val-rage">—</span>
+              <button class="resource-btn" onclick="restoreResource('rage')">+</button>
+            </div>
+            <span class="resource-max" id="res-max-rage"></span>
+          </div>
+        </th:block>
+
+        <!-- Bard: Bardic Inspiration -->
+        <th:block th:if="${draft.characterClass == 'bard'}">
+          <div class="resource-row" id="resource-row-bardic_inspiration" th:data-resource="bardic_inspiration">
+            <span class="resource-label">Bardic Inspiration</span>
+            <div class="resource-counter-btns">
+              <button class="resource-btn" onclick="useResource('bardic_inspiration')">−</button>
+              <span class="resource-counter-val" id="res-val-bardic_inspiration">—</span>
+              <button class="resource-btn" onclick="restoreResource('bardic_inspiration')">+</button>
+            </div>
+            <span class="resource-max" id="res-max-bardic_inspiration"></span>
+          </div>
+        </th:block>
+
+        <!-- Cleric / Paladin: Channel Divinity -->
+        <th:block th:if="${draft.characterClass == 'cleric' or draft.characterClass == 'paladin'}">
+          <div class="resource-row" id="resource-row-channel_divinity" th:data-resource="channel_divinity">
+            <span class="resource-label">Channel Divinity</span>
+            <div class="resource-counter-btns">
+              <button class="resource-btn" onclick="useResource('channel_divinity')">−</button>
+              <span class="resource-counter-val" id="res-val-channel_divinity">—</span>
+              <button class="resource-btn" onclick="restoreResource('channel_divinity')">+</button>
+            </div>
+            <span class="resource-max" id="res-max-channel_divinity"></span>
+          </div>
+        </th:block>
+
+        <!-- Druid: Wild Shape (level >= 2) -->
+        <th:block th:if="${draft.characterClass == 'druid' and draft.level >= 2}">
+          <div class="resource-row" id="resource-row-wild_shape" th:data-resource="wild_shape">
+            <span class="resource-label">Wild Shape</span>
+            <div class="resource-counter-btns">
+              <button class="resource-btn" onclick="useResource('wild_shape')">−</button>
+              <span class="resource-counter-val" id="res-val-wild_shape">—</span>
+              <button class="resource-btn" onclick="restoreResource('wild_shape')">+</button>
+            </div>
+            <span class="resource-max" id="res-max-wild_shape"></span>
+          </div>
+        </th:block>
+
+        <!-- Fighter: Second Wind -->
+        <th:block th:if="${draft.characterClass == 'fighter'}">
+          <div class="resource-row" id="resource-row-second_wind" th:data-resource="second_wind">
+            <span class="resource-label">Second Wind</span>
+            <div class="resource-counter-btns">
+              <button class="resource-btn" onclick="useResource('second_wind')">−</button>
+              <span class="resource-counter-val" id="res-val-second_wind">—</span>
+              <button class="resource-btn" onclick="restoreResource('second_wind')">+</button>
+            </div>
+            <span class="resource-max" id="res-max-second_wind"></span>
+          </div>
+          <!-- Fighter: Action Surge (level >= 2) -->
+          <div class="resource-row" th:if="${draft.level >= 2}" id="resource-row-action_surge" th:data-resource="action_surge">
+            <span class="resource-label">Action Surge</span>
+            <div class="resource-counter-btns">
+              <button class="resource-btn" onclick="useResource('action_surge')">−</button>
+              <span class="resource-counter-val" id="res-val-action_surge">—</span>
+              <button class="resource-btn" onclick="restoreResource('action_surge')">+</button>
+            </div>
+            <span class="resource-max" id="res-max-action_surge"></span>
+          </div>
+        </th:block>
+
+        <!-- Monk: Ki Points -->
+        <th:block th:if="${draft.characterClass == 'monk'}">
+          <div class="resource-row" id="resource-row-ki" th:data-resource="ki">
+            <span class="resource-label">Ki Points</span>
+            <div class="resource-counter-btns">
+              <button class="resource-btn" onclick="useResource('ki')">−</button>
+              <span class="resource-counter-val" id="res-val-ki">—</span>
+              <button class="resource-btn" onclick="restoreResource('ki')">+</button>
+            </div>
+            <span class="resource-max" id="res-max-ki"></span>
+          </div>
+        </th:block>
+
+        <!-- Sorcerer: Sorcery Points -->
+        <th:block th:if="${draft.characterClass == 'sorcerer'}">
+          <div class="resource-row" id="resource-row-sorcery_points" th:data-resource="sorcery_points">
+            <span class="resource-label">Sorcery Points</span>
+            <div class="resource-counter-btns">
+              <button class="resource-btn" onclick="useResource('sorcery_points')">−</button>
+              <span class="resource-counter-val" id="res-val-sorcery_points">—</span>
+              <button class="resource-btn" onclick="restoreResource('sorcery_points')">+</button>
+            </div>
+            <span class="resource-max" id="res-max-sorcery_points"></span>
+          </div>
+        </th:block>
+
+        <!-- Wizard: Arcane Recovery -->
+        <th:block th:if="${draft.characterClass == 'wizard'}">
+          <div class="resource-row" id="resource-row-arcane_recovery" th:data-resource="arcane_recovery">
+            <span class="resource-label">Arcane Recovery</span>
+            <div class="resource-counter-btns">
+              <button class="resource-btn" onclick="useResource('arcane_recovery')">−</button>
+              <span class="resource-counter-val" id="res-val-arcane_recovery">—</span>
+              <button class="resource-btn" onclick="restoreResource('arcane_recovery')">+</button>
+            </div>
+            <span class="resource-max" id="res-max-arcane_recovery"></span>
+          </div>
+        </th:block>
+
+        <!-- Ranger / Rogue / Warlock: no basic resource -->
+        <th:block th:if="${draft.characterClass == 'ranger' or draft.characterClass == 'rogue' or draft.characterClass == 'warlock'}">
+          <div style="color:var(--cream-dim);font-size:.85rem">
+            No tracked class resources — see spell slots above.
+          </div>
+        </th:block>
+
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -342,7 +565,8 @@ function damage() {
             .then(r => r.json())
             .then(data => {
                 updateHpDisplay(data.currentHp);
-                if (document.getElementById('temp-hp')) document.getElementById('temp-hp').textContent = data.tempHp;
+                const tempHpEl = document.getElementById('temp-hp');
+                if (tempHpEl) tempHpEl.textContent = data.tempHp;
                 // Show death saves card if at 0 HP
                 const deathCard = document.getElementById('death-saves-card');
                 if (deathCard) deathCard.style.display = data.currentHp === 0 ? '' : 'none';
@@ -382,7 +606,7 @@ function useHitDie() {
 
 function updateHpDisplay(hp) {
     document.getElementById('hp-current').textContent = hp;
-    const pct = Math.min(100, (hp / maxHp) * 100);
+    const pct = Math.min(100, Math.max(0, (hp / maxHp) * 100));
     const fill = document.getElementById('hp-fill');
     fill.style.width = pct + '%';
     fill.className = 'hp-fill ' + (pct >= 50 ? 'healthy' : pct >= 25 ? 'bloodied' : '');
@@ -449,6 +673,32 @@ function showRoll(total, breakdown) {
     el.style.animation = 'none';
     el.offsetHeight;
     el.style.animation = 'pulse .3s ease';
+}
+
+// ── Saving Throw Rolls ──────────────────────────────────────────────────────
+function rollSaveThrow(el) {
+    const bonus = parseInt(el.dataset.bonus);
+    const label = el.dataset.label;
+    const roll = Math.floor(Math.random() * 20) + 1;
+    const total = roll + bonus;
+    const sign = bonus >= 0 ? '+' : '';
+    const resultEl = document.getElementById('save-roll-result');
+    document.getElementById('save-roll-total').textContent = total;
+    document.getElementById('save-roll-breakdown').textContent = `${label}: d20 (${roll}) ${sign}${bonus}`;
+    resultEl.style.display = '';
+}
+
+// ── Skill Check Rolls ───────────────────────────────────────────────────────
+function rollSkill(el) {
+    const bonus = parseInt(el.dataset.bonus);
+    const label = el.dataset.label;
+    const roll = Math.floor(Math.random() * 20) + 1;
+    const total = roll + bonus;
+    const sign = bonus >= 0 ? '+' : '';
+    const resultEl = document.getElementById('skill-roll-result');
+    document.getElementById('skill-roll-total').textContent = total;
+    document.getElementById('skill-roll-breakdown').textContent = `${label}: d20 (${roll}) ${sign}${bonus}`;
+    resultEl.style.display = '';
 }
 
 // ── Death Saves ────────────────────────────────────────────────────────────
@@ -567,6 +817,74 @@ function checkConcentration(damage) {
                 }
             }
         });
+}
+
+// ── Class Resources ────────────────────────────────────────────────────────
+function useResource(resource) {
+    fetch('/play/resource/use', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'resource=' + encodeURIComponent(resource)
+    })
+    .then(r => r.json())
+    .then(data => updateResourceDisplay(data));
+}
+
+function restoreResource(resource, amount) {
+    let body = 'resource=' + encodeURIComponent(resource);
+    if (amount !== undefined) body += '&amount=' + amount;
+    fetch('/play/resource/restore', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body
+    })
+    .then(r => r.json())
+    .then(data => updateResourceDisplay(data));
+}
+
+function updateResourceDisplay(data) {
+    const valEl = document.getElementById('res-val-' + data.resource);
+    const maxEl = document.getElementById('res-max-' + data.resource);
+    if (valEl) valEl.textContent = data.current;
+    if (maxEl) maxEl.textContent = '/ ' + data.max;
+}
+
+// Initialize resource displays on page load
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('[data-resource]').forEach(row => {
+        const resource = row.dataset.resource;
+        // Fetch current value by doing a 0-amount restore (returns current state)
+        fetch('/play/resource/restore', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: 'resource=' + encodeURIComponent(resource) + '&amount=0'
+        })
+        .then(r => r.json())
+        .then(data => updateResourceDisplay(data));
+    });
+});
+
+// ── Save Character ─────────────────────────────────────────────────────────
+async function saveCharacter() {
+    const btn = document.getElementById('save-char-btn');
+    try {
+        const resp = await fetch('/play/draft');
+        const draft = await resp.json();
+        const characters = JSON.parse(localStorage.getItem('characterForge_characters') || '[]');
+        const idx = characters.findIndex(c => c.draft &&
+            c.draft.characterName === draft.characterName &&
+            c.draft.characterClass === draft.characterClass);
+        const entry = { draft, level: draft.level, name: draft.characterName || 'Unnamed' };
+        if (idx >= 0) characters[idx] = entry;
+        else characters.push(entry);
+        localStorage.setItem('characterForge_characters', JSON.stringify(characters));
+        const orig = btn.textContent;
+        btn.textContent = 'Saved!';
+        setTimeout(() => btn.textContent = orig, 1500);
+    } catch (e) {
+        btn.textContent = 'Error!';
+        setTimeout(() => btn.textContent = 'Save', 1500);
+    }
 }
 
 // Register service worker

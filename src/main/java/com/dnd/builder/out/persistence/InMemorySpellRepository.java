@@ -349,6 +349,15 @@ public class InMemorySpellRepository implements com.dnd.builder.core.port.out.Sp
         list.add(s("wrathful_smite","Wrathful Smite",1,"Evocation","1 bonus action","Self","Up to 1 min",true,false,"V",
             "Next hit deals extra 1d6 psychic; WIS save or frightened.",
             "paladin"));
+        list.add(s("thunderous_smite","Thunderous Smite",1,"Transmutation","1 bonus action","Self","Up to 1 min",true,false,"V",
+            "Next melee weapon hit deals extra 2d6 thunder damage and pushes target 10 ft (STR save or prone).",
+            "paladin"));
+        list.add(s("searing_smite","Searing Smite",1,"Evocation","1 bonus action","Self","Up to 1 min",true,false,"V",
+            "Next melee weapon hit deals extra 1d6 fire damage and ignites target (1d6 fire/turn, CON save to end).",
+            "paladin"));
+        list.add(s("compelled_duel","Compelled Duel",1,"Enchantment","1 bonus action","30 ft","Up to 1 min",true,false,"V",
+            "One creature must make a WIS save or be compelled to fight only you. Disadvantage on attacks against others, WIS save to move away.",
+            "paladin"));
         list.add(s("hunters_mark","Hunter's Mark",1,"Divination","1 bonus action","90 ft","Up to 1 hour",true,false,"V",
             "Mark a creature; deal extra 1d6 on weapon attacks against it. Bonus action to switch marks.",
             "ranger"));
@@ -477,6 +486,13 @@ public class InMemorySpellRepository implements com.dnd.builder.core.port.out.Sp
         list.add(s("web","Web",2,"Conjuration","1 action","60 ft","Up to 1 hour",true,false,"V,S,M",
             "20-ft cube of sticky webs; DEX save or restrained. Flammable.",
             "sorcerer","wizard"));
+
+        list.add(s("lesser_restoration","Lesser Restoration",2,"Abjuration","1 action","Touch","Instantaneous",false,false,"V,S",
+            "End one disease or condition (blinded, deafened, paralyzed, or poisoned) affecting a creature.",
+            "cleric","druid","paladin","ranger","bard"));
+        list.add(s("zone_of_truth","Zone of Truth",2,"Enchantment","1 action","60 ft","Up to 10 min",true,false,"V,S",
+            "20-ft radius sphere. Creatures in area can't lie; CHA save to avoid the compulsion.",
+            "cleric","paladin","bard"));
 
         // ── XGtE Level 2 ─────────────────────────────────────────────────────
         list.add(s("aganazzars_scorcher","Aganazzar's Scorcher",2,"Evocation","1 action","30 ft","Instantaneous",false,false,"V,S,M",
@@ -875,6 +891,10 @@ public class InMemorySpellRepository implements com.dnd.builder.core.port.out.Sp
             "Create nonmagical stone wall. Each 10-ft panel has AC 15 and 30 HP per inch.",
             "druid","sorcerer","wizard"));
 
+        list.add(s("swift_quiver","Swift Quiver",5,"Transmutation","1 bonus action","Touch","Up to 1 min",true,false,"V,S,M",
+            "Ammunition from a quiver becomes magical. As a bonus action each turn, make two weapon attacks with a ranged weapon.",
+            "ranger"));
+
         // ══ LEVEL 6 SPELLS ═══════════════════════════════════════════════════
         list.add(s("arcane_gate","Arcane Gate",6,"Conjuration","1 action","500 ft","Up to 10 min",true,false,"V,S",
             "Create linked teleportation portals within 500 ft; enter one, exit the other.",
@@ -1080,6 +1100,10 @@ public class InMemorySpellRepository implements com.dnd.builder.core.port.out.Sp
             "wizard"));
         list.add(s("tsunami","Tsunami",8,"Conjuration","1 minute","Sight","Up to 6 rounds",true,false,"V,S",
             "300-ft long, 300-ft high wave; 6d10 bludgeoning per round, STR save for half.",
+            "druid"));
+
+        list.add(s("animal_shapes","Animal Shapes",8,"Transmutation","1 action","30 ft","Up to 24 hours",true,false,"V,S",
+            "Transform willing creatures in range into beast forms of CR 4 or lower. Each creature chooses the form. Lasts until concentration ends or beast drops to 0 HP.",
             "druid"));
 
         // ══ LEVEL 9 SPELLS ═══════════════════════════════════════════════════

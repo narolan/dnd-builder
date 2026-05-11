@@ -26,7 +26,7 @@ public class InMemoryRaceRepository implements RaceRepository {
 
     /** Base speed by race ID */
     private static final Map<String, Integer> SPEED = Map.ofEntries(
-        Map.entry("human_standard",30),
+        Map.entry("human_standard",30), Map.entry("human_variant",30),
         Map.entry("dwarf_hill",25), Map.entry("dwarf_mountain",25), Map.entry("dwarf_duergar",25),
         Map.entry("elf_high",30), Map.entry("elf_wood",35), Map.entry("elf_drow",30),
         Map.entry("elf_eladrin",30), Map.entry("elf_sea",30), Map.entry("elf_shadarkai",30),
@@ -61,6 +61,8 @@ public class InMemoryRaceRepository implements RaceRepository {
 
         // ── PHB ──────────────────────────────────────────────────────────────
         list.add(r("human_standard","Human","PHB", m("STR",1,"DEX",1,"CON",1,"INT",1,"WIS",1,"CHA",1)));
+        list.add(rf("human_variant","Variant Human","PHB", m(),
+            List.of(new FlexibleBonus(2,1,List.of(),"+1 to two different ability scores of your choice"))));
         list.add(r("dwarf_hill",    "Dwarf (Hill)",    "PHB", m("CON",2,"WIS",1)));
         list.add(r("dwarf_mountain","Dwarf (Mountain)","PHB", m("STR",2,"CON",2)));
         list.add(r("elf_high",      "Elf (High)",      "PHB", m("DEX",2,"INT",1)));

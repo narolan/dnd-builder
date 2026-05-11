@@ -228,6 +228,49 @@
       </div>
     </div>
 
+    <!-- Racial Traits Section -->
+    <div th:if="${raceDef != null}" class="features-section" style="margin-top:16px">
+      <div class="section-head" th:text="${raceDef.name()} + ' Traits'">Racial Traits</div>
+      <div class="features-grid">
+        <!-- Speed -->
+        <div class="feature-card">
+          <div class="feature-header">
+            <span class="feature-name">Speed</span>
+          </div>
+          <div class="feature-desc" th:text="${derived.speed} + ' ft walking speed'">30 ft walking speed</div>
+        </div>
+        <!-- Fixed ability score bonuses -->
+        <div th:if="${raceDef.fixedBonuses() != null and !raceDef.fixedBonuses().isEmpty()}" class="feature-card">
+          <div class="feature-header">
+            <span class="feature-name">Ability Score Increases</span>
+          </div>
+          <div class="feature-desc">
+            <th:block th:each="entry : ${raceDef.fixedBonuses()}">
+              <span th:text="${entry.key} + ' ' + (${entry.value} > 0 ? '+' : '') + ${entry.value}"></span><br/>
+            </th:block>
+          </div>
+        </div>
+        <!-- Flexible bonuses (e.g. Half-Elf choose two) -->
+        <div th:if="${raceDef.flexibleBonuses() != null and !raceDef.flexibleBonuses().isEmpty()}" class="feature-card">
+          <div class="feature-header">
+            <span class="feature-name">Flexible Ability Bonuses</span>
+          </div>
+          <div class="feature-desc">
+            <th:block th:each="fb : ${raceDef.flexibleBonuses()}">
+              <span th:text="'+' + ${fb.amount()} + ' to ' + ${fb.count()} + ' ability score(s) of your choice'"></span><br/>
+            </th:block>
+          </div>
+        </div>
+        <!-- Source -->
+        <div th:if="${raceDef.source() != null and !raceDef.source().isEmpty()}" class="feature-card">
+          <div class="feature-header">
+            <span class="feature-name">Source</span>
+          </div>
+          <div class="feature-desc" th:text="${raceDef.source()}">PHB</div>
+        </div>
+      </div>
+    </div>
+
     <div style="margin-top:24px;border-top:1px solid var(--border);padding-top:20px">
       <div class="section-head">Play Mode</div>
       <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px">

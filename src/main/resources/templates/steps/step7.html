@@ -110,7 +110,12 @@
         </div><!-- end th:if spellsKnownLimit > 0 -->
       </div>
 
-      <!-- Prepared Caster Spells (Cleric, Druid, Paladin) -->
+      <!-- Level-1 Paladin/Ranger: prepared caster but no spell slots yet -->
+      <div th:if="${isPreparedCasterNoSpells}" class="info-box" style="margin-top:20px">
+        Paladins and Rangers don't access spells until level 2. No spells to prepare at this level.
+      </div>
+
+      <!-- Prepared Caster Spells (Cleric, Druid, Paladin at level 2+) -->
       <div th:if="${isPreparedCaster}" style="margin-top:20px">
         <div class="section-head">Prepared Spells</div>
         <div class="spell-count">

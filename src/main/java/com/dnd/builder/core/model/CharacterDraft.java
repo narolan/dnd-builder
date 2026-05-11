@@ -90,6 +90,9 @@ public class CharacterDraft {
     /** Spell currently being concentrated on (null if none) */
     private String concentratingOn = null;
 
+    // ── Class Resource Counters (rage, ki, etc.) ─────────────────────────────
+    private Map<String, Integer> resourceCounters = new LinkedHashMap<>();
+
     // ── Tracking ─────────────────────────────────────────────────────────────
     private int highestStepReached = 1;
 
@@ -226,4 +229,9 @@ public class CharacterDraft {
 
     public int getHighestStepReached() { return highestStepReached; }
     public void setHighestStepReached(int highestStepReached) { this.highestStepReached = highestStepReached; }
+
+    public Map<String, Integer> getResourceCounters() { return resourceCounters; }
+    public void setResourceCounters(Map<String, Integer> resourceCounters) {
+        this.resourceCounters = resourceCounters != null ? resourceCounters : new LinkedHashMap<>();
+    }
 }

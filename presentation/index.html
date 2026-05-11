@@ -23,7 +23,7 @@
     .reveal-viewport {
       background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%) !important;
     }
-    .reveal .slides section { text-align: left; }
+    .reveal .slides section { text-align: left; overflow: hidden; }
     .reveal h1 { font-size: 2.4em; font-weight: 900; line-height: 1.1; }
     .reveal h2 { font-size: 1.9em; font-weight: 800; }
     .reveal h3 { font-size: 1.3em; font-weight: 700; color: #8892a4; }
@@ -51,13 +51,13 @@
     .act-4 { background: rgba(88,166,255,0.15); color: #58a6ff; border: 1px solid rgba(88,166,255,0.4); }
 
     /* ── Divider line ───────────────────────────── */
-    .rule { border: none; border-top: 1px solid rgba(255,255,255,0.12); margin: 0.8em 0; }
+    .rule { border: none; border-top: 1px solid rgba(255,255,255,0.12); margin: 0.5em 0; }
 
     /* ── Step blocks ────────────────────────────── */
-    .steps { display: flex; flex-direction: column; gap: 0.5em; margin-top: 0.6em; }
+    .steps { display: flex; flex-direction: column; gap: 0.35em; margin-top: 0.5em; }
     .step  {
       background: rgba(255,255,255,0.05); border-radius: 8px;
-      padding: 0.5em 0.9em; border-left: 3px solid rgba(255,255,255,0.15);
+      padding: 0.4em 0.9em; border-left: 3px solid rgba(255,255,255,0.15);
     }
 
     /* ── THE NUMBER (slide 13) ──────────────────── */
@@ -68,14 +68,13 @@
     }
 
     /* ── Virtuous cycle ─────────────────────────── */
-    .cycle { display: flex; align-items: center; gap: 0.4em; flex-wrap: wrap; margin-top: 0.6em; }
-    .cycle-item  { background: rgba(255,255,255,0.07); border-radius: 6px; padding: 0.3em 0.7em; }
+    .cycle { display: flex; align-items: center; gap: 0.4em; flex-wrap: nowrap; margin-top: 0.6em; }
+    .cycle-item  { background: rgba(255,255,255,0.07); border-radius: 6px; padding: 0.3em 0.55em; white-space: nowrap; }
     .cycle-arrow { color: #58a6ff; font-size: 1.2em; }
 
-    /* ── Timeline (slide 18) — prefix .tl- = timeline ── */
-    .timeline { display: flex; flex-direction: column; gap: 0.6em; margin-top: 0.6em; }
-    .tl-item  { display: flex; align-items: baseline; gap: 0.8em; }
-    .tl-week  { font-weight: 700; min-width: 90px; font-size: 0.85em; }
+    /* ── Timeline (slide 18) — 2-col grid; labels auto-size to widest ── */
+    .timeline { display: grid; grid-template-columns: max-content 1fr; gap: 0.5em 0.8em; margin-top: 0.6em; align-items: baseline; }
+    .tl-week  { font-weight: 700; font-size: 0.85em; white-space: nowrap; }
 
     /* ── Meta finale card (slide 20) ────────────── */
     .meta-card {
@@ -134,7 +133,7 @@
       <!-- 04 ─ CHATGPT REALITY CHECK ───────────────────── -->
       <section>
         <span class="act-label act-1">Act 1 · Reality Check</span>
-        <h2>ChatGPT:<br>The honest review</h2>
+        <h2>ChatGPT: The honest review</h2>
         <hr class="rule">
         <div class="steps">
           <div class="step"><span class="green">✓</span> &nbsp;Great for ideas and exploration</div>
@@ -154,13 +153,13 @@
         <h2>Enter <span class="orange">Copilot</span></h2>
         <hr class="rule">
         <div class="steps">
-          <div class="step">⚡ &nbsp;Inline suggestions — right inside VS Code</div>
+          <div class="step">⚡ &nbsp;Inline suggestions — right inside VS Code or IntelliJ</div>
           <div class="step">👀 &nbsp;It sees your files. Your context.</div>
           <div class="step">🏢 &nbsp;Microsoft-backed. GitHub-trained.</div>
           <div class="step">🎯 &nbsp;Tab to accept. This must be it.</div>
         </div>
         <aside class="notes">
-          Then Copilot arrives. And this looks different. It's inside VS Code. It sees your files. It autocompletes whole functions. You press Tab and it just does it. Microsoft is behind it. GitHub trained it on a billion repos. Surely this changes everything.
+          Then Copilot arrives. And this looks different. It's inside VS Code or IntelliJ. It sees your files. It autocompletes whole functions. You press Tab and it just does it. Microsoft is behind it. GitHub trained it on a billion repos. Surely this changes everything.
         </aside>
       </section>
 
@@ -257,16 +256,16 @@
       <!-- 12 ─ SUPERPOWERS ─────────────────────────────── -->
       <section>
         <span class="act-label act-3">Act 3 · Level Up</span>
-        <h2><span class="green">Superpowers</span><br>Unlocked</h2>
+        <h2><span class="green">Superpowers</span> Unlocked</h2>
         <hr class="rule">
         <div class="steps">
-          <div class="step">⚙️ &nbsp;<strong>Skills</strong> — custom workflows for how your team operates</div>
-          <div class="step">🪝 &nbsp;<strong>Hooks</strong> — automated actions triggered by events</div>
-          <div class="step">🤖 &nbsp;<strong>Agents</strong> — Claude tuned to your coding standards</div>
+          <div class="step">🧠 &nbsp;<strong>Skills</strong> — structured workflows Claude follows every time: brainstorm before coding, TDD, systematic debugging, code review</div>
+          <div class="step">🔗 &nbsp;<strong>Hooks</strong> — automated guardrails: always verify before claiming done, always review after implementing</div>
+          <div class="step">📦 &nbsp;<strong>A plugin for Claude Code</strong> — install once, your whole team works the same disciplined way</div>
         </div>
-        <p style="margin-top:0.8em;">Claude stops being generic.<br><span class="accent">It becomes yours.</span></p>
+        <p style="margin-top:0.8em;">Claude stops winging it.<br><span class="accent">It follows a process. Your process.</span></p>
         <aside class="notes">
-          And then we added the Superpowers plugin. Custom skills — workflows that match how our team operates. Hooks that run automatically. Agents that know our coding standards, our test patterns, our commit message style. Claude stopped being a generic AI assistant and started feeling like a colleague who'd been on the team for months.
+          And then we added the Superpowers plugin. This is a plugin for Claude Code that gives it structured skills — repeatable workflows it follows every time. Brainstorming before touching code. Test-driven development. Systematic debugging. Code review with spec compliance checks. And hooks: automated guardrails that fire on every task, like always verifying work before claiming it's done. This presentation was actually built using those skills — brainstorming, writing plans, subagent-driven development. Claude didn't just generate slides, it followed a process to design and review them.
         </aside>
       </section>
 
@@ -305,13 +304,13 @@
         <h2>The virtuous cycle</h2>
         <hr class="rule">
         <div class="cycle">
-          <span class="cycle-item">Better context</span>
+          <span class="cycle-item">Context</span>
           <span class="cycle-arrow">→</span>
-          <span class="cycle-item">Better output</span>
+          <span class="cycle-item">Output</span>
           <span class="cycle-arrow">→</span>
-          <span class="cycle-item">Better instincts</span>
+          <span class="cycle-item">Instincts</span>
           <span class="cycle-arrow">→</span>
-          <span class="cycle-item">Better prompts</span>
+          <span class="cycle-item">Prompts</span>
           <span class="cycle-arrow">↺</span>
         </div>
         <p style="margin-top:1em;">Once you're in this loop, it <strong>compounds</strong>.<br>You reach for Claude first, not last.</p>
@@ -345,6 +344,8 @@
           <div class="step">
             <strong>1. Install Claude Code</strong><br>
             <span class="mono" style="font-size:0.8em;">npm install -g @anthropic-ai/claude-code</span>
+            <br/>
+            <span class="mono" style="font-size:0.8em;">brew install --cask claude-code</span>
           </div>
           <div class="step">
             <strong>2. Write your first <span class="mono">CLAUDE.md</span></strong><br>
@@ -366,18 +367,12 @@
         <h2>What to expect</h2>
         <hr class="rule">
         <div class="timeline">
-          <div class="tl-item">
-            <span class="tl-week accent">Week 1</span>
-            <span>Awkward. You'll fight it. You'll wonder if it's worth it.</span>
-          </div>
-          <div class="tl-item">
-            <span class="tl-week orange">Month 1</span>
-            <span>Surprising. It earns your trust. Moments that genuinely impress you.</span>
-          </div>
-          <div class="tl-item">
-            <span class="tl-week green">Month 3</span>
-            <span>You can't go back. Coding alone starts to feel unnecessary.</span>
-          </div>
+          <span class="tl-week accent">Week 1</span>
+          <span>Awkward. You'll fight it. You'll wonder if it's worth it.</span>
+          <span class="tl-week orange">Month 1</span>
+          <span>Surprising. It earns your trust. Moments that genuinely impress you.</span>
+          <span class="tl-week green">Month 3</span>
+          <span>You can't go back. Coding alone starts to feel unnecessary.</span>
         </div>
         <aside class="notes">
           Be honest with yourself about the learning curve. Week 1 will be awkward. You'll spend as much time correcting it as using it. Stick with it. By month one you'll have moments that genuinely surprise you — it finds a bug you missed, it suggests a pattern you hadn't thought of, it finishes a task you expected to take a day in two hours. By month three, you'll wonder how you coded alone.
@@ -390,7 +385,7 @@
         <h1 style="margin-top:0.3em;">Stop coding<br><span class="accent">alone.</span></h1>
         <hr class="rule">
         <div class="steps" style="margin-top:0.6em;">
-          <div class="step">🔧 &nbsp;<strong>Claude Code</strong> &nbsp;<span class="mono dim">claude.ai/code</span></div>
+          <div class="step">🔧 &nbsp;<strong>Claude Code</strong> &nbsp;<a href="https://claude.ai/code" class="mono" style="color:inherit;text-decoration:none;">claude.ai/code</a></div>
           <div class="step">⚡ &nbsp;<strong>Superpowers plugin</strong> &nbsp;<span class="dim" style="font-size:0.85em;">— skills, hooks, agents for your workflow</span></div>
           <div class="step">📄 &nbsp;<strong>Start with a <span class="mono">CLAUDE.md</span></strong> &nbsp;<span class="dim" style="font-size:0.85em;">— 15 minutes, changes everything</span></div>
         </div>
@@ -427,7 +422,7 @@
       hash: true,
       transition: 'fade',
       transitionSpeed: 'fast',
-      controls: true,
+      controls: false,
       progress: true,
       center: false,
       width: 1280,
@@ -444,7 +439,8 @@
         if (!el) return;
         if (rafId) cancelAnimationFrame(rafId);
         let start = null;
-        const from = 0, to = 30, duration = 1200;
+        const from = 10, to = 30, duration = 1200;
+        el.textContent = from + '+';
         const step = (ts) => {
           if (!start) start = ts;
           const raw = Math.min((ts - start) / duration, 1);

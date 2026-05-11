@@ -254,8 +254,12 @@ public class CharacterBuilderController {
             String choiceType = allParams.get("asi_type_" + lvl); // "asi" or "feat"
             if ("feat".equals(choiceType)) {
                 String featId = allParams.get("feat_" + lvl);
-                // Feats may also grant stat bonuses (handled separately if needed)
-                choices.add(com.dnd.builder.core.model.AsiChoice.feat(lvl, featId, Map.of()));
+                // Collect optional stat bonus from feats like Observant or Resilient
+                String featBonusStat = allParams.get("feat_bonus_stat_" + lvl);
+                Map<String, Integer> bonusStats = (featBonusStat != null && !featBonusStat.isEmpty())
+                        ? Map.of(featBonusStat, 1)
+                        : Map.of();
+                choices.add(com.dnd.builder.core.model.AsiChoice.feat(lvl, featId, bonusStats));
             } else {
                 // ASI: could be +2 to one stat or +1/+1 to two
                 var statIncreases = new LinkedHashMap<String, Integer>();
@@ -494,9 +498,14 @@ public class CharacterBuilderController {
 
                     boolean isKnownCaster = !sc.isPrepareSpells();
                     boolean isWizard = "wizard".equals(classId);
+                    // Paladins/Rangers have isPrepareSpells=true but maxSpellLvl=0 at level 1
+                    // Don't show the prepared caster section when no spells are accessible yet
+                    boolean isPreparedCaster = sc.isPrepareSpells() && !isWizard && maxSpellLvl > 0;
                     model.addAttribute("isWizard", isWizard);
-                    model.addAttribute("isPreparedCaster", sc.isPrepareSpells() && !isWizard);
+                    model.addAttribute("isPreparedCaster", isPreparedCaster);
                     model.addAttribute("isKnownCaster", isKnownCaster && !isWizard);
+                    // Flag for level-1 prepared casters with no spells yet (Paladin/Ranger)
+                    model.addAttribute("isPreparedCasterNoSpells", sc.isPrepareSpells() && !isWizard && maxSpellLvl == 0);
 
                     if (isKnownCaster && !isWizard) {
                         int spellsKnown = ClassRepository.spellsKnown(classId, level);
@@ -603,6 +612,12 @@ public class CharacterBuilderController {
                             asiSummary.add(Map.of(
                                 "label", "Level " + choice.level() + ": " + String.join(", ", parts),
                                 "description", ""
+                            ));
+                        } else {
+                            // ASI saved with no stat chosen — make the gap visible
+                            asiSummary.add(Map.of(
+                                "label", "Level " + choice.level() + ": ASI — no stat chosen",
+                                "description", "Return to ASI/Feats step to complete this choice."
                             ));
                         }
                     }

@@ -266,6 +266,19 @@ const LevelUp = (() => {
           <option value="blade">Pact of the Blade — Summon a magical pact weapon</option>
           <option value="tome">Pact of the Tome — Gain a Book of Shadows with 3 cantrips</option>
         </select>`);
+
+      if (o.allCantripsForTome?.length) {
+        const btns = o.allCantripsForTome.map(s =>
+          `<button type="button" class="lu-pick" data-id="${s.id}" data-type="tome_cantrip"
+                   data-max="3" style="${_spellBtnStyle()}"
+                   onclick="LevelUp._toggleSpell(this)">${s.name}</button>`
+        ).join('');
+        html += `<div id="lu-tome-cantrips" style="display:none">` +
+          _section('Pact of the Tome — Choose 3 Cantrips (from any class)',
+            `<p style="margin:0 0 10px;font-size:.9rem;opacity:.8">These cantrips don't count against your cantrips known:</p>
+             <div style="display:flex;flex-wrap:wrap;gap:6px">${btns}</div>`) +
+          `</div>`;
+      }
     }
 
     // ── Eldritch Invocations ───────────────────────────────────────────────────
@@ -367,7 +380,13 @@ const LevelUp = (() => {
     if (o.needsMysticArcanum)   ok = ok && _count('mystic_arcanum') >= 1;
 
     if (o.needsSubclass)        ok = ok && _val('lu-subclass');
-    if (o.needsPactBoon)        ok = ok && _val('lu-pact-boon');
+    if (o.needsPactBoon) {
+      ok = ok && _val('lu-pact-boon');
+      if (o.allCantripsForTome?.length) {
+        const pactVal = document.getElementById('lu-pact-boon')?.value;
+        if (pactVal === 'tome') ok = ok && _count('tome_cantrip') >= 3;
+      }
+    }
     if (o.needsFavoredEnemy)    ok = ok && _val('lu-favored-enemy');
     if (o.needsNaturalExplorer) ok = ok && _val('lu-natural-explorer');
 
@@ -409,8 +428,15 @@ const LevelUp = (() => {
 
     // Wire all select elements to re-validate on change
     ['lu-asi-stat1','lu-asi-split1','lu-asi-split2',
-     'lu-subclass','lu-pact-boon','lu-favored-enemy','lu-natural-explorer','lu-feat-bonus-stat']
+     'lu-subclass','lu-favored-enemy','lu-natural-explorer','lu-feat-bonus-stat']
       .forEach(id => document.getElementById(id)?.addEventListener('change', _validate));
+
+    // Pact Boon: show/hide tome cantrip section and re-validate
+    document.getElementById('lu-pact-boon')?.addEventListener('change', e => {
+      const tomeSection = document.getElementById('lu-tome-cantrips');
+      if (tomeSection) tomeSection.style.display = e.target.value === 'tome' ? '' : 'none';
+      _validate();
+    });
 
     // When a feat is selected, show bonus stat picker if that feat grants +1 to a stat
     document.getElementById('lu-feat-select')?.addEventListener('change', e => {
@@ -463,22 +489,28 @@ const LevelUp = (() => {
     const confirmBtn = document.getElementById('lu-confirm-btn');
     if (confirmBtn) { confirmBtn.disabled = true; confirmBtn.textContent = 'Levelling up...'; }
 
-    const resp = await fetch('/play/levelup', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
-    const result = await resp.json();
+    try {
+      const resp = await fetch('/play/levelup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      const result = await resp.json();
 
-    if (!result.success) {
-      alert(result.error || 'Error levelling up.');
+      if (!result.success) {
+        alert(result.error || 'Error levelling up.');
+        if (confirmBtn) { confirmBtn.disabled = false; confirmBtn.textContent = 'Confirm Level Up'; }
+        return;
+      }
+
+      _saveToLocalStorage(result.draft);
+      document.getElementById('lu-modal')?.remove();
+      location.reload();
+    } catch (err) {
+      alert('Network error during level-up. Please try again.');
       if (confirmBtn) { confirmBtn.disabled = false; confirmBtn.textContent = 'Confirm Level Up'; }
       return;
     }
-
-    _saveToLocalStorage(result.draft);
-    document.getElementById('lu-modal')?.remove();
-    location.reload();
   }
 
   function _gatherChoices() {
@@ -488,6 +520,7 @@ const LevelUp = (() => {
     document.querySelectorAll('.lu-pick.lu-selected[data-type="spell"]').forEach(b => body.newSpells.push(b.dataset.id));
     document.querySelectorAll('.lu-pick.lu-selected[data-type="magical_secret"]').forEach(b => body.newSpells.push(b.dataset.id));
     document.querySelectorAll('.lu-pick.lu-selected[data-type="cantrip"]').forEach(b => body.newCantrips.push(b.dataset.id));
+    document.querySelectorAll('.lu-pick.lu-selected[data-type="tome_cantrip"]').forEach(b => body.newCantrips.push(b.dataset.id));
     document.querySelectorAll('.lu-pick.lu-selected[data-type="spellbook"]').forEach(b => body.spellbookAdditions.push(b.dataset.id));
 
     const asiRadio = document.querySelector('input[name="lu-asi-type"]:checked');
@@ -539,8 +572,15 @@ const LevelUp = (() => {
     if (idx >= 0 && idx < characters.length) {
       characters[idx].draft = updatedDraft;
       characters[idx].level = updatedDraft.level;
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(characters));
+    } else {
+      // Character not in localStorage — add it
+      characters.push({
+        draft: updatedDraft,
+        level: updatedDraft.level,
+        name: updatedDraft.characterName || 'Unnamed'
+      });
     }
+    localStorage.setItem('characterForge_characters', JSON.stringify(characters));
   }
 
   // ── Public API ────────────────────────────────────────────────────────────────

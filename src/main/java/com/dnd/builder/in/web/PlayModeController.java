@@ -129,7 +129,10 @@ public class PlayModeController {
 
         // Current HP (initialize to max if not set)
         int currentHp = draft.getCurrentHp();
-        if (currentHp < 0) currentHp = derived.getMaxHitPoints();
+        if (currentHp < 0) {
+            currentHp = derived.getMaxHitPoints();
+            draft.setCurrentHp(currentHp);  // persist back so template pct is never negative
+        }
         model.addAttribute("currentHp", currentHp);
 
         // Spell slots
@@ -255,6 +258,21 @@ public class PlayModeController {
             draft.setUsedSpellSlots(new int[9]);
         }
 
+        // Restore short-rest resources
+        if (draft.getResourceCounters() != null) {
+            var counters = draft.getResourceCounters();
+            var derived = calculator.calculate(draft);
+            String classId = draft.getCharacterClass();
+            // Bardic Inspiration: on short rest at L5+ (Font of Inspiration)
+            if ("bard".equals(classId) && draft.getLevel() >= 5 && counters.containsKey("bardic_inspiration")) {
+                counters.put("bardic_inspiration", maxForResource(classId, draft.getLevel(), "bardic_inspiration", derived));
+            }
+            // Ki points restore on short rest for Monk
+            if ("monk".equals(classId) && counters.containsKey("ki")) {
+                counters.put("ki", maxForResource(classId, draft.getLevel(), "ki", derived));
+            }
+        }
+
         return Map.of("message", "Short rest complete. Roll hit dice to heal.");
     }
 
@@ -274,6 +292,19 @@ public class PlayModeController {
         // Restore half hit dice (minimum 1)
         int hitDiceToRestore = Math.max(1, draft.getLevel() / 2);
         draft.setUsedHitDice(Math.max(0, draft.getUsedHitDice() - hitDiceToRestore));
+
+        // Restore long-rest resources
+        if (draft.getResourceCounters() != null) {
+            var counters = draft.getResourceCounters();
+            List<String> longRestResources = List.of(
+                "rage", "bardic_inspiration", "channel_divinity", "wild_shape",
+                "second_wind", "action_surge", "arcane_recovery");
+            for (String res : longRestResources) {
+                if (counters.containsKey(res)) {
+                    counters.put(res, maxForResource(draft.getCharacterClass(), draft.getLevel(), res, derived));
+                }
+            }
+        }
 
         return Map.of(
             "message", "Long rest complete!",
@@ -511,6 +542,71 @@ public class PlayModeController {
         );
     }
 
+    // ══════════════════════════════════════════════════════════════════════════
+    // CLASS RESOURCE TRACKERS
+    // ══════════════════════════════════════════════════════════════════════════
+
+    @PostMapping("/resource/use")
+    @ResponseBody
+    public Map<String, Object> useResource(@RequestParam String resource, HttpSession session) {
+        CharacterDraft draft = getDraft(session);
+        if (draft.getResourceCounters() == null) {
+            draft.setResourceCounters(new LinkedHashMap<>());
+        }
+        var counters = draft.getResourceCounters();
+        var derived = calculator.calculate(draft);
+        int current = counters.getOrDefault(resource,
+                maxForResource(draft.getCharacterClass(), draft.getLevel(), resource, derived));
+        int newVal = Math.max(0, current - 1);
+        counters.put(resource, newVal);
+        return Map.of("resource", resource, "current", newVal,
+                "max", maxForResource(draft.getCharacterClass(), draft.getLevel(), resource, derived));
+    }
+
+    @PostMapping("/resource/restore")
+    @ResponseBody
+    public Map<String, Object> restoreResource(@RequestParam String resource,
+                                               @RequestParam(defaultValue = "999") int amount,
+                                               HttpSession session) {
+        CharacterDraft draft = getDraft(session);
+        if (draft.getResourceCounters() == null) {
+            draft.setResourceCounters(new LinkedHashMap<>());
+        }
+        var counters = draft.getResourceCounters();
+        var derived = calculator.calculate(draft);
+        int max = maxForResource(draft.getCharacterClass(), draft.getLevel(), resource, derived);
+        int current = counters.getOrDefault(resource, max);
+        int newVal = Math.min(max, current + amount);
+        counters.put(resource, newVal);
+        return Map.of("resource", resource, "current", newVal, "max", max);
+    }
+
+    private int maxForResource(String classId, int level, String resource, com.dnd.builder.core.model.DerivedStats derived) {
+        return switch (resource) {
+            case "rage" -> level < 3 ? 2 : level < 6 ? 3 : level < 12 ? 4 : level < 17 ? 5 : level < 20 ? 6 : 999;
+            case "bardic_inspiration" -> {
+                int chaMod = derived != null ? derived.getModifiers().getOrDefault("CHA", 0) : 0;
+                yield Math.max(1, chaMod);
+            }
+            case "channel_divinity" -> level < 6 ? 1 : level < 18 ? 2 : 3;
+            case "ki" -> level;
+            case "sorcery_points" -> level;
+            case "second_wind" -> 1;
+            case "action_surge" -> level < 17 ? 1 : 2;
+            case "wild_shape" -> 2;
+            case "arcane_recovery" -> 1;
+            default -> 1;
+        };
+    }
+
+    // ── Draft Export ─────────────────────────────────────────────────────────
+
+    @GetMapping("/draft")
+    @ResponseBody
+    public CharacterDraft exportDraft(HttpSession session) {
+        return getDraft(session);
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     @GetMapping("/levelup/options")
@@ -658,9 +754,12 @@ public class PlayModeController {
                 .toList()
             : List.<String>of();
 
-        // ── Magical Secrets (Bard L10/14/18) ─────────────────────────────────
+        // ── Magical Secrets (Bard L10/14/18, or College of Lore Bard L6) ─────
         boolean needsMagicalSecrets = "bard".equals(classId)
-            && (newLevel == 10 || newLevel == 14 || newLevel == 18);
+            && (newLevel == 10 || newLevel == 14 || newLevel == 18
+                || (newLevel == 6
+                    && draft.getSubclassId() != null
+                    && draft.getSubclassId().toLowerCase().contains("lore")));
         var availableMagicalSecrets = needsMagicalSecrets
             ? spellRepository.getAllSpells().stream()
                 .filter(sp -> sp.getLevel() > 0 && sp.getLevel() <= maxNewSpellLevel)
@@ -674,6 +773,14 @@ public class PlayModeController {
         // ── Pact Boon (Warlock L3) ────────────────────────────────────────────
         boolean needsPactBoon = "warlock".equals(classId) && newLevel == 3
             && (draft.getPactBoon() == null || draft.getPactBoon().isBlank());
+
+        // All cantrips from any class (for Pact of the Tome picker)
+        var allCantripsForTome = needsPactBoon
+            ? spellRepository.getAllSpells().stream()
+                .filter(sp -> sp.getLevel() == 0)
+                .sorted(Comparator.comparing(com.dnd.builder.core.model.SpellDefinition::getName))
+                .toList()
+            : List.of();
 
         // ── Eldritch Invocations (Warlock) ────────────────────────────────────
         int newInvocationsCount = 0;
@@ -750,6 +857,7 @@ public class PlayModeController {
         result.put("needsMagicalSecrets",      needsMagicalSecrets);
         result.put("availableMagicalSecrets",  availableMagicalSecrets);
         result.put("needsPactBoon",            needsPactBoon);
+        result.put("allCantripsForTome",       allCantripsForTome);
         result.put("needsInvocations",         needsInvocations);
         result.put("newInvocationsCount",      newInvocationsCount);
         result.put("availableInvocations",     availableInvocations);

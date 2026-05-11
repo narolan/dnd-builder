@@ -39,9 +39,14 @@ class InMemoryRaceRepositoryTest {
         }
 
         @Test
-        @DisplayName("Variant Human should not exist (disabled per user request)")
-        void variantHumanDisabled() {
-            assertNull(repository.findById("human_variant"));
+        @DisplayName("Variant Human exists with flexible +1/+1 bonus")
+        void variantHumanEnabled() {
+            var vh = repository.findById("human_variant");
+            assertNotNull(vh);
+            assertEquals("Variant Human", vh.name());
+            assertFalse(vh.flexibleBonuses().isEmpty());
+            assertEquals(1, vh.flexibleBonuses().get(0).amount());
+            assertEquals(2, vh.flexibleBonuses().get(0).count());
         }
 
         @Test

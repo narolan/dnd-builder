@@ -97,12 +97,26 @@
 
         <!-- Feat Options (shown when Feat selected) -->
         <div th:id="'feat_options_' + ${lvl}" class="feat-options" style="margin-top:16px;display:none">
-          <select th:name="'feat_' + ${lvl}" class="feat-select" style="width:100%;padding:10px">
+          <select th:name="'feat_' + ${lvl}" class="feat-select" style="width:100%;padding:10px"
+                  th:onchange="'onFeatChanged(' + ${lvl} + ', this.value)'">
             <option value="">— Select a Feat —</option>
             <th:block th:each="feat : ${feats}">
               <option th:value="${feat.id}" th:text="${feat.name + (feat.prerequisite.isEmpty() ? '' : ' (Prereq: ' + feat.prerequisite + ')')}"></option>
             </th:block>
           </select>
+          <!-- Stat bonus dropdown — shown only when feat grants +1 to a stat -->
+          <div th:id="'feat-bonus-wrap-' + ${lvl}" style="display:none;margin-top:10px">
+            <label style="display:block;margin-bottom:6px;color:var(--cream-dim)">Choose stat bonus (+1):</label>
+            <select th:name="'feat_bonus_stat_' + ${lvl}" style="padding:8px;min-width:150px">
+              <option value="">— Select stat —</option>
+              <option value="STR">STR</option>
+              <option value="DEX">DEX</option>
+              <option value="CON">CON</option>
+              <option value="INT">INT</option>
+              <option value="WIS">WIS</option>
+              <option value="CHA">CHA</option>
+            </select>
+          </div>
         </div>
       </div>
     </th:block>
@@ -123,14 +137,47 @@
 </form>
 
 <script th:inline="javascript">
+/*<![CDATA[*/
+// Build feats lookup from server-side data
+var FEATS_RAW = /*[[${feats}]]*/ [];
+var FEATS_MAP = {};
+(FEATS_RAW || []).forEach(function(f) { FEATS_MAP[f.id] = f; });
+
 function toggleAsiMode(lvl, isAsi) {
   document.getElementById('asi_options_' + lvl).style.display = isAsi ? 'block' : 'none';
   document.getElementById('feat_options_' + lvl).style.display = isAsi ? 'none' : 'block';
+  if (isAsi) {
+    // Hide bonus wrap when switching back to ASI
+    var wrap = document.getElementById('feat-bonus-wrap-' + lvl);
+    if (wrap) wrap.style.display = 'none';
+  }
 }
 
 function toggleSplitMode(lvl, isSplit) {
   document.getElementById('single_' + lvl).style.display = isSplit ? 'none' : 'block';
   document.getElementById('split_' + lvl).style.display = isSplit ? 'flex' : 'none';
+}
+
+function onFeatChanged(lvl, featId) {
+  var wrap = document.getElementById('feat-bonus-wrap-' + lvl);
+  if (!wrap) return;
+  var feat = FEATS_MAP[featId];
+  if (feat && feat.asiChoiceCount > 0) {
+    // Repopulate options based on feat.asiBonus (or all 6 if null/empty)
+    var statSelect = wrap.querySelector('select');
+    var allStats = ['STR','DEX','CON','INT','WIS','CHA'];
+    var validStats = (feat.asiBonus && feat.asiBonus.length > 0) ? feat.asiBonus : allStats;
+    statSelect.innerHTML = '<option value="">— Select stat —</option>';
+    validStats.forEach(function(s) {
+      var opt = document.createElement('option');
+      opt.value = s;
+      opt.textContent = s;
+      statSelect.appendChild(opt);
+    });
+    wrap.style.display = 'block';
+  } else {
+    wrap.style.display = 'none';
+  }
 }
 
 // Initialize visibility on page load
@@ -142,9 +189,13 @@ document.addEventListener('DOMContentLoaded', function() {
     toggleAsiMode(lvl, true);
   } else {
     toggleAsiMode(lvl, false);
+    // Re-trigger feat bonus dropdown for any pre-selected feat
+    var featSel = document.querySelector('select[name="feat_' + lvl + '"]');
+    if (featSel && featSel.value) onFeatChanged(lvl, featSel.value);
   }
   /*[/]*/
 });
+/*]]>*/
 </script>
 </div>
 </body>
