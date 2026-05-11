@@ -154,6 +154,15 @@ const LevelUp = (() => {
           <select id="lu-feat-select" style="${_selectStyle()}">
             <option value="">Choose feat...</option>${featOpts}
           </select>
+          <div id="lu-feat-desc" style="display:none;margin-top:8px;padding:8px 10px;
+               background:rgba(0,0,0,.25);border-radius:4px;font-size:.9rem;
+               line-height:1.5;opacity:.85"></div>
+          <div id="lu-feat-bonus-wrap" style="display:none;margin-top:8px">
+            <div style="font-size:.85rem;opacity:.7;margin-bottom:6px">Choose the ability to increase (+1):</div>
+            <select id="lu-feat-bonus-stat" style="${_selectStyle()}">
+              <option value="">Choose ability...</option>
+            </select>
+          </div>
         </div>
       `);
     }
@@ -372,6 +381,9 @@ const LevelUp = (() => {
         ok = ok && _val('lu-asi-split1') && _val('lu-asi-split2');
       } else if (type === 'feat') {
         ok = ok && _val('lu-feat-select');
+        const featId = document.getElementById('lu-feat-select')?.value;
+        const feat = (_options?.availableFeats || []).find(f => f.id === featId);
+        if (feat?.asiChoiceCount > 0) ok = ok && _val('lu-feat-bonus-stat');
       }
     }
 
@@ -396,9 +408,31 @@ const LevelUp = (() => {
     });
 
     // Wire all select elements to re-validate on change
-    ['lu-asi-stat1','lu-asi-split1','lu-asi-split2','lu-feat-select',
-     'lu-subclass','lu-pact-boon','lu-favored-enemy','lu-natural-explorer']
+    ['lu-asi-stat1','lu-asi-split1','lu-asi-split2',
+     'lu-subclass','lu-pact-boon','lu-favored-enemy','lu-natural-explorer','lu-feat-bonus-stat']
       .forEach(id => document.getElementById(id)?.addEventListener('change', _validate));
+
+    // When a feat is selected, show bonus stat picker if that feat grants +1 to a stat
+    document.getElementById('lu-feat-select')?.addEventListener('change', e => {
+      const feat = (_options?.availableFeats || []).find(f => f.id === e.target.value);
+      const desc = document.getElementById('lu-feat-desc');
+      const wrap = document.getElementById('lu-feat-bonus-wrap');
+      const sel  = document.getElementById('lu-feat-bonus-stat');
+      if (desc) {
+        desc.textContent    = feat?.description || '';
+        desc.style.display  = feat?.description ? '' : 'none';
+      }
+      if (feat?.asiChoiceCount > 0) {
+        const stats = feat.asiBonus?.length ? feat.asiBonus : ['STR','DEX','CON','INT','WIS','CHA'];
+        sel.innerHTML = `<option value="">Choose ability...</option>` +
+          stats.map(s => `<option value="${s}">${s}</option>`).join('');
+        wrap.style.display = '';
+      } else {
+        sel.innerHTML = `<option value="">Choose ability...</option>`;
+        wrap.style.display = 'none';
+      }
+      _validate();
+    });
 
     // Run initial validation (enables confirm if no choices are required)
     _validate();
@@ -467,7 +501,8 @@ const LevelUp = (() => {
         body.asiStat1 = document.getElementById('lu-asi-split1')?.value || null;
         body.asiStat2 = document.getElementById('lu-asi-split2')?.value || null;
       } else if (asiRadio.value === 'feat') {
-        body.featId = document.getElementById('lu-feat-select')?.value || null;
+        body.featId        = document.getElementById('lu-feat-select')?.value || null;
+        body.featBonusStat = document.getElementById('lu-feat-bonus-stat')?.value || null;
       }
     }
 

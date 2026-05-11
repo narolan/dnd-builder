@@ -1,0 +1,586 @@
+# "From ChatGPT to Claude Code" Presentation — Implementation Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Goal:** Build a self-contained reveal.js HTML presentation — 20 slides, Deep Blue/Dramatic theme, speaker notes on every slide, counter animation on slide 13.
+
+**Architecture:** Single `presentation/index.html` file. Reveal.js 5.1.0 loaded from jsDelivr CDN. All CSS inline in `<style>`. Slides added act-by-act across tasks. No build step — open directly in any browser.
+
+**Tech Stack:** HTML5, CSS3, reveal.js 5.1.0 (CDN), vanilla JS (counter animation slide 13)
+
+---
+
+### Task 1: HTML shell + custom theme
+
+**Files:**
+- Create: `presentation/index.html`
+
+- [ ] **Step 1: Create the file with reveal.js shell + full Deep Blue/Dramatic theme CSS**
+
+```html
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>From ChatGPT to Claude Code — A Dev's Journey</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/black.css">
+  <style>
+    /* ── Base theme ─────────────────────────────── */
+    :root {
+      --r-background-color: #1a1a2e;
+      --r-main-color: #cdd9e5;
+      --r-heading-color: #ffffff;
+      --r-link-color: #e94560;
+      --r-selection-background-color: rgba(233,69,96,0.3);
+      --r-main-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      --r-heading-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      --r-heading-text-transform: none;
+      --r-heading-letter-spacing: -0.02em;
+    }
+    body { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); }
+    .reveal .slides section { text-align: left; }
+    .reveal h1 { font-size: 2.4em; font-weight: 900; line-height: 1.1; }
+    .reveal h2 { font-size: 1.9em; font-weight: 800; }
+    .reveal h3 { font-size: 1.3em; font-weight: 700; color: #8892a4; }
+
+    /* ── Utility classes ────────────────────────── */
+    .accent { color: #e94560; }
+    .blue   { color: #58a6ff; }
+    .orange { color: #f0883e; }
+    .green  { color: #3fb950; }
+    .dim    { color: #8892a4; }
+    .mono   {
+      font-family: 'Courier New', monospace; font-size: 0.85em;
+      background: rgba(255,255,255,0.08); padding: 2px 8px; border-radius: 4px;
+    }
+
+    /* ── Act label pills ────────────────────────── */
+    .act-label {
+      display: inline-block; font-size: 0.5em; font-weight: 600;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      padding: 4px 14px; border-radius: 20px; margin-bottom: 0.6em;
+    }
+    .act-1 { background: rgba(233,69,96,0.15);  color: #e94560; border: 1px solid rgba(233,69,96,0.4); }
+    .act-2 { background: rgba(240,136,62,0.15); color: #f0883e; border: 1px solid rgba(240,136,62,0.4); }
+    .act-3 { background: rgba(63,185,80,0.15);  color: #3fb950; border: 1px solid rgba(63,185,80,0.4); }
+    .act-4 { background: rgba(88,166,255,0.15); color: #58a6ff; border: 1px solid rgba(88,166,255,0.4); }
+
+    /* ── Divider line ───────────────────────────── */
+    .rule { border: none; border-top: 1px solid rgba(255,255,255,0.12); margin: 0.8em 0; }
+
+    /* ── Step blocks ────────────────────────────── */
+    .steps { display: flex; flex-direction: column; gap: 0.5em; margin-top: 0.6em; }
+    .step  {
+      background: rgba(255,255,255,0.05); border-radius: 8px;
+      padding: 0.5em 0.9em; border-left: 3px solid rgba(255,255,255,0.15);
+    }
+
+    /* ── THE NUMBER (slide 13) ──────────────────── */
+    .stat-number {
+      font-size: 7em; font-weight: 900; line-height: 1; color: #e94560;
+      font-variant-numeric: tabular-nums;
+      text-shadow: 0 0 60px rgba(233,69,96,0.4);
+    }
+
+    /* ── Virtuous cycle ─────────────────────────── */
+    .cycle { display: flex; align-items: center; gap: 0.4em; flex-wrap: wrap; margin-top: 0.6em; }
+    .cycle-item  { background: rgba(255,255,255,0.07); border-radius: 6px; padding: 0.3em 0.7em; }
+    .cycle-arrow { color: #58a6ff; font-size: 1.2em; }
+
+    /* ── Timeline (slide 18) ────────────────────── */
+    .timeline { display: flex; flex-direction: column; gap: 0.6em; margin-top: 0.6em; }
+    .tl-item  { display: flex; align-items: baseline; gap: 0.8em; }
+    .tl-week  { font-weight: 700; min-width: 90px; font-size: 0.85em; }
+
+    /* ── Meta finale card (slide 20) ────────────── */
+    .meta-card {
+      border: 1px solid rgba(233,69,96,0.4); border-radius: 12px;
+      padding: 1em 1.4em;
+      background: linear-gradient(135deg, rgba(233,69,96,0.08), rgba(88,166,255,0.08));
+    }
+  </style>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+      <!-- SLIDES GO HERE (Tasks 2–5) -->
+
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+  <script>
+    Reveal.initialize({
+      hash: true,
+      transition: 'fade',
+      transitionSpeed: 'fast',
+      controls: true,
+      progress: true,
+      center: false,
+      width: 1280,
+      height: 720,
+      margin: 0.08,
+    });
+
+    /* Counter animation on slide 13 */
+    Reveal.on('slidechanged', ({ currentSlide }) => {
+      if (currentSlide.dataset.slide === 'the-number') {
+        const el = currentSlide.querySelector('.stat-number');
+        let start = null;
+        const from = 10, to = 30, duration = 1200;
+        const step = (ts) => {
+          if (!start) start = ts;
+          const pct = Math.min((ts - start) / duration, 1);
+          el.textContent = Math.round(from + (to - from) * pct) + '+';
+          if (pct < 1) requestAnimationFrame(step);
+        };
+        requestAnimationFrame(step);
+      }
+    });
+  </script>
+</body>
+</html>
+```
+
+- [ ] **Step 2: Open `presentation/index.html` in browser**
+
+Expected: Dark gradient background visible, no console errors, no slides yet (blank reveal.js shell is correct at this stage).
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add presentation/index.html
+git commit -m "feat: reveal.js shell and Deep Blue/Dramatic theme"
+```
+
+---
+
+### Task 2: Act 1 — The Ordinary World & The Call (slides 01–04)
+
+**Files:**
+- Modify: `presentation/index.html` — replace `<!-- SLIDES GO HERE (Tasks 2–5) -->` with 4 `<section>` blocks
+
+- [ ] **Step 1: Replace the placeholder comment with Act 1 slides**
+
+```html
+      <!-- 01 ─ TITLE ─────────────────────────────────── -->
+      <section>
+        <br><br>
+        <span class="act-label act-1">A Dev's Journey</span>
+        <h1>From <span class="accent">ChatGPT</span><br>to <span class="accent">Claude Code</span></h1>
+        <p class="dim" style="margin-top:1em;font-size:0.8em;">
+          How going through every step made me a better developer — and a 3× faster one.
+        </p>
+        <aside class="notes">
+          Welcome everyone. I'm going to tell you a story about how I went from reluctant AI experimenter to someone who ships 3 times as many tickets per sprint — with the same quality. I'm going to argue that the journey itself is the point. You can't shortcut it. And by the end, I hope you'll want to start your own.
+        </aside>
+      </section>
+
+      <!-- 02 ─ THE PROBLEM ─────────────────────────────── -->
+      <section>
+        <span class="act-label act-1">Act 1 · The Ordinary World</span>
+        <h2>You're a dev.<br>You ship features.<br><span class="dim">Slowly.</span></h2>
+        <hr class="rule">
+        <p>Everyone around you is talking about AI. Your manager is asking about it. Articles everywhere. You feel the pressure — but also the scepticism.</p>
+        <p style="margin-top:0.6em;"><span class="accent">The question isn't whether to try it.</span><br>It's how not to waste your time doing it wrong.</p>
+        <aside class="notes">
+          Let's set the scene. You're a developer. You've got a backlog of tickets, deadlines, and code reviews. You're good at your job. And then AI code tools start getting real buzz. ChatGPT. Copilot. The pressure to adopt is real — but so is the scepticism. Most of us have been burned by hype before.
+        </aside>
+      </section>
+
+      <!-- 03 ─ ENTER CHATGPT ────────────────────────────── -->
+      <section>
+        <span class="act-label act-1">Act 1 · The Call</span>
+        <h2>Enter <span class="accent">ChatGPT</span></h2>
+        <hr class="rule">
+        <div class="steps">
+          <div class="step">💬 &nbsp;Paste your code into a browser tab</div>
+          <div class="step">🤖 &nbsp;Get a generated answer back</div>
+          <div class="step">✂️ &nbsp;Copy it into your editor</div>
+          <div class="step">🙏 &nbsp;Hope for the best</div>
+        </div>
+        <p style="margin-top:0.8em;">It felt like magic. <span class="dim">Kind of.</span></p>
+        <aside class="notes">
+          Late 2022, ChatGPT drops. Every developer is trying it. Pasting code into a chat window and getting something back. It felt like magic. You could describe a problem in plain English and get a working function. Or at least, something that looked like one.
+        </aside>
+      </section>
+
+      <!-- 04 ─ CHATGPT REALITY CHECK ───────────────────── -->
+      <section>
+        <span class="act-label act-1">Act 1 · Reality Check</span>
+        <h2>ChatGPT:<br>The honest review</h2>
+        <hr class="rule">
+        <div class="steps">
+          <div class="step"><span class="green">✓</span> &nbsp;Great for ideas and exploration</div>
+          <div class="step"><span class="green">✓</span> &nbsp;Good when you know how to ask</div>
+          <div class="step"><span class="accent">✗</span> &nbsp;Wildly inconsistent results</div>
+          <div class="step"><span class="accent">✗</span> &nbsp;Knows nothing about your codebase</div>
+          <div class="step"><span class="accent">✗</span> &nbsp;Lives outside your IDE — forever copy-pasting</div>
+        </div>
+        <aside class="notes">
+          But the magic wore off fast. Sometimes the output was pretty good. Most of the time, way off. And every time you had to copy-paste between the browser and your editor. It had no idea what your project looked like, what patterns you used, what you'd already built. It was a smart stranger, not a teammate.
+        </aside>
+      </section>
+
+      <!-- SLIDES CONTINUE — Task 3 -->
+```
+
+- [ ] **Step 2: Open in browser, navigate slides 01–04**
+
+Expected: Crimson act-1 labels, gradient background, step blocks styled, slide 01 has large bold heading. Press `S` — speaker notes panel opens.
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add presentation/index.html
+git commit -m "feat: Act 1 slides — ordinary world and ChatGPT"
+```
+
+---
+
+### Task 3: Act 2 — The Ordeal: Copilot (slides 05–09)
+
+**Files:**
+- Modify: `presentation/index.html` — replace `<!-- SLIDES CONTINUE — Task 3 -->` with 5 sections
+
+- [ ] **Step 1: Replace Task 3 placeholder with Act 2 slides**
+
+```html
+      <!-- 05 ─ ENTER COPILOT ──────────────────────────── -->
+      <section>
+        <span class="act-label act-2">Act 2 · The Ordeal</span>
+        <h2>Enter <span class="orange">Copilot</span></h2>
+        <hr class="rule">
+        <div class="steps">
+          <div class="step">⚡ &nbsp;Inline suggestions — right inside VS Code</div>
+          <div class="step">👀 &nbsp;It sees your files. Your context.</div>
+          <div class="step">🏢 &nbsp;Microsoft-backed. GitHub-trained.</div>
+          <div class="step">🎯 &nbsp;Tab to accept. This must be it.</div>
+        </div>
+        <aside class="notes">
+          Then Copilot arrives. And this looks different. It's inside VS Code. It sees your files. It autocompletes whole functions. You press Tab and it just does it. Microsoft is behind it. GitHub trained it on a billion repos. Surely this changes everything.
+        </aside>
+      </section>
+
+      <!-- 06 ─ WEEK 1: RAGE QUIT ───────────────────────── -->
+      <section>
+        <span class="act-label act-2">Act 2 · Week 1</span>
+        <h2>Week 1:<br><span class="accent">Rage quit.</span></h2>
+        <hr class="rule">
+        <p>More work. Constant corrections. Explaining the same thing over and over.</p>
+        <p style="margin-top:0.6em;" class="dim">"Why won't you just listen to me?"</p>
+        <p style="margin-top:0.6em;">The ratio was wrong. Fixing Copilot's output took longer than writing it myself.</p>
+        <aside class="notes">
+          I quit after one week. Genuinely. I turned it off. It was giving me more work, not less. I felt like I had to explain over and over why it was doing a bad job. Every suggestion needed reviewing. Half of them needed fixing. The ratio was backwards — it was faster to just write the code myself.
+        </aside>
+      </section>
+
+      <!-- 07 ─ THE MISSING INGREDIENT ─────────────────── -->
+      <section>
+        <span class="act-label act-2">Act 2 · The Turning Point</span>
+        <h2>The missing<br>ingredient</h2>
+        <hr class="rule">
+        <p>Months later, we tried again. But this time we added <strong>context files</strong>.</p>
+        <div class="steps" style="margin-top:0.8em;">
+          <div class="step"><span class="mono">CLAUDE.md</span> &nbsp;— project purpose, conventions, what to avoid</div>
+          <div class="step"><span class="mono">AGENT.md</span> &nbsp;&nbsp;— how the AI should behave, what it owns</div>
+        </div>
+        <p style="margin-top:0.8em;"><span class="accent">It wasn't the tool that changed.</span> It was the context we gave it.</p>
+        <aside class="notes">
+          Several months later, we tried again. But this time we added context files. A CLAUDE.md that explained the project — what it does, the tech stack, the conventions, what we wanted the AI to avoid. An AGENT.md describing how it should behave. And something clicked. It wasn't the tool that changed. We had changed.
+        </aside>
+      </section>
+
+      <!-- 08 ─ COPILOT ROUND 2 ──────────────────────────── -->
+      <section>
+        <span class="act-label act-2">Act 2 · Round 2</span>
+        <h2>Copilot: <span class="green">Round 2</span></h2>
+        <hr class="rule">
+        <p>With context, it started behaving like a <strong>junior team member</strong> who actually read the brief.</p>
+        <div class="steps" style="margin-top:0.8em;">
+          <div class="step"><span class="green">✓</span> &nbsp;Picks up smaller, well-defined tasks</div>
+          <div class="step"><span class="green">✓</span> &nbsp;Handles boilerplate and repetitive patterns</div>
+          <div class="step"><span class="green">✓</span> &nbsp;The value-to-correction ratio finally flipped</div>
+        </div>
+        <aside class="notes">
+          It started behaving like a junior developer who actually read the brief. Not perfect. Not for hard architectural decisions. But smaller tasks? Boilerplate? Repetitive patterns? It could handle those. The ratio flipped. We were getting more value than we were spending in corrections.
+        </aside>
+      </section>
+
+      <!-- 09 ─ THE INSIGHT ─────────────────────────────── -->
+      <section>
+        <span class="act-label act-2">Act 2 · The Insight</span>
+        <h2>You just became a<br><span class="accent">prompt engineer</span>.<br>
+          <span class="dim" style="font-size:0.7em;">Without realising it.</span></h2>
+        <hr class="rule">
+        <p>We thought we were fixing Copilot.<br>We were actually learning how to communicate with machines.</p>
+        <p style="margin-top:0.6em;" class="dim">How to be precise. How to give context. How to think like an AI collaborator.</p>
+        <aside class="notes">
+          Here's the key insight from this whole phase. We thought we were fixing Copilot. Adding context files felt like a workaround. But what we were actually doing was learning how to communicate with machines. How to be precise. How to give context. How to describe what we wanted without ambiguity. We were becoming prompt engineers, and we didn't even have a name for it yet.
+        </aside>
+      </section>
+
+      <!-- SLIDES CONTINUE — Task 4 -->
+```
+
+- [ ] **Step 2: Open in browser, navigate slides 05–09**
+
+Expected: Orange `act-2` labels visible, slide 06 has large "Rage quit." heading in crimson, slide 09 has stacked large heading with dim subtitle. Speaker notes present on all 5 slides.
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add presentation/index.html
+git commit -m "feat: Act 2 slides — Copilot ordeal and the context insight"
+```
+
+---
+
+### Task 4: Act 3 — The Transformation: Claude Code (slides 10–14)
+
+**Files:**
+- Modify: `presentation/index.html` — replace `<!-- SLIDES CONTINUE — Task 4 -->` with 5 sections including the animated counter slide
+
+- [ ] **Step 1: Replace Task 4 placeholder with Act 3 slides**
+
+```html
+      <!-- 10 ─ ENTER CLAUDE CODE ──────────────────────── -->
+      <section>
+        <span class="act-label act-3">Act 3 · The Transformation</span>
+        <h2>Enter <span class="green">Claude Code</span></h2>
+        <hr class="rule">
+        <div class="steps">
+          <div class="step">🖥️ &nbsp;Not a plugin. A <strong>CLI agent</strong>.</div>
+          <div class="step">📁 &nbsp;Reads your <strong>entire codebase</strong> — all files, all context</div>
+          <div class="step">🎯 &nbsp;Takes on <strong>whole tasks</strong>, not just next-line suggestions</div>
+          <div class="step">🧠 &nbsp;Understands architecture, patterns, your decisions</div>
+        </div>
+        <aside class="notes">
+          Then we switched to Claude Code. And this is where things got real. It's not a plugin that autocompletes the next line. It's a CLI agent that reads your entire repository, understands the architecture, knows about your conventions — and takes on whole tasks. You give it a ticket description and it figures out what needs to change and where.
+        </aside>
+      </section>
+
+      <!-- 11 ─ PAIR PROGRAMMER ─────────────────────────── -->
+      <section>
+        <span class="act-label act-3">Act 3 · Pair Programming 2.0</span>
+        <h2>Your new<br><span class="green">pair programmer</span></h2>
+        <hr class="rule">
+        <div class="steps">
+          <div class="step">💡 &nbsp;<strong>Sparring partner</strong> — challenges your approach</div>
+          <div class="step">🔍 &nbsp;<strong>Reviewer</strong> — spots things you miss</div>
+          <div class="step">🤝 &nbsp;<strong>Collaborator</strong> — pushes back when you're wrong</div>
+          <div class="step">⏰ &nbsp;<strong>Always available</strong> — no meetings, no calendar</div>
+        </div>
+        <aside class="notes">
+          It became a genuine collaborator. Not just a code generator — a thinking partner. It would challenge my approach. Suggest better patterns. Flag things I'd missed. Sometimes it would say "are you sure about this?" and it would be right. Like having a senior dev always available, one who actually read all your code.
+        </aside>
+      </section>
+
+      <!-- 12 ─ SUPERPOWERS ─────────────────────────────── -->
+      <section>
+        <span class="act-label act-3">Act 3 · Level Up</span>
+        <h2><span class="green">Superpowers</span><br>Unlocked</h2>
+        <hr class="rule">
+        <div class="steps">
+          <div class="step">⚙️ &nbsp;<strong>Skills</strong> — custom workflows for how your team operates</div>
+          <div class="step">🪝 &nbsp;<strong>Hooks</strong> — automated actions triggered by events</div>
+          <div class="step">🤖 &nbsp;<strong>Agents</strong> — Claude tuned to your coding standards</div>
+        </div>
+        <p style="margin-top:0.8em;">Claude stops being generic.<br><span class="accent">It becomes yours.</span></p>
+        <aside class="notes">
+          And then we added the Superpowers plugin. Custom skills — workflows that match how our team operates. Hooks that run automatically. Agents that know our coding standards, our test patterns, our commit message style. Claude stopped being a generic AI assistant and started feeling like a colleague who'd been on the team for months.
+        </aside>
+      </section>
+
+      <!-- 13 ─ THE NUMBER ───────────────────────────────── -->
+      <section data-slide="the-number" data-background-gradient="linear-gradient(135deg, #1a0a12 0%, #2d0f1f 50%, #1a0a12 100%)">
+        <div style="text-align:center;padding-top:0.5em;">
+          <p class="dim" style="font-size:0.75em;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.2em;">Tickets per sprint</p>
+          <div style="display:flex;align-items:center;justify-content:center;gap:0.5em;">
+            <span style="font-size:3em;font-weight:900;color:#8892a4;">10–12</span>
+            <span style="font-size:2em;color:#e94560;">→</span>
+            <span class="stat-number">30+</span>
+          </div>
+          <hr class="rule" style="margin:0.6em auto;max-width:400px;">
+          <p class="dim">Same team. Same codebase. Same quality bar.<br>No more regressions than before.</p>
+        </div>
+        <aside class="notes">
+          I'll give you one number. Before Claude Code: 10 to 12 tickets per sprint. After, with Superpowers: over 30. Per sprint. Same team. Same codebase. Same code review bar. The quality didn't drop. The regression rate didn't go up. We just moved faster. Let that land for a second.
+        </aside>
+      </section>
+
+      <!-- 14 ─ WHAT CHANGED ────────────────────────────── -->
+      <section>
+        <span class="act-label act-3">Act 3 · The Realisation</span>
+        <h2>What changed?</h2>
+        <hr class="rule">
+        <h1 style="margin-top:0.4em;">Not the AI.<br><span class="accent">You.</span></h1>
+        <p style="margin-top:0.6em;" class="dim">You learned to communicate with machines.<br>That skill transferred — and compounded.</p>
+        <aside class="notes">
+          But here's what I want you to understand. The AI didn't get 3x better between Copilot and Claude Code. What changed was that we knew how to use it. Because we'd done the journey. We'd learned how to give context. How to prompt precisely. How to collaborate with a machine. And all of that transferred directly to Claude Code, and paid off immediately.
+        </aside>
+      </section>
+
+      <!-- SLIDES CONTINUE — Task 5 -->
+```
+
+- [ ] **Step 2: Open in browser, navigate to slide 13**
+
+Expected: Slide 13 shows a darker red-gradient background (distinct from other slides). The counter animates from 10 to 30+ over ~1.2 seconds on each entry. Navigate away and back — animation replays. Slide 14 has a large dramatic "You." heading.
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add presentation/index.html
+git commit -m "feat: Act 3 slides — Claude Code, Superpowers, and THE NUMBER animation"
+```
+
+---
+
+### Task 5: Act 4 — The Return (slides 15–20) + verification
+
+**Files:**
+- Modify: `presentation/index.html` — replace `<!-- SLIDES CONTINUE — Task 5 -->` with 6 final sections
+
+- [ ] **Step 1: Replace Task 5 placeholder with Act 4 slides**
+
+```html
+      <!-- 15 ─ THE VIRTUOUS CYCLE ─────────────────────── -->
+      <section>
+        <span class="act-label act-4">Act 4 · The Return</span>
+        <h2>The virtuous cycle</h2>
+        <hr class="rule">
+        <div class="cycle">
+          <span class="cycle-item">Better context</span>
+          <span class="cycle-arrow">→</span>
+          <span class="cycle-item">Better output</span>
+          <span class="cycle-arrow">→</span>
+          <span class="cycle-item">Better instincts</span>
+          <span class="cycle-arrow">→</span>
+          <span class="cycle-item">Better prompts</span>
+          <span class="cycle-arrow">↺</span>
+        </div>
+        <p style="margin-top:1em;">Once you're in this loop, it <strong>compounds</strong>.<br>You reach for Claude first, not last.</p>
+        <aside class="notes">
+          And once you're in this cycle, it compounds. You get better at prompting. Claude gets more useful. You ship more. You feel less friction. You start reaching for it first — for design decisions, for code review, for architecture questions — not just for generating boilerplate. It stops being a tool and starts being a way of working.
+        </aside>
+      </section>
+
+      <!-- 16 ─ YOU DON'T SKIP LEVELS ──────────────────── -->
+      <section>
+        <span class="act-label act-4">Act 4 · The Key Insight</span>
+        <h2>You don't<br>skip levels.</h2>
+        <hr class="rule">
+        <div class="steps" style="margin-top:0.8em;">
+          <div class="step"><span class="accent">ChatGPT</span> &nbsp;&nbsp;taught you to <strong>ask</strong></div>
+          <div class="step"><span class="orange">Copilot</span> &nbsp;&nbsp;&nbsp;taught you <strong>context</strong></div>
+          <div class="step"><span class="green">Claude Code</span> &nbsp;rewards <strong>both</strong></div>
+        </div>
+        <p style="margin-top:0.8em;" class="dim">The journey isn't inefficiency. It's the training.</p>
+        <aside class="notes">
+          This is the thing I most want you to take away. You can't skip the early tools and just jump to Claude Code and be immediately productive. The journey is the training. Every frustration with ChatGPT's inconsistency taught you what a good prompt looks like. Every Copilot rage-quit taught you what context the AI needs to succeed. Claude Code rewards all of that, directly.
+        </aside>
+      </section>
+
+      <!-- 17 ─ START YOUR JOURNEY ──────────────────────── -->
+      <section>
+        <span class="act-label act-4">Act 4 · Your Turn</span>
+        <h2>Start your journey</h2>
+        <hr class="rule">
+        <div class="steps" style="margin-top:0.6em;">
+          <div class="step">
+            <strong>1. Install Claude Code</strong><br>
+            <span class="mono" style="font-size:0.8em;">npm install -g @anthropic-ai/claude-code</span>
+          </div>
+          <div class="step">
+            <strong>2. Write your first <span class="mono">CLAUDE.md</span></strong><br>
+            <span class="dim" style="font-size:0.85em;">Project purpose · tech stack · conventions · what to avoid</span>
+          </div>
+          <div class="step">
+            <strong>3. Give it a real task</strong><br>
+            <span class="dim" style="font-size:0.85em;">Not a toy. A real ticket. Let it run. Watch what happens.</span>
+          </div>
+        </div>
+        <aside class="notes">
+          Practically: install Claude Code. Write a CLAUDE.md that explains your project like you'd explain it to a new team member — what it does, the tech stack, your conventions, what to avoid. Then give it a real ticket, not a toy task, and see what happens. The first time it navigates to the right file and makes the right change without being told where to look, it'll click.
+        </aside>
+      </section>
+
+      <!-- 18 ─ WHAT TO EXPECT ───────────────────────────── -->
+      <section>
+        <span class="act-label act-4">Act 4 · Honest Expectations</span>
+        <h2>What to expect</h2>
+        <hr class="rule">
+        <div class="timeline">
+          <div class="tl-item">
+            <span class="tl-week accent">Week 1</span>
+            <span>Awkward. You'll fight it. You'll wonder if it's worth it.</span>
+          </div>
+          <div class="tl-item">
+            <span class="tl-week orange">Month 1</span>
+            <span>Surprising. It earns your trust. Moments that genuinely impress you.</span>
+          </div>
+          <div class="tl-item">
+            <span class="tl-week green">Month 3</span>
+            <span>You can't go back. Coding alone starts to feel unnecessary.</span>
+          </div>
+        </div>
+        <aside class="notes">
+          Be honest with yourself about the learning curve. Week 1 will be awkward. You'll spend as much time correcting it as using it. Stick with it. By month one you'll have moments that genuinely surprise you — it finds a bug you missed, it suggests a pattern you hadn't thought of, it finishes a task you expected to take a day in two hours. By month three, you'll wonder how you coded alone.
+        </aside>
+      </section>
+
+      <!-- 19 ─ CALL TO ACTION ───────────────────────────── -->
+      <section>
+        <span class="act-label act-4">Act 4 · Your Move</span>
+        <h1 style="margin-top:0.3em;">Stop coding<br><span class="accent">alone.</span></h1>
+        <hr class="rule">
+        <div class="steps" style="margin-top:0.6em;">
+          <div class="step">🔧 &nbsp;<strong>Claude Code</strong> &nbsp;<span class="mono dim">claude.ai/code</span></div>
+          <div class="step">⚡ &nbsp;<strong>Superpowers plugin</strong> &nbsp;<span class="dim" style="font-size:0.85em;">— skills, hooks, agents for your workflow</span></div>
+          <div class="step">📄 &nbsp;<strong>Start with a <span class="mono">CLAUDE.md</span></strong> &nbsp;<span class="dim" style="font-size:0.85em;">— 15 minutes, changes everything</span></div>
+        </div>
+        <aside class="notes">
+          Stop coding alone. The tools are here. The journey is real and it's worth it. Start with Claude Code at claude.ai/code. Add the Superpowers plugin once you're comfortable. Write your first CLAUDE.md today — it takes 15 minutes and it's the single highest-leverage thing you can do. Any questions before the last slide?
+        </aside>
+      </section>
+
+      <!-- 20 ─ MADE BY CLAUDE & JORGI ─────────────────── -->
+      <section data-background-gradient="linear-gradient(135deg, #1a1a2e 0%, #0f1f3d 50%, #1a0a12 100%)">
+        <br>
+        <div class="meta-card">
+          <p class="dim" style="font-size:0.65em;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:0.6em;">One last thing</p>
+          <h2>This presentation<br>was built with <span class="accent">Claude Code</span>.</h2>
+          <hr class="rule">
+          <p>The structure. The copy. The slides. The speaker notes.<br>Designed together, in a single conversation.</p>
+          <p style="margin-top:0.8em;font-size:0.85em;" class="dim">Because that's what pair programming with Claude actually looks like.</p>
+        </div>
+        <p style="margin-top:1em;font-size:0.75em;color:#8892a4;text-align:right;">
+          Made by <span class="accent">Claude</span> &amp; <span class="blue">Jorgi</span> ✦
+        </p>
+        <aside class="notes">
+          One last thing. This presentation? I didn't build it alone. Claude and I designed it together — the four-act structure, all the copy, the slides, these speaker notes. We brainstormed, I gave feedback, we iterated. A single conversation. Because that's what pair programming with Claude Code actually looks like. Now go start yours.
+        </aside>
+      </section>
+```
+
+- [ ] **Step 2: Full run-through in browser — verify all 20 slides**
+
+Check each of the following:
+- Navigate all 20 slides with arrow keys — no blank slides, no missing content
+- Slide 13: dark red gradient background, counter animates 10→30+ on slide entry
+- Slide 20: gradient background, meta-card visible, "Made by Claude & Jorgi ✦" bottom-right
+- Press `S` on any slide — speaker notes panel opens with notes text
+- Press `F` — fullscreen works
+- Press `?` — keyboard shortcuts overlay appears
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add presentation/index.html
+git commit -m "feat: complete presentation — From ChatGPT to Claude Code (20 slides)"
+```

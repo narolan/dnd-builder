@@ -793,7 +793,12 @@ public class PlayModeController {
             if ("feat".equals(asiType)) {
                 String featId = (String) body.get("featId");
                 if (featId != null && !featId.isEmpty()) {
-                    draft.getAsiChoices().add(AsiChoice.feat(newLevel, featId, Map.of()));
+                    var bonusStats = new LinkedHashMap<String, Integer>();
+                    String featBonusStat = (String) body.get("featBonusStat");
+                    if (featBonusStat != null && !featBonusStat.isEmpty()) {
+                        bonusStats.put(featBonusStat, 1);
+                    }
+                    draft.getAsiChoices().add(AsiChoice.feat(newLevel, featId, bonusStats));
                 }
             } else {
                 var statIncreases = new LinkedHashMap<String, Integer>();

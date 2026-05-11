@@ -474,8 +474,8 @@ public class CharacterBuilderController {
                     model.addAttribute("cantrips", spellRepository.findCantripsForClass(classId));
                     model.addAttribute("maxSpellLevel", maxSpellLvl);
 
-                    // Fetch spells grouped by level
-                    var allSpells = spellRepository.findByClass(classId, maxSpellLvl);
+                    // Fetch spells grouped by level (null = all levels, filtered below)
+                    var allSpells = spellRepository.findByClass(classId, null);
                     var spellsByLevel = new LinkedHashMap<Integer, List<SpellDefinition>>();
                     for (int lvl = 1; lvl <= maxSpellLvl; lvl++) {
                         final int spellLvl = lvl;
@@ -581,21 +581,29 @@ public class CharacterBuilderController {
                 if (!draft.getChosenFeatId().isBlank()) {
                     var feat = featRepository.findById(draft.getChosenFeatId());
                     model.addAttribute("featName", feat != null ? feat.getName() : draft.getChosenFeatId());
+                    model.addAttribute("featDescription", feat != null ? feat.getDescription() : "");
                 }
 
                 // ASI summary for review
-                var asiSummary = new ArrayList<String>();
+                var asiSummary = new ArrayList<java.util.Map<String, String>>();
                 if (draft.getAsiChoices() != null) {
                     for (var choice : draft.getAsiChoices()) {
                         if ("feat".equals(choice.type())) {
                             var feat = featRepository.findById(choice.featId());
                             String featName = feat != null ? feat.getName() : choice.featId();
-                            asiSummary.add("Level " + choice.level() + ": " + featName + " (Feat)");
+                            String featDesc = feat != null && feat.getDescription() != null ? feat.getDescription() : "";
+                            asiSummary.add(Map.of(
+                                "label", "Level " + choice.level() + ": " + featName + " (Feat)",
+                                "description", featDesc
+                            ));
                         } else if (choice.statIncreases() != null && !choice.statIncreases().isEmpty()) {
                             var parts = new ArrayList<String>();
                             choice.statIncreases().forEach((stat, bonus) ->
                                 parts.add(stat + " +" + bonus));
-                            asiSummary.add("Level " + choice.level() + ": " + String.join(", ", parts));
+                            asiSummary.add(Map.of(
+                                "label", "Level " + choice.level() + ": " + String.join(", ", parts),
+                                "description", ""
+                            ));
                         }
                     }
                 }

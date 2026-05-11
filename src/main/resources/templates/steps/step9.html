@@ -174,13 +174,23 @@
 
         <div th:if="${featName != null}" class="sheet-detail" style="margin-top:8px">
           <div class="sheet-detail-title">Variant Human Feat</div>
-          <div class="sheet-detail-body" th:text="${featName}"></div>
+          <div class="sheet-detail-body">
+            <div th:text="${featName}"></div>
+            <div th:if="${featDescription != null and !featDescription.isEmpty()}"
+                 th:text="${featDescription}"
+                 style="font-size:.8rem;opacity:.65;margin-top:1px;padding-left:8px"></div>
+          </div>
         </div>
 
         <div th:if="${!asiSummary.isEmpty()}" class="sheet-detail" style="margin-top:8px">
           <div class="sheet-detail-title">Ability Score Improvements</div>
           <div class="sheet-detail-body" style="font-size:.85rem;line-height:1.7">
-            <div th:each="entry : ${asiSummary}" th:text="${entry}"></div>
+            <div th:each="entry : ${asiSummary}" style="margin-bottom:4px">
+              <div th:text="${entry['label']}"></div>
+              <div th:if="${entry['description'] != null and !entry['description'].isEmpty()}"
+                   th:text="${entry['description']}"
+                   style="font-size:.8rem;opacity:.65;margin-top:1px;padding-left:8px"></div>
+            </div>
           </div>
         </div>
       </div>
