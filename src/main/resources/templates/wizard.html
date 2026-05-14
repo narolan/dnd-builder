@@ -69,15 +69,15 @@
 <div th:if="${importSuccess != null}" class="alert alert-success" th:text="${importSuccess}"></div>
 
 <!-- ── Step content ───────────────────────────────────────────────────────── -->
-<th:block th:if="${step == 1}"><th:block th:replace="~{steps/step1 :: content}"></th:block></th:block>
-<th:block th:if="${step == 2}"><th:block th:replace="~{steps/step2 :: content}"></th:block></th:block>
-<th:block th:if="${step == 3}"><th:block th:replace="~{steps/step3 :: content}"></th:block></th:block>
-<th:block th:if="${step == 4}"><th:block th:replace="~{steps/step4 :: content}"></th:block></th:block>
-<th:block th:if="${step == 5}"><th:block th:replace="~{steps/step5 :: content}"></th:block></th:block>
-<th:block th:if="${step == 6}"><th:block th:replace="~{steps/step6 :: content}"></th:block></th:block>
-<th:block th:if="${step == 7}"><th:block th:replace="~{steps/step7 :: content}"></th:block></th:block>
-<th:block th:if="${step == 8}"><th:block th:replace="~{steps/step8 :: content}"></th:block></th:block>
-<th:block th:if="${step == 9}"><th:block th:replace="~{steps/step9 :: content}"></th:block></th:block>
+<th:block th:if="${step == 1}"><th:block th:replace="~{steps/step1-race :: content}"></th:block></th:block>
+<th:block th:if="${step == 2}"><th:block th:replace="~{steps/step2-class :: content}"></th:block></th:block>
+<th:block th:if="${step == 3}"><th:block th:replace="~{steps/step3-background :: content}"></th:block></th:block>
+<th:block th:if="${step == 4}"><th:block th:replace="~{steps/step4-ability-scores :: content}"></th:block></th:block>
+<th:block th:if="${step == 5}"><th:block th:replace="~{steps/step5-skills :: content}"></th:block></th:block>
+<th:block th:if="${step == 6}"><th:block th:replace="~{steps/step6-asi-feats :: content}"></th:block></th:block>
+<th:block th:if="${step == 7}"><th:block th:replace="~{steps/step7-spells :: content}"></th:block></th:block>
+<th:block th:if="${step == 8}"><th:block th:replace="~{steps/step8-equipment :: content}"></th:block></th:block>
+<th:block th:if="${step == 9}"><th:block th:replace="~{steps/step9-review :: content}"></th:block></th:block>
 
 </div><!-- /forge-panel -->
 
