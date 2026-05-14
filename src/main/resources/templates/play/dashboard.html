@@ -637,68 +637,39 @@ function longRest() {
 }
 
 function rollDice(sides) {
-    const roll = Math.floor(Math.random() * sides) + 1;
-    showRoll(roll, `1d${sides}`);
+    DiceRoller.roll(sides, 1, 0, `d${sides}`);
 }
 
 function rollStat(el) {
     const stat = el.dataset.stat;
-    const mod = parseInt(el.dataset.mod);
-    const roll = Math.floor(Math.random() * 20) + 1;
-    const total = roll + mod;
-    showRoll(total, `d20 (${roll}) ${mod >= 0 ? '+' : ''}${mod} ${stat}`);
+    const mod  = parseInt(el.dataset.mod);
+    DiceRoller.roll(20, 1, mod, `${stat} Check`);
 }
 
 function rollCustom() {
     const input = prompt('Enter dice (e.g., 2d6+3):', '1d20');
     if (!input) return;
     const match = input.match(/(\d*)d(\d+)([+-]\d+)?/i);
-    if (!match) { alert('Invalid format'); return; }
+    if (!match) { alert('Invalid format. Use e.g. 2d6+3'); return; }
     const count = parseInt(match[1]) || 1;
     const sides = parseInt(match[2]);
     const bonus = parseInt(match[3]) || 0;
-    let total = bonus;
-    const rolls = [];
-    for (let i = 0; i < count; i++) {
-        const r = Math.floor(Math.random() * sides) + 1;
-        rolls.push(r);
-        total += r;
-    }
-    showRoll(total, `${count}d${sides}${bonus ? (bonus > 0 ? '+' : '') + bonus : ''} = [${rolls.join(', ')}]${bonus ? (bonus > 0 ? '+' : '') + bonus : ''}`);
-}
-
-function showRoll(total, breakdown) {
-    const el = document.getElementById('dice-result');
-    el.innerHTML = `<div class="dice-total">${total}</div><div class="dice-breakdown">${breakdown}</div>`;
-    el.style.animation = 'none';
-    el.offsetHeight;
-    el.style.animation = 'pulse .3s ease';
+    const label = `${count}d${sides}${bonus > 0 ? '+' + bonus : bonus < 0 ? bonus : ''}`;
+    DiceRoller.roll(sides, count, bonus, label);
 }
 
 // ── Saving Throw Rolls ──────────────────────────────────────────────────────
 function rollSaveThrow(el) {
     const bonus = parseInt(el.dataset.bonus);
     const label = el.dataset.label;
-    const roll = Math.floor(Math.random() * 20) + 1;
-    const total = roll + bonus;
-    const sign = bonus >= 0 ? '+' : '';
-    const resultEl = document.getElementById('save-roll-result');
-    document.getElementById('save-roll-total').textContent = total;
-    document.getElementById('save-roll-breakdown').textContent = `${label}: d20 (${roll}) ${sign}${bonus}`;
-    resultEl.style.display = '';
+    DiceRoller.roll(20, 1, bonus, `${label} Save`);
 }
 
 // ── Skill Check Rolls ───────────────────────────────────────────────────────
 function rollSkill(el) {
     const bonus = parseInt(el.dataset.bonus);
     const label = el.dataset.label;
-    const roll = Math.floor(Math.random() * 20) + 1;
-    const total = roll + bonus;
-    const sign = bonus >= 0 ? '+' : '';
-    const resultEl = document.getElementById('skill-roll-result');
-    document.getElementById('skill-roll-total').textContent = total;
-    document.getElementById('skill-roll-breakdown').textContent = `${label}: d20 (${roll}) ${sign}${bonus}`;
-    resultEl.style.display = '';
+    DiceRoller.roll(20, 1, bonus, label);
 }
 
 // ── Death Saves ────────────────────────────────────────────────────────────
@@ -893,5 +864,6 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 <script src="/js/levelup.js"></script>
+<script src="/js/dice-roller.js"></script>
 </body>
 </html>
