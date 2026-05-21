@@ -762,9 +762,20 @@ function executeRoll() {
 }
 
 function rollStat(el) {
-    const stat = el.dataset.stat;
-    const mod  = parseInt(el.dataset.mod);
-    DiceRoller.roll(20, 1, mod, `${stat} Check`);
+    const mod = parseInt(el.dataset.mod);
+    // Load into builder: d20 + stat modifier, reset to normal mode
+    diceState.sides = 20;
+    diceState.count = 1;
+    diceState.bonus = mod;
+    diceState.mode  = 'normal';
+    document.querySelectorAll('.die-btn').forEach(b =>
+        b.classList.toggle('die-active', b.textContent === 'd20'));
+    document.getElementById('dr-count').textContent = '1';
+    document.getElementById('dr-bonus').textContent = mod >= 0 ? '+' + mod : '' + mod;
+    document.querySelectorAll('.adv-btn').forEach(b => b.classList.remove('adv-active'));
+    document.getElementById('adv-btn-normal').classList.add('adv-active');
+    _syncAdvRow();
+    updateFormulaPreview();
 }
 
 // ── Saving Throw Rolls ──────────────────────────────────────────────────────
