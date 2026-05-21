@@ -44,13 +44,29 @@
 .slot-pip.available { background: var(--gold); }
 .slot-pip:hover { transform: scale(1.1); border-color: var(--gold); }
 
-/* Dice Roller */
-.dice-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-.dice-btn { padding: 12px 8px; border: 1px solid var(--border); background: rgba(0,0,0,.3); color: var(--cream); border-radius: 4px; cursor: pointer; font-family: 'Cinzel', serif; font-size: .9rem; text-align: center; transition: all .2s; }
-.dice-btn:hover { border-color: var(--gold); background: rgba(201,164,64,.1); transform: translateY(-2px); }
-.dice-result { margin-top: 16px; padding: 12px; background: rgba(0,0,0,.3); border-radius: 4px; text-align: center; min-height: 50px; }
-.dice-total { font-family: 'Cinzel Decorative', serif; font-size: 2rem; color: var(--gold); }
-.dice-breakdown { font-size: .8rem; color: var(--cream-dim); margin-top: 4px; }
+/* Dice Builder */
+.die-selector { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.die-btn { flex: 1; min-width: 36px; padding: 8px 4px; border: 1px solid var(--border); background: rgba(0,0,0,.3); color: var(--cream-dim); border-radius: 4px; cursor: pointer; font-family: 'Cinzel', serif; font-size: .82rem; text-align: center; transition: all .2s; }
+.die-btn:hover { border-color: var(--gold); background: rgba(201,164,64,.08); color: var(--cream); }
+.die-btn.die-active { border-color: var(--gold); background: rgba(201,164,64,.18); color: var(--gold); }
+.dice-params { display: flex; align-items: flex-end; gap: 10px; margin-bottom: 10px; justify-content: center; }
+.dice-param { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.dice-param-label { font-family: 'Cinzel', serif; font-size: .62rem; color: var(--gold-dim); text-transform: uppercase; letter-spacing: .07em; }
+.dice-stepper { display: flex; align-items: center; gap: 5px; }
+.dice-stepper-btn { width: 24px; height: 24px; border: 1px solid var(--border); background: rgba(0,0,0,.3); color: var(--cream); border-radius: 4px; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; transition: all .2s; font-family: 'Cinzel', serif; line-height: 1; padding: 0; }
+.dice-stepper-btn:hover { border-color: var(--gold); background: rgba(201,164,64,.1); }
+.dice-stepper-val { font-family: 'Cinzel', serif; font-size: 1.05rem; color: var(--cream); min-width: 26px; text-align: center; }
+.dice-param-sep { font-family: 'Cinzel', serif; font-size: 1.1rem; color: var(--gold-dim); padding-bottom: 2px; }
+.dice-formula-preview { font-family: 'Cinzel', serif; font-size: .82rem; color: var(--gold-dim); text-align: center; margin-bottom: 8px; min-height: 18px; letter-spacing: .03em; }
+.adv-row { display: flex; gap: 5px; margin-bottom: 8px; }
+.adv-btn { flex: 1; padding: 5px 3px; border: 1px solid var(--border); background: rgba(0,0,0,.3); color: var(--cream-dim); border-radius: 4px; cursor: pointer; font-family: 'Cinzel', serif; font-size: .68rem; text-align: center; transition: all .2s; letter-spacing: .02em; }
+.adv-btn:hover { border-color: var(--gold); color: var(--cream); }
+.adv-btn.adv-active { border-color: var(--gold); background: rgba(201,164,64,.15); color: var(--gold); }
+.elven-row { margin-bottom: 8px; display: flex; justify-content: center; }
+.elven-label { display: flex; align-items: center; gap: 7px; font-family: 'Crimson Text', serif; font-size: .88rem; color: var(--cream-dim); cursor: pointer; }
+.elven-label input[type=checkbox] { cursor: pointer; accent-color: var(--gold); width: 14px; height: 14px; }
+.roll-execute-btn { width: 100%; padding: 11px; border: 1px solid var(--gold); background: rgba(201,164,64,.12); color: var(--gold); border-radius: 4px; cursor: pointer; font-family: 'Cinzel', serif; font-size: .95rem; letter-spacing: .06em; transition: all .25s; margin-top: 4px; }
+.roll-execute-btn:hover { background: rgba(201,164,64,.28); box-shadow: 0 0 14px rgba(201,164,64,.18); }
 
 /* Stats Quick Reference */
 .stats-mini { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-bottom: 16px; }
@@ -319,20 +335,53 @@
           </div>
         </th:block>
       </div>
-      <div class="dice-grid">
-        <button class="dice-btn" onclick="rollDice(4)">d4</button>
-        <button class="dice-btn" onclick="rollDice(6)">d6</button>
-        <button class="dice-btn" onclick="rollDice(8)">d8</button>
-        <button class="dice-btn" onclick="rollDice(10)">d10</button>
-        <button class="dice-btn" onclick="rollDice(12)">d12</button>
-        <button class="dice-btn" onclick="rollDice(20)">d20</button>
-        <button class="dice-btn" onclick="rollDice(100)">d100</button>
-        <button class="dice-btn" onclick="rollCustom()">Custom</button>
+      <!-- Die type selector -->
+      <div class="die-selector">
+        <button class="die-btn" onclick="selectDie(4,this)">d4</button>
+        <button class="die-btn" onclick="selectDie(6,this)">d6</button>
+        <button class="die-btn" onclick="selectDie(8,this)">d8</button>
+        <button class="die-btn" onclick="selectDie(10,this)">d10</button>
+        <button class="die-btn" onclick="selectDie(12,this)">d12</button>
+        <button class="die-btn die-active" onclick="selectDie(20,this)">d20</button>
+        <button class="die-btn" onclick="selectDie(100,this)">d%</button>
       </div>
-      <div class="dice-result" id="dice-result">
-        <div class="dice-total">—</div>
-        <div class="dice-breakdown">Click to roll</div>
+      <!-- Count + Bonus steppers -->
+      <div class="dice-params">
+        <div class="dice-param">
+          <span class="dice-param-label">Dice</span>
+          <div class="dice-stepper">
+            <button class="dice-stepper-btn" onclick="adjustDiceCount(-1)">−</button>
+            <span class="dice-stepper-val" id="dr-count">1</span>
+            <button class="dice-stepper-btn" onclick="adjustDiceCount(1)">+</button>
+          </div>
+        </div>
+        <div class="dice-param-sep">+</div>
+        <div class="dice-param">
+          <span class="dice-param-label">Bonus</span>
+          <div class="dice-stepper">
+            <button class="dice-stepper-btn" onclick="adjustBonus(-1)">−</button>
+            <span class="dice-stepper-val" id="dr-bonus">0</span>
+            <button class="dice-stepper-btn" onclick="adjustBonus(1)">+</button>
+          </div>
+        </div>
       </div>
+      <!-- Formula preview -->
+      <div class="dice-formula-preview" id="dice-formula-preview">1d20</div>
+      <!-- Advantage / Disadvantage (d20 single rolls only) -->
+      <div class="adv-row" id="adv-row">
+        <button class="adv-btn adv-active" id="adv-btn-normal" onclick="setAdvMode('normal')">Normal</button>
+        <button class="adv-btn" id="adv-btn-advantage" onclick="setAdvMode('advantage')">Advantage</button>
+        <button class="adv-btn" id="adv-btn-disadvantage" onclick="setAdvMode('disadvantage')">Disadvantage</button>
+      </div>
+      <!-- Elven Accuracy (advantage + d20 only) -->
+      <div class="elven-row" id="elven-row" style="display:none">
+        <label class="elven-label">
+          <input type="checkbox" id="elven-accuracy" onchange="updateFormulaPreview()">
+          Elven Accuracy (3 dice, take best)
+        </label>
+      </div>
+      <!-- Roll button -->
+      <button class="roll-execute-btn" onclick="executeRoll()">Roll</button>
     </div>
 
     <!-- Core Stats Reference -->
@@ -636,26 +685,86 @@ function longRest() {
     }
 }
 
-function rollDice(sides) {
-    DiceRoller.roll(sides, 1, 0, `d${sides}`);
+// ── Dice Builder State ─────────────────────────────────────────────────────
+const diceState = { sides: 20, count: 1, bonus: 0, mode: 'normal' };
+
+function selectDie(sides, btn) {
+    diceState.sides = sides;
+    document.querySelectorAll('.die-btn').forEach(b => b.classList.remove('die-active'));
+    btn.classList.add('die-active');
+    _syncAdvRow();
+    updateFormulaPreview();
+}
+
+function adjustDiceCount(delta) {
+    diceState.count = Math.max(1, Math.min(20, diceState.count + delta));
+    document.getElementById('dr-count').textContent = diceState.count;
+    _syncAdvRow();
+    updateFormulaPreview();
+}
+
+function adjustBonus(delta) {
+    diceState.bonus = Math.max(-20, Math.min(20, diceState.bonus + delta));
+    const el = document.getElementById('dr-bonus');
+    el.textContent = diceState.bonus >= 0 ? '+' + diceState.bonus : '' + diceState.bonus;
+    updateFormulaPreview();
+}
+
+function setAdvMode(mode) {
+    diceState.mode = mode;
+    document.querySelectorAll('.adv-btn').forEach(b => b.classList.remove('adv-active'));
+    document.getElementById('adv-btn-' + mode).classList.add('adv-active');
+    _syncElvenRow();
+    updateFormulaPreview();
+}
+
+function _syncAdvRow() {
+    const showAdv = diceState.sides === 20 && diceState.count === 1;
+    document.getElementById('adv-row').style.display = showAdv ? '' : 'none';
+    if (!showAdv) {
+        diceState.mode = 'normal';
+        document.querySelectorAll('.adv-btn').forEach(b => b.classList.remove('adv-active'));
+        document.getElementById('adv-btn-normal').classList.add('adv-active');
+    }
+    _syncElvenRow();
+}
+
+function _syncElvenRow() {
+    const showElven = diceState.sides === 20 && diceState.count === 1 && diceState.mode === 'advantage';
+    document.getElementById('elven-row').style.display = showElven ? '' : 'none';
+    if (!showElven) document.getElementById('elven-accuracy').checked = false;
+}
+
+function updateFormulaPreview() {
+    const { sides, count, bonus, mode } = diceState;
+    const elven = document.getElementById('elven-accuracy')?.checked;
+    let formula = count + 'd' + sides;
+    if (bonus > 0) formula += '+' + bonus;
+    else if (bonus < 0) formula += bonus;
+    if (sides === 20 && count === 1) {
+        if (mode === 'advantage') formula += elven ? ' (3 dice, best)' : ' (adv)';
+        else if (mode === 'disadvantage') formula += ' (dis)';
+    }
+    document.getElementById('dice-formula-preview').textContent = formula;
+}
+
+function executeRoll() {
+    const { sides, count, bonus, mode } = diceState;
+    const elven = document.getElementById('elven-accuracy')?.checked ?? false;
+    let label = count + 'd' + sides;
+    if (bonus > 0) label += '+' + bonus;
+    else if (bonus < 0) label += bonus;
+    if (sides === 20 && count === 1) {
+        if (mode === 'advantage') label += elven ? ' (Elven Adv)' : ' (Adv)';
+        else if (mode === 'disadvantage') label += ' (Dis)';
+    }
+    DiceRoller.roll(sides, count, bonus, label, mode, elven);
 }
 
 function rollStat(el) {
     const stat = el.dataset.stat;
     const mod  = parseInt(el.dataset.mod);
     DiceRoller.roll(20, 1, mod, `${stat} Check`);
-}
-
-function rollCustom() {
-    const input = prompt('Enter dice (e.g., 2d6+3):', '1d20');
-    if (!input) return;
-    const match = input.match(/(\d*)d(\d+)([+-]\d+)?/i);
-    if (!match) { alert('Invalid format. Use e.g. 2d6+3'); return; }
-    const count = parseInt(match[1]) || 1;
-    const sides = parseInt(match[2]);
-    const bonus = parseInt(match[3]) || 0;
-    const label = `${count}d${sides}${bonus > 0 ? '+' + bonus : bonus < 0 ? bonus : ''}`;
-    DiceRoller.roll(sides, count, bonus, label);
 }
 
 // ── Saving Throw Rolls ──────────────────────────────────────────────────────

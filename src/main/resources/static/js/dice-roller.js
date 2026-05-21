@@ -2,8 +2,11 @@
  * DiceRoller — animated 3D dice for the D&D character dashboard.
  *
  * API:
- *   DiceRoller.roll(sides, count, modifier, label)  → Promise<number>
- *   DiceRoller.rollCheck(stat, modifier, label)      → Promise<number>  (d20 + mod)
+ *   DiceRoller.roll(sides, count, modifier, label, mode, elvenAccuracy)  → Promise<number>
+ *   DiceRoller.rollCheck(stat, modifier, label)                           → Promise<number>
+ *
+ * mode: 'normal' | 'advantage' | 'disadvantage'
+ * elvenAccuracy: boolean — roll 3 dice on advantage, take highest (feat)
  */
 const DiceRoller = (() => {
   'use strict';
@@ -27,10 +30,10 @@ const DiceRoller = (() => {
 
   // ── Public API ───────────────────────────────────────────────────────────────
 
-  function roll(sides, count = 1, modifier = 0, label = '') {
+  function roll(sides, count = 1, modifier = 0, label = '', mode = 'normal', elvenAccuracy = false) {
     return new Promise(resolve => {
       _cleanup();
-      _build(sides, count, modifier, label, resolve);
+      _build(sides, count, modifier, label, resolve, mode, elvenAccuracy);
     });
   }
 
@@ -40,15 +43,34 @@ const DiceRoller = (() => {
 
   // ── Build overlay ────────────────────────────────────────────────────────────
 
-  function _build(sides, count, modifier, label, resolve) {
-    const results = Array.from({ length: count }, () =>
+  function _build(sides, count, modifier, label, resolve, mode, elvenAccuracy) {
+    // For adv/disadv: roll 2 dice (or 3 with Elven Accuracy on advantage)
+    const diceToRoll = mode !== 'normal'
+      ? (mode === 'advantage' && elvenAccuracy ? 3 : 2)
+      : count;
+
+    const results = Array.from({ length: diceToRoll }, () =>
       Math.ceil(Math.random() * sides)
     );
-    const total = results.reduce((a, b) => a + b, 0) + modifier;
 
-    const isNat20   = count === 1 && sides === 20 && results[0] === 20;
-    const isNat1    = count === 1 && sides === 20 && results[0] === 1;
-    const isCrit    = isNat20;
+    let total, chosenIdx = null;
+    if (mode === 'advantage') {
+      const maxVal = Math.max(...results);
+      chosenIdx = results.lastIndexOf(maxVal);
+      total = maxVal + modifier;
+    } else if (mode === 'disadvantage') {
+      const minVal = Math.min(...results);
+      chosenIdx = results.indexOf(minVal);
+      total = minVal + modifier;
+    } else {
+      total = results.reduce((a, b) => a + b, 0) + modifier;
+    }
+
+    // Nat 20 / Fumble based on the result die (or single die in normal mode)
+    const resultDie = chosenIdx !== null ? results[chosenIdx] : (count === 1 ? results[0] : null);
+    const isNat20 = sides === 20 && resultDie === 20;
+    const isNat1  = sides === 20 && resultDie === 1;
+    const isCrit  = isNat20;
 
     _overlay = document.createElement('div');
     _overlay.id = 'dr-overlay';
@@ -57,7 +79,7 @@ const DiceRoller = (() => {
       <div id="dr-arena">
         <div id="dr-label-top">${label}</div>
         <div id="dr-dice-row">
-          ${results.map((_, i) => _dieFaceHTML(sides, i, count)).join('')}
+          ${results.map((_, i) => _dieFaceHTML(sides, i, diceToRoll)).join('')}
         </div>
         <div id="dr-result-area">
           <div id="dr-total"></div>
@@ -77,7 +99,7 @@ const DiceRoller = (() => {
 
     requestAnimationFrame(() => {
       _overlay.classList.add('dr-visible');
-      _animate(sides, count, modifier, results, total, isNat20, isNat1);
+      _animate(sides, diceToRoll, modifier, results, total, isNat20, isNat1, chosenIdx, mode);
     });
   }
 
@@ -97,7 +119,7 @@ const DiceRoller = (() => {
 
   // ── Animation pipeline ───────────────────────────────────────────────────────
 
-  async function _animate(sides, count, modifier, results, total, isNat20, isNat1) {
+  async function _animate(sides, count, modifier, results, total, isNat20, isNat1, chosenIdx, mode) {
     const dice = [..._overlay.querySelectorAll('.dr-die')];
     const nums = dice.map(d => d.querySelector('.dr-num'));
 
@@ -134,15 +156,20 @@ const DiceRoller = (() => {
       });
 
       dice[i].classList.add('dr-settled');
-      if (isNat20) dice[i].classList.add('dr-nat20');
-      if (isNat1)  dice[i].classList.add('dr-nat1');
+      // Dim dice that weren't picked (advantage/disadvantage)
+      if (chosenIdx !== null && i !== chosenIdx) {
+        dice[i].classList.add('dr-discarded');
+      } else {
+        if (isNat20) dice[i].classList.add('dr-nat20');
+        if (isNat1)  dice[i].classList.add('dr-nat1');
+      }
     }
 
     await _sleep(160);
 
     // Phase 3 — particles + result
     _burst(isNat20 ? 44 : 18, isNat20);
-    _revealTotal(total, modifier, results, sides, count, isNat20, isNat1);
+    _revealTotal(total, modifier, results, sides, count, isNat20, isNat1, chosenIdx, mode);
 
     // Phase 4 — banner
     if (isNat20 || isNat1) {
@@ -151,7 +178,7 @@ const DiceRoller = (() => {
     }
   }
 
-  function _revealTotal(total, modifier, results, sides, count, isNat20, isNat1) {
+  function _revealTotal(total, modifier, results, sides, count, isNat20, isNat1, chosenIdx, mode) {
     const totalEl   = _overlay.querySelector('#dr-total');
     const formulaEl = _overlay.querySelector('#dr-formula');
 
@@ -159,10 +186,21 @@ const DiceRoller = (() => {
     _countUp(totalEl, total);
 
     const sign = modifier > 0 ? `+${modifier}` : modifier < 0 ? `${modifier}` : '';
-    const diceStr = count > 1 ? `(${results.join(' + ')})` : `${results[0]}`;
-    const formula = sign
-      ? `${diceStr} ${sign} = ${total}`
-      : (count > 1 ? `${diceStr} = ${total}` : `1d${sides}`);
+    let formula;
+
+    if (chosenIdx !== null) {
+      // Advantage or Disadvantage — show all rolls, arrow to chosen
+      const prefix = mode === 'advantage' ? '↑ Adv' : '↓ Dis';
+      const diceStr = '[' + results.join(', ') + ']';
+      formula = sign
+        ? `${prefix} ${diceStr} → ${results[chosenIdx]} ${sign} = ${total}`
+        : `${prefix} ${diceStr} → ${results[chosenIdx]}`;
+    } else {
+      const diceStr = count > 1 ? `(${results.join(' + ')})` : `${results[0]}`;
+      formula = sign
+        ? `${diceStr} ${sign} = ${total}`
+        : (count > 1 ? `${diceStr} = ${total}` : `1d${sides}`);
+    }
 
     _t(() => _typewriter(formulaEl, formula), 280);
   }
@@ -338,6 +376,15 @@ const DiceRoller = (() => {
   box-shadow:0 0 28px rgba(201,164,64,.35),0 0 56px rgba(201,164,64,.12),inset 0 0 18px rgba(201,164,64,.05);
 }
 .dr-die.dr-settled .dr-num { color:#c9a440;text-shadow:0 0 12px rgba(201,164,64,.5); }
+
+/* ── DISCARDED (advantage/disadvantage non-chosen dice) ─────────── */
+.dr-die.dr-discarded .dr-face {
+  animation:dr-settle .52s cubic-bezier(.34,1.56,.64,1) forwards;
+  border-color:rgba(255,255,255,.1);
+  box-shadow:none;
+  opacity:.35;
+}
+.dr-die.dr-discarded .dr-num { color:rgba(255,255,255,.2);text-shadow:none; }
 
 /* ── NATURAL 20 ─────────────────────────────────────────────────── */
 @keyframes dr-crit-glow {
