@@ -965,7 +965,15 @@ async function saveCharacter() {
         const idx = characters.findIndex(c => c.draft &&
             c.draft.characterName === draft.characterName &&
             c.draft.characterClass === draft.characterClass);
-        const entry = { draft, level: draft.level, name: draft.characterName || 'Unnamed' };
+        const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
+        const entry = {
+            characterName: draft.characterName || 'Unnamed',
+            raceName: cap(draft.raceId) || '',
+            className: cap(draft.characterClass) || '',
+            level: draft.level || 1,
+            draft,
+            savedAt: new Date().toISOString()
+        };
         if (idx >= 0) characters[idx] = entry;
         else characters.push(entry);
         localStorage.setItem('characterForge_characters', JSON.stringify(characters));

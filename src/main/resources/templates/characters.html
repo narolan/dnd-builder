@@ -109,22 +109,28 @@ function renderCharacters() {
     empty.style.display = 'none';
 
     list.innerHTML = characters.map((char, index) => {
-        const initials = (char.characterName || 'C').substring(0, 2).toUpperCase();
-        const details = [char.raceName || 'Unknown Race', char.className || 'Unknown Class', 'Level ' + (char.level || 1)].join(' • ');
+        const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
+        const name      = char.characterName || char.name || char.draft?.characterName || 'Unnamed';
+        const raceName  = char.raceName  || cap(char.draft?.raceId)         || '';
+        const className = char.className || cap(char.draft?.characterClass)  || '';
+        const level     = char.level     || char.draft?.level                || 1;
+        const initials  = name.substring(0, 2).toUpperCase() || 'C';
+        const parts     = [raceName || 'Unknown Race', className || 'Unknown Class', 'Level ' + level];
+        const details   = parts.join(' • ');
         const saved = char.savedAt ? new Date(char.savedAt).toLocaleDateString() : 'Unknown';
 
         return `
             <div class="character-card" data-index="${index}">
                 <div class="character-avatar">${initials}</div>
                 <div class="character-info" onclick="loadCharacter(${index})">
-                    <div class="character-name">${char.characterName || 'Unnamed Character'}</div>
+                    <div class="character-name">${name}</div>
                     <div class="character-details">${details}</div>
                     <div class="character-meta">Saved: ${saved}</div>
                 </div>
                 <div class="character-actions">
                     <button class="char-btn load" onclick="loadCharacter(${index})">Load</button>
                     <button class="char-btn" onclick="exportCharacter(${index})">Export</button>
-                    ${(char.level || 1) < 20 ? `<button class="char-btn" onclick="LevelUp.open(${index})" style="border-color:#c9a440;color:#c9a440">Level Up</button>` : ''}
+                    ${level < 20 ? `<button class="char-btn" onclick="LevelUp.open(${index})" style="border-color:#c9a440;color:#c9a440">Level Up</button>` : ''}
                     <button class="char-btn delete" onclick="deleteCharacter(${index})">Delete</button>
                 </div>
             </div>
