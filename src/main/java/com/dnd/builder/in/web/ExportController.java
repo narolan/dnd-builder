@@ -31,10 +31,10 @@ public class ExportController {
     private final BackgroundRepository backgroundRepository;
     private final SpellRepository spellRepository;
 
-    public ExportController(CharacterCalculator calculator, PdfExportService pdfService,
+    public ExportController(ObjectMapper objectMapper, CharacterCalculator calculator, PdfExportService pdfService,
                             RaceRepository raceRepository, ClassRepository classRepository,
                             BackgroundRepository backgroundRepository, SpellRepository spellRepository) {
-        this.objectMapper = new ObjectMapper();
+        this.objectMapper = objectMapper;
         this.calculator = calculator;
         this.pdfService = pdfService;
         this.raceRepository = raceRepository;

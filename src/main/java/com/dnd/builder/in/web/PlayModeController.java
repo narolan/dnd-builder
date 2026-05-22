@@ -6,6 +6,7 @@ import com.dnd.builder.core.port.out.FeatRepository;
 import com.dnd.builder.core.port.out.SpellRepository;
 import com.dnd.builder.core.service.CharacterCalculator;
 import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -349,7 +350,7 @@ public class PlayModeController {
 
     @PostMapping("/inventory/add")
     @ResponseBody
-    public Map<String, Object> addItem(@RequestBody InventoryItem item, HttpSession session) {
+    public Map<String, Object> addItem(@Valid @RequestBody InventoryItem item, HttpSession session) {
         CharacterDraft draft = getDraft(session);
         draft.addItem(item);
         return Map.of("success", true, "itemId", item.getId());
@@ -583,7 +584,7 @@ public class PlayModeController {
 
     private int maxForResource(String classId, int level, String resource, com.dnd.builder.core.model.DerivedStats derived) {
         return switch (resource) {
-            case "rage" -> level < 3 ? 2 : level < 6 ? 3 : level < 12 ? 4 : level < 17 ? 5 : level < 20 ? 6 : 999;
+            case "rage" -> level < 3 ? 2 : level < 6 ? 3 : level < 12 ? 4 : level < 17 ? 5 : level < 20 ? 6 : Integer.MAX_VALUE;
             case "bardic_inspiration" -> {
                 int chaMod = derived != null ? derived.getModifiers().getOrDefault("CHA", 0) : 0;
                 yield Math.max(1, chaMod);
@@ -759,7 +760,7 @@ public class PlayModeController {
             && (newLevel == 10 || newLevel == 14 || newLevel == 18
                 || (newLevel == 6
                     && draft.getSubclassId() != null
-                    && draft.getSubclassId().toLowerCase().contains("lore")));
+                    && "lore".equals(draft.getSubclassId())));
         var availableMagicalSecrets = needsMagicalSecrets
             ? spellRepository.getAllSpells().stream()
                 .filter(sp -> sp.getLevel() > 0 && sp.getLevel() <= maxNewSpellLevel)

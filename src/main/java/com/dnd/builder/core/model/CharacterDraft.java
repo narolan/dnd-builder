@@ -1,6 +1,9 @@
 package com.dnd.builder.core.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Size;
 import java.util.*;
 
 /**
@@ -18,11 +21,14 @@ public class CharacterDraft {
     // ── Step 2: Class ─────────────────────────────────────────────────────────
     private String characterClass = "";
     private String subclassId = "";
+    @Min(1) @Max(20)
     private int level = 1;
 
     // ── Step 3: Background ───────────────────────────────────────────────────
     private String background = "";
+    @Size(max = 40)
     private String alignment = "";
+    @Size(max = 80)
     private String characterName = "";
 
     // ── Step 4: Ability Scores ───────────────────────────────────────────────
@@ -43,6 +49,7 @@ public class CharacterDraft {
 
     // ── Level-Up Choices ─────────────────────────────────────────────────────
     private List<String> expertiseSkills     = new ArrayList<>();
+    @Size(max = 100)
     private String       pactBoon            = "";
     private List<String> eldritchInvocations = new ArrayList<>();
     private List<String> metamagicOptions    = new ArrayList<>();
@@ -88,6 +95,7 @@ public class CharacterDraft {
     /** Death save failures (0-3) */
     private int deathSaveFailures = 0;
     /** Spell currently being concentrated on (null if none) */
+    @Size(max = 100)
     private String concentratingOn = null;
 
     // ── Class Resource Counters (rage, ki, etc.) ─────────────────────────────

@@ -1,5 +1,8 @@
 package com.dnd.builder.core.model;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Size;
 import java.util.Map;
 
 /**
@@ -8,13 +11,18 @@ import java.util.Map;
 public class InventoryItem {
 
     private String id;
+    @Size(max = 100)
     private String name;
+    @Size(max = 50)
     private String category;    // weapon, armor, wondrous, potion, ring, etc.
+    @Min(0) @Max(9999)
     private int quantity;
     private boolean equipped;
     private boolean attuned;
     private boolean requiresAttunement;
+    @Size(max = 20)
     private String rarity;      // common, uncommon, rare, very rare, legendary, artifact
+    @Size(max = 500)
     private String description;
 
     // Stat modifiers when equipped
@@ -26,6 +34,7 @@ public class InventoryItem {
     private int speedBonus;
 
     // Weapon/armor specific
+    @Size(max = 30)
     private String damage;      // e.g., "1d8+1 slashing"
     private int baseAc;         // for armor, e.g., 14
     private int maxDexBonus;    // -1 for no limit, 0 for no dex, 2 for medium armor

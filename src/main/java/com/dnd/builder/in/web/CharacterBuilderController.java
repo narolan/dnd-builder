@@ -6,6 +6,7 @@ import com.dnd.builder.core.service.CharacterCalculator;
 import com.dnd.builder.out.persistence.InMemoryRaceRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -31,7 +32,7 @@ public class CharacterBuilderController {
 
     public CharacterBuilderController(RaceRepository r, ClassRepository c, BackgroundRepository b,
                              SpellRepository sp, EquipmentRepository eq, FeatRepository f,
-                             CharacterCalculator calc) {
+                             CharacterCalculator calc, ObjectMapper objectMapper) {
         this.raceRepository       = r;
         this.classRepository      = c;
         this.backgroundRepository = b;
@@ -39,7 +40,7 @@ public class CharacterBuilderController {
         this.equipmentRepository  = eq;
         this.featRepository       = f;
         this.calculator           = calc;
-        this.objectMapper         = new ObjectMapper();
+        this.objectMapper         = objectMapper;
     }
 
     // ── Home / start fresh ────────────────────────────────────────────────────
@@ -66,7 +67,7 @@ public class CharacterBuilderController {
 
     @PostMapping("/characters/load")
     @ResponseBody
-    public Map<String, Object> loadCharacter(@RequestBody CharacterDraft draft, HttpSession session) {
+    public Map<String, Object> loadCharacter(@Valid @RequestBody CharacterDraft draft, HttpSession session) {
         session.setAttribute(DRAFT_KEY, draft);
         return Map.of("success", true);
     }
@@ -177,7 +178,7 @@ public class CharacterBuilderController {
         for (var stat : stats) {
             String raw = allParams.get("score_" + stat);
             int val = 8;
-            try { val = Integer.parseInt(raw); } catch (Exception ignored) {}
+            try { val = Integer.parseInt(raw); } catch (NumberFormatException ignored) {}
             val = Math.max(8, Math.min(15, val));
             scores.put(stat, val);
         }
