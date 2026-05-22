@@ -94,9 +94,13 @@ const LevelUp = (() => {
   }
 
   function _buildBody(o) {
-    let html = '';
+    return _buildGainedSection(o)
+         + _buildSubclassAndAsiSection(o)
+         + _buildSpellSection(o)
+         + _buildClassSpecificSection(o);
+  }
 
-    // ── What you gained ────────────────────────────────────────────────────────
+  function _buildGainedSection(o) {
     const gained = [];
     if (o.newFeatures?.length) {
       o.newFeatures.forEach(f => gained.push(
@@ -108,9 +112,11 @@ const LevelUp = (() => {
     if (o.spellSlotsChanged) gained.push(`<li>Spell slots: ${o.newSpellSlotSummary}</li>`);
     if (o.preparedSpellsGain > 0) gained.push(`<li>You can now prepare one additional spell</li>`);
     if (o.unlocksNewSpellLevel) gained.push(`<li>${_ordinal(o.newUnlockedSpellLevel)}-level spells are now accessible</li>`);
-    html += _section('What you gained', `<ul style="margin:0;padding-left:20px;line-height:1.8">${gained.join('')}</ul>`);
+    return _section('What you gained', `<ul style="margin:0;padding-left:20px;line-height:1.8">${gained.join('')}</ul>`);
+  }
 
-    // ── Subclass ───────────────────────────────────────────────────────────────
+  function _buildSubclassAndAsiSection(o) {
+    let html = '';
     if (o.needsSubclass) {
       const opts = o.availableSubclasses.map(s =>
         `<option value="${s.id}">${s.name}${s.description ? ' — ' + s.description : ''}</option>`
@@ -118,11 +124,8 @@ const LevelUp = (() => {
       html += _section('Choose Your Subclass',
         `<select id="lu-subclass" style="${_selectStyle()}">
           <option value="">Select subclass...</option>${opts}
-        </select>`
-      );
+        </select>`);
     }
-
-    // ── ASI / Feat ─────────────────────────────────────────────────────────────
     if (o.needsAsi) {
       const statOpts = ['STR','DEX','CON','INT','WIS','CHA']
         .map(s => `<option value="${s}">${s}</option>`).join('');
@@ -142,12 +145,8 @@ const LevelUp = (() => {
         </div>
         <div id="lu-asi-split" style="display:none">
           <div style="display:flex;gap:8px">
-            <select id="lu-asi-split1" style="${_selectStyle()}">
-              <option value="">Ability 1...</option>${statOpts}
-            </select>
-            <select id="lu-asi-split2" style="${_selectStyle()}">
-              <option value="">Ability 2...</option>${statOpts}
-            </select>
+            <select id="lu-asi-split1" style="${_selectStyle()}"><option value="">Ability 1...</option>${statOpts}</select>
+            <select id="lu-asi-split2" style="${_selectStyle()}"><option value="">Ability 2...</option>${statOpts}</select>
           </div>
         </div>
         <div id="lu-asi-feat" style="display:none">
@@ -155,19 +154,18 @@ const LevelUp = (() => {
             <option value="">Choose feat...</option>${featOpts}
           </select>
           <div id="lu-feat-desc" style="display:none;margin-top:8px;padding:8px 10px;
-               background:rgba(0,0,0,.25);border-radius:4px;font-size:.9rem;
-               line-height:1.5;opacity:.85"></div>
+               background:rgba(0,0,0,.25);border-radius:4px;font-size:.9rem;line-height:1.5;opacity:.85"></div>
           <div id="lu-feat-bonus-wrap" style="display:none;margin-top:8px">
             <div style="font-size:.85rem;opacity:.7;margin-bottom:6px">Choose the ability to increase (+1):</div>
-            <select id="lu-feat-bonus-stat" style="${_selectStyle()}">
-              <option value="">Choose ability...</option>
-            </select>
+            <select id="lu-feat-bonus-stat" style="${_selectStyle()}"><option value="">Choose ability...</option></select>
           </div>
-        </div>
-      `);
+        </div>`);
     }
+    return html;
+  }
 
-    // ── New cantrips ───────────────────────────────────────────────────────────
+  function _buildSpellSection(o) {
+    let html = '';
     if (o.newCantripsCount > 0) {
       const btns = o.availableCantrips.map(s =>
         `<button type="button" class="lu-pick" data-id="${s.id}" data-type="cantrip"
@@ -177,24 +175,17 @@ const LevelUp = (() => {
       html += _section(`New Cantrip${o.newCantripsCount > 1 ? 's' : ''} — Pick ${o.newCantripsCount}`,
         `<div style="display:flex;flex-wrap:wrap;gap:6px">${btns}</div>`);
     }
-
-    // ── New spells ─────────────────────────────────────────────────────────────
     if (o.newSpellsCount > 0) {
       if (o.isFullPreparedCaster) {
-        // Cleric/Druid: show all accessible spells grouped by level
         const grouped = {};
-        (o.availableSpells || []).forEach(s => {
-          if (!grouped[s.level]) grouped[s.level] = [];
-          grouped[s.level].push(s);
-        });
+        (o.availableSpells || []).forEach(s => { if (!grouped[s.level]) grouped[s.level] = []; grouped[s.level].push(s); });
         let spellHtml = `<p style="margin:0 0 10px;font-size:.9rem;opacity:.8">Choose a spell to add to your prepared spells list:</p>`;
         Object.keys(grouped).sort((a,b) => a-b).forEach(lvl => {
           spellHtml += `<div style="margin-bottom:6px;font-size:.8rem;opacity:.7;text-transform:uppercase;letter-spacing:.05em">${_ordinal(+lvl)}-level</div>`;
           spellHtml += `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">`;
           grouped[lvl].forEach(s => {
             spellHtml += `<button type="button" class="lu-pick" data-id="${s.id}" data-type="spell"
-                 data-max="${o.newSpellsCount}" style="${_spellBtnStyle()}"
-                 onclick="LevelUp._toggleSpell(this)">${s.name}</button>`;
+                 data-max="${o.newSpellsCount}" style="${_spellBtnStyle()}" onclick="LevelUp._toggleSpell(this)">${s.name}</button>`;
           });
           spellHtml += `</div>`;
         });
@@ -210,8 +201,6 @@ const LevelUp = (() => {
           `<div style="display:flex;flex-wrap:wrap;gap:6px">${btns}</div>`);
       }
     }
-
-    // ── Wizard spellbook ───────────────────────────────────────────────────────
     if (o.wizardSpellbookGain > 0) {
       const btns = o.availableSpells.map(s =>
         `<button type="button" class="lu-pick" data-id="${s.id}" data-type="spellbook"
@@ -222,8 +211,6 @@ const LevelUp = (() => {
       html += _section(`Add ${o.wizardSpellbookGain} Spells to Spellbook`,
         `<div style="display:flex;flex-wrap:wrap;gap:6px">${btns}</div>`);
     }
-
-    // ── Expertise ──────────────────────────────────────────────────────────────
     if (o.needsExpertise) {
       const btns = (o.eligibleExpertiseSkills || []).map(sk =>
         `<button type="button" class="lu-pick" data-id="${sk}" data-type="expertise"
@@ -234,15 +221,9 @@ const LevelUp = (() => {
         `<p style="margin:0 0 10px;font-size:.9rem;opacity:.8">Choose skills to gain Expertise (doubled proficiency bonus):</p>
          <div style="display:flex;flex-wrap:wrap;gap:6px">${btns}</div>`);
     }
-
-    // ── Magical Secrets ────────────────────────────────────────────────────────
     if (o.needsMagicalSecrets) {
       const grouped = {};
-      (o.availableMagicalSecrets || []).forEach(sp => {
-        const k = sp.level;
-        if (!grouped[k]) grouped[k] = [];
-        grouped[k].push(sp);
-      });
+      (o.availableMagicalSecrets || []).forEach(sp => { const k = sp.level; if (!grouped[k]) grouped[k] = []; grouped[k].push(sp); });
       let spellHtml = '';
       Object.keys(grouped).sort((a,b) => a - b).forEach(lvl => {
         spellHtml += `<div style="margin-bottom:8px"><span style="font-size:.8rem;color:#c9a440;opacity:.8">${_ordinal(+lvl)}-level</span><br>
@@ -256,8 +237,11 @@ const LevelUp = (() => {
       html += _section('Magical Secrets — Pick 2 Spells from Any Class',
         `<p style="margin:0 0 10px;font-size:.9rem;opacity:.8">These spells become part of your spells known:</p>${spellHtml}`);
     }
+    return html;
+  }
 
-    // ── Pact Boon ──────────────────────────────────────────────────────────────
+  function _buildClassSpecificSection(o) {
+    let html = '';
     if (o.needsPactBoon) {
       html += _section('Choose Your Pact Boon',
         `<select id="lu-pact-boon" style="${_selectStyle()}">
@@ -266,22 +250,17 @@ const LevelUp = (() => {
           <option value="blade">Pact of the Blade — Summon a magical pact weapon</option>
           <option value="tome">Pact of the Tome — Gain a Book of Shadows with 3 cantrips</option>
         </select>`);
-
       if (o.allCantripsForTome?.length) {
         const btns = o.allCantripsForTome.map(s =>
           `<button type="button" class="lu-pick" data-id="${s.id}" data-type="tome_cantrip"
-                   data-max="3" style="${_spellBtnStyle()}"
-                   onclick="LevelUp._toggleSpell(this)">${s.name}</button>`
+                   data-max="3" style="${_spellBtnStyle()}" onclick="LevelUp._toggleSpell(this)">${s.name}</button>`
         ).join('');
         html += `<div id="lu-tome-cantrips" style="display:none">` +
           _section('Pact of the Tome — Choose 3 Cantrips (from any class)',
             `<p style="margin:0 0 10px;font-size:.9rem;opacity:.8">These cantrips don't count against your cantrips known:</p>
-             <div style="display:flex;flex-wrap:wrap;gap:6px">${btns}</div>`) +
-          `</div>`;
+             <div style="display:flex;flex-wrap:wrap;gap:6px">${btns}</div>`) + `</div>`;
       }
     }
-
-    // ── Eldritch Invocations ───────────────────────────────────────────────────
     if (o.needsInvocations) {
       const btns = (o.availableInvocations || []).map(inv =>
         `<button type="button" class="lu-pick" data-id="${inv.id}" data-type="invocation"
@@ -292,8 +271,6 @@ const LevelUp = (() => {
         `<p style="margin:0 0 10px;font-size:.9rem;opacity:.8">Hover for description. Filtered by level and pact requirements:</p>
          <div style="display:flex;flex-wrap:wrap;gap:6px">${btns}</div>`);
     }
-
-    // ── Metamagic ──────────────────────────────────────────────────────────────
     if (o.needsMetamagic) {
       const btns = (o.availableMetamagic || []).map(m =>
         `<button type="button" class="lu-pick" data-id="${m.id}" data-type="metamagic"
@@ -304,43 +281,31 @@ const LevelUp = (() => {
         `<p style="margin:0 0 10px;font-size:.9rem;opacity:.8">Hover for description. Sorcery Points (SP) costs shown in description:</p>
          <div style="display:flex;flex-wrap:wrap;gap:6px">${btns}</div>`);
     }
-
-    // ── Ranger: Favored Enemy ──────────────────────────────────────────────────
     if (o.needsFavoredEnemy) {
-      const opts = (o.favoredEnemyTypes || []).map(t =>
-        `<option value="${t}">${t}</option>`
-      ).join('');
+      const opts = (o.favoredEnemyTypes || []).map(t => `<option value="${t}">${t}</option>`).join('');
       html += _section('Additional Favored Enemy',
         `<p style="margin:0 0 10px;font-size:.9rem;opacity:.8">Advantage on Survival to track and INT checks to recall information:</p>
          <select id="lu-favored-enemy" style="${_selectStyle()}">
            <option value="">Select enemy type...</option>${opts}
          </select>`);
     }
-
-    // ── Ranger: Natural Explorer ───────────────────────────────────────────────
     if (o.needsNaturalExplorer) {
-      const opts = (o.naturalExplorerTerrains || []).map(t =>
-        `<option value="${t}">${t}</option>`
-      ).join('');
+      const opts = (o.naturalExplorerTerrains || []).map(t => `<option value="${t}">${t}</option>`).join('');
       html += _section('Additional Favored Terrain',
         `<p style="margin:0 0 10px;font-size:.9rem;opacity:.8">Gain natural explorer benefits in this terrain type:</p>
          <select id="lu-natural-explorer" style="${_selectStyle()}">
            <option value="">Select terrain...</option>${opts}
          </select>`);
     }
-
-    // ── Warlock: Mystic Arcanum ────────────────────────────────────────────────
     if (o.needsMysticArcanum) {
       const btns = (o.availableMysticArcanum || []).map(s =>
         `<button type="button" class="lu-pick" data-id="${s.id}" data-type="mystic_arcanum"
-                 data-max="1" style="${_spellBtnStyle()}"
-                 onclick="LevelUp._toggleSpell(this)">${s.name}</button>`
+                 data-max="1" style="${_spellBtnStyle()}" onclick="LevelUp._toggleSpell(this)">${s.name}</button>`
       ).join('');
       html += _section(`Mystic Arcanum — Choose a ${_ordinal(o.mysticArcanumLevel)}-Level Spell`,
         `<p style="margin:0 0 10px;font-size:.9rem;opacity:.8">Cast once per long rest without a spell slot:</p>
          <div style="display:flex;flex-wrap:wrap;gap:6px">${btns}</div>`);
     }
-
     return html;
   }
 

@@ -676,53 +676,6 @@ public class PlayModeController {
         boolean needsSubclass = newLevel == classDef.getSubclassLevel()
             && (draft.getSubclassId() == null || draft.getSubclassId().isEmpty());
 
-        // Cantrip gain
-        int newCantripsCount = Math.max(0,
-            ClassRepository.cantripsKnown(classId, newLevel) - ClassRepository.cantripsKnown(classId, currentLevel));
-
-        // Spell gain: deficit between target count and current known spells
-        int newSpellsCount = 0;
-        boolean isWizard = "wizard".equals(classId);
-        int wizardSpellbookGain = isWizard && newLevel > 1 ? 2 : 0;
-        int maxNewSpellLevel = ClassRepository.maxSpellLevel(classId, newLevel);
-
-        // Prepared casters (Cleric, Druid, Paladin): prepared=true, not wizard
-        boolean isFullPreparedCaster = !isWizard && sc != null && sc.isPrepareSpells();
-
-        if (sc != null && !sc.isPrepareSpells() && maxNewSpellLevel > 0) {
-            // Known casters: fill up to target spells known at new level
-            int target = ClassRepository.spellsKnown(classId, newLevel);
-            newSpellsCount = Math.max(0, target - draft.getChosenSpells().size());
-        } else if (isFullPreparedCaster && maxNewSpellLevel > 0) {
-            // Prepared casters (Cleric, Druid, Paladin): fill up to new preparation count
-            int abilityMod = derived.getModifiers().getOrDefault(sc.getAbility(), 0);
-            int target = ClassRepository.maxPrepared(classId, newLevel, abilityMod);
-            newSpellsCount = Math.max(0, target - draft.getChosenSpells().size());
-        }
-
-        // Available cantrips (not already chosen)
-        var availableCantrips = newCantripsCount > 0
-            ? spellRepository.findCantripsForClass(classId).stream()
-                .filter(s -> !draft.getChosenCantrips().contains(s.getId()))
-                .toList()
-            : List.of();
-
-        // Available spells — all spells up to max accessible level (not just the newly unlocked tier)
-        int maxLvl = maxNewSpellLevel;
-        var availableSpells = (newSpellsCount > 0 || wizardSpellbookGain > 0)
-            ? spellRepository.findByClass(classId, null).stream()
-                .filter(s -> s.getLevel() > 0 && s.getLevel() <= maxLvl)
-                .filter(s -> !draft.getChosenSpells().contains(s.getId())
-                          && !draft.getSpellbookSpells().contains(s.getId()))
-                .sorted(Comparator.comparingInt(com.dnd.builder.core.model.SpellDefinition::getLevel)
-                                  .thenComparing(com.dnd.builder.core.model.SpellDefinition::getName))
-                .toList()
-            : List.of();
-
-        var availableFeats      = needsAsi       ? featRepository.findAll()         : List.of();
-        var availableSubclasses = needsSubclass && classDef.getSubclasses() != null
-                                    ? classDef.getSubclasses() : List.of();
-
         var result = new LinkedHashMap<String, Object>();
         result.put("currentLevel",        currentLevel);
         result.put("newLevel",            newLevel);
@@ -733,148 +686,13 @@ public class PlayModeController {
         result.put("newSpellSlotSummary", newSpellSlotSummary);
         result.put("needsAsi",            needsAsi);
         result.put("needsSubclass",       needsSubclass);
-        result.put("newCantripsCount",    newCantripsCount);
-        result.put("newSpellsCount",      newSpellsCount);
-        result.put("availableCantrips",   availableCantrips);
-        result.put("availableSpells",     availableSpells);
-        result.put("availableFeats",      availableFeats);
-        result.put("availableSubclasses", availableSubclasses);
-        result.put("maxNewSpellLevel",    maxNewSpellLevel);
-        result.put("isWizard",               isWizard);
-        result.put("isFullPreparedCaster",   isFullPreparedCaster);
-        result.put("wizardSpellbookGain",    wizardSpellbookGain);
+        result.put("availableFeats",      needsAsi ? featRepository.findAll() : List.of());
+        result.put("availableSubclasses", needsSubclass && classDef.getSubclasses() != null
+                                            ? classDef.getSubclasses() : List.of());
 
-        // ── Expertise (Bard L3/10, Rogue L6) ─────────────────────────────────
-        boolean needsExpertise = ("bard".equals(classId) && (newLevel == 3 || newLevel == 10))
-                              || ("rogue".equals(classId) && newLevel == 6);
-        int expertiseCount = needsExpertise ? 2 : 0;
-        var eligibleExpertise = needsExpertise
-            ? derived.getAllSkillProficiencies().stream()
-                .filter(s -> !draft.getExpertiseSkills().contains(s))
-                .sorted()
-                .toList()
-            : List.<String>of();
-
-        // ── Magical Secrets (Bard L10/14/18, or College of Lore Bard L6) ─────
-        boolean needsMagicalSecrets = "bard".equals(classId)
-            && (newLevel == 10 || newLevel == 14 || newLevel == 18
-                || (newLevel == 6
-                    && draft.getSubclassId() != null
-                    && "lore".equals(draft.getSubclassId())));
-        var availableMagicalSecrets = needsMagicalSecrets
-            ? spellRepository.getAllSpells().stream()
-                .filter(sp -> sp.getLevel() > 0 && sp.getLevel() <= maxNewSpellLevel)
-                .filter(sp -> !draft.getChosenSpells().contains(sp.getId())
-                           && !draft.getChosenCantrips().contains(sp.getId()))
-                .sorted(Comparator.comparingInt(com.dnd.builder.core.model.SpellDefinition::getLevel)
-                                  .thenComparing(com.dnd.builder.core.model.SpellDefinition::getName))
-                .toList()
-            : List.of();
-
-        // ── Pact Boon (Warlock L3) ────────────────────────────────────────────
-        boolean needsPactBoon = "warlock".equals(classId) && newLevel == 3
-            && (draft.getPactBoon() == null || draft.getPactBoon().isBlank());
-
-        // All cantrips from any class (for Pact of the Tome picker)
-        var allCantripsForTome = needsPactBoon
-            ? spellRepository.getAllSpells().stream()
-                .filter(sp -> sp.getLevel() == 0)
-                .sorted(Comparator.comparing(com.dnd.builder.core.model.SpellDefinition::getName))
-                .toList()
-            : List.of();
-
-        // ── Eldritch Invocations (Warlock) ────────────────────────────────────
-        int newInvocationsCount = 0;
-        if ("warlock".equals(classId)) {
-            if (newLevel == 2) newInvocationsCount = 2;
-            else if (List.of(5, 7, 9, 12, 15, 18).contains(newLevel)) newInvocationsCount = 1;
-        }
-        boolean needsInvocations = newInvocationsCount > 0;
-        var availableInvocations = needsInvocations
-            ? ELDRITCH_INVOCATIONS.stream()
-                .filter(inv -> Integer.parseInt(inv.get("minLevel")) <= newLevel)
-                .filter(inv -> !draft.getEldritchInvocations().contains(inv.get("id")))
-                .filter(inv -> {
-                    String req = inv.get("requiresPact");
-                    return req.isBlank() || req.equals(draft.getPactBoon());
-                })
-                .toList()
-            : List.<Map<String, String>>of();
-
-        // ── Metamagic (Sorcerer L3/10/17) ────────────────────────────────────
-        int newMetamagicCount = 0;
-        if ("sorcerer".equals(classId)) {
-            if (newLevel == 3) newMetamagicCount = 2;
-            else if (newLevel == 10 || newLevel == 17) newMetamagicCount = 1;
-        }
-        boolean needsMetamagic = newMetamagicCount > 0;
-        var availableMetamagic = needsMetamagic
-            ? METAMAGIC_OPTIONS.stream()
-                .filter(m -> !draft.getMetamagicOptions().contains(m.get("id")))
-                .toList()
-            : List.<Map<String, String>>of();
-
-        // ── Ranger: Favored Enemy / Natural Explorer ──────────────────────────
-        boolean needsFavoredEnemy    = "ranger".equals(classId) && (newLevel == 6 || newLevel == 14);
-        boolean needsNaturalExplorer = "ranger".equals(classId) && (newLevel == 6 || newLevel == 10 || newLevel == 14);
-
-        // ── Prepared Caster: spell prep gain + new spell level unlock ─────────
-        boolean isPreparedCaster = sc != null && sc.isPrepareSpells();
-        int preparedSpellsGain = (isPreparedCaster && !"half".equals(sc.getType())) ? 1 : 0;
-        int currentMaxSlotLevel = 0, newMaxSlotLevel = 0;
-        if (isPreparedCaster && !"half".equals(sc.getType())) {
-            int[] curSlots = ClassRepository.fullCasterSlots(currentLevel);
-            int[] newSlots = ClassRepository.fullCasterSlots(newLevel);
-            for (int i = 8; i >= 0; i--) {
-                if (curSlots[i] > 0 && currentMaxSlotLevel == 0) currentMaxSlotLevel = i + 1;
-                if (newSlots[i] > 0 && newMaxSlotLevel == 0) newMaxSlotLevel = i + 1;
-            }
-        } else if (sc != null && "half".equals(sc.getType())) {
-            currentMaxSlotLevel = ClassRepository.maxSpellLevel(classId, currentLevel);
-            newMaxSlotLevel     = ClassRepository.maxSpellLevel(classId, newLevel);
-        }
-        boolean unlocksNewSpellLevel = newMaxSlotLevel > currentMaxSlotLevel;
-        int newUnlockedSpellLevel = unlocksNewSpellLevel ? newMaxSlotLevel : 0;
-
-        // ── Warlock Mystic Arcanum ────────────────────────────────────────────
-        int mysticArcanumLevel = 0;
-        if ("warlock".equals(classId)) {
-            mysticArcanumLevel = switch (newLevel) {
-                case 11 -> 6; case 13 -> 7; case 15 -> 8; case 17 -> 9;
-                default -> 0;
-            };
-        }
-        boolean needsMysticArcanum = mysticArcanumLevel > 0;
-        int finalMysticLevel = mysticArcanumLevel;
-        var availableMysticArcanum = needsMysticArcanum
-            ? spellRepository.findByClass("warlock", finalMysticLevel).stream()
-                .filter(sp -> !draft.getChosenSpells().contains(sp.getId()))
-                .toList()
-            : List.of();
-
-        result.put("needsExpertise",           needsExpertise);
-        result.put("expertiseCount",           expertiseCount);
-        result.put("eligibleExpertiseSkills",  eligibleExpertise);
-        result.put("needsMagicalSecrets",      needsMagicalSecrets);
-        result.put("availableMagicalSecrets",  availableMagicalSecrets);
-        result.put("needsPactBoon",            needsPactBoon);
-        result.put("allCantripsForTome",       allCantripsForTome);
-        result.put("needsInvocations",         needsInvocations);
-        result.put("newInvocationsCount",      newInvocationsCount);
-        result.put("availableInvocations",     availableInvocations);
-        result.put("needsMetamagic",           needsMetamagic);
-        result.put("newMetamagicCount",        newMetamagicCount);
-        result.put("availableMetamagic",       availableMetamagic);
-        result.put("needsFavoredEnemy",        needsFavoredEnemy);
-        result.put("needsNaturalExplorer",     needsNaturalExplorer);
-        result.put("favoredEnemyTypes",        needsFavoredEnemy   ? FAVORED_ENEMY_TYPES        : List.of());
-        result.put("naturalExplorerTerrains",  needsNaturalExplorer ? NATURAL_EXPLORER_TERRAINS : List.of());
-        result.put("preparedSpellsGain",       preparedSpellsGain);
-        result.put("unlocksNewSpellLevel",     unlocksNewSpellLevel);
-        result.put("newUnlockedSpellLevel",    newUnlockedSpellLevel);
-        result.put("needsMysticArcanum",       needsMysticArcanum);
-        result.put("mysticArcanumLevel",       mysticArcanumLevel);
-        result.put("availableMysticArcanum",   availableMysticArcanum);
+        buildSpellGainInfo(classId, draft, sc, derived, currentLevel, newLevel, result);
+        buildClassSpecificChoices(classId, draft, derived, sc, currentLevel, newLevel,
+                (int) result.get("maxNewSpellLevel"), result);
         return result;
     }
 
@@ -983,6 +801,145 @@ public class PlayModeController {
         result.put("draft",    draft);
         result.put("derived",  derived);
         return result;
+    }
+
+    private void buildSpellGainInfo(String classId, CharacterDraft draft,
+                                    ClassDefinition.SpellcastingInfo sc,
+                                    DerivedStats derived, int currentLevel, int newLevel,
+                                    Map<String, Object> result) {
+        boolean isWizard = "wizard".equals(classId);
+        int wizardSpellbookGain = isWizard && newLevel > 1 ? 2 : 0;
+        int maxNewSpellLevel = ClassRepository.maxSpellLevel(classId, newLevel);
+        boolean isFullPreparedCaster = !isWizard && sc != null && sc.isPrepareSpells();
+        int newCantripsCount = Math.max(0,
+            ClassRepository.cantripsKnown(classId, newLevel) - ClassRepository.cantripsKnown(classId, currentLevel));
+
+        int newSpellsCount = 0;
+        if (sc != null && !sc.isPrepareSpells() && maxNewSpellLevel > 0) {
+            newSpellsCount = Math.max(0, ClassRepository.spellsKnown(classId, newLevel) - draft.getChosenSpells().size());
+        } else if (isFullPreparedCaster && maxNewSpellLevel > 0) {
+            int abilityMod = derived.getModifiers().getOrDefault(sc.getAbility(), 0);
+            newSpellsCount = Math.max(0, ClassRepository.maxPrepared(classId, newLevel, abilityMod) - draft.getChosenSpells().size());
+        }
+
+        var availableCantrips = newCantripsCount > 0
+            ? spellRepository.findCantripsForClass(classId).stream()
+                .filter(s -> !draft.getChosenCantrips().contains(s.getId())).toList()
+            : List.of();
+
+        int maxLvl = maxNewSpellLevel;
+        var availableSpells = (newSpellsCount > 0 || wizardSpellbookGain > 0)
+            ? spellRepository.findByClass(classId, null).stream()
+                .filter(s -> s.getLevel() > 0 && s.getLevel() <= maxLvl)
+                .filter(s -> !draft.getChosenSpells().contains(s.getId()) && !draft.getSpellbookSpells().contains(s.getId()))
+                .sorted(Comparator.comparingInt(SpellDefinition::getLevel).thenComparing(SpellDefinition::getName))
+                .toList()
+            : List.of();
+
+        result.put("newCantripsCount",    newCantripsCount);
+        result.put("newSpellsCount",      newSpellsCount);
+        result.put("availableCantrips",   availableCantrips);
+        result.put("availableSpells",     availableSpells);
+        result.put("maxNewSpellLevel",    maxNewSpellLevel);
+        result.put("isWizard",            isWizard);
+        result.put("isFullPreparedCaster",isFullPreparedCaster);
+        result.put("wizardSpellbookGain", wizardSpellbookGain);
+    }
+
+    private void buildClassSpecificChoices(String classId, CharacterDraft draft, DerivedStats derived,
+                                           ClassDefinition.SpellcastingInfo sc,
+                                           int currentLevel, int newLevel, int maxNewSpellLevel,
+                                           Map<String, Object> result) {
+        // Expertise (Bard L3/10, Rogue L6)
+        boolean needsExpertise = ("bard".equals(classId) && (newLevel == 3 || newLevel == 10))
+                              || ("rogue".equals(classId) && newLevel == 6);
+        result.put("needsExpertise",          needsExpertise);
+        result.put("expertiseCount",          needsExpertise ? 2 : 0);
+        result.put("eligibleExpertiseSkills", needsExpertise
+            ? derived.getAllSkillProficiencies().stream().filter(s -> !draft.getExpertiseSkills().contains(s)).sorted().toList()
+            : List.<String>of());
+
+        // Magical Secrets (Bard L10/14/18 or Lore Bard L6)
+        boolean needsMagicalSecrets = "bard".equals(classId)
+            && (newLevel == 10 || newLevel == 14 || newLevel == 18
+                || (newLevel == 6 && "lore".equals(draft.getSubclassId())));
+        result.put("needsMagicalSecrets",     needsMagicalSecrets);
+        result.put("availableMagicalSecrets", needsMagicalSecrets
+            ? spellRepository.getAllSpells().stream()
+                .filter(sp -> sp.getLevel() > 0 && sp.getLevel() <= maxNewSpellLevel)
+                .filter(sp -> !draft.getChosenSpells().contains(sp.getId()) && !draft.getChosenCantrips().contains(sp.getId()))
+                .sorted(Comparator.comparingInt(SpellDefinition::getLevel).thenComparing(SpellDefinition::getName)).toList()
+            : List.of());
+
+        // Pact Boon (Warlock L3)
+        boolean needsPactBoon = "warlock".equals(classId) && newLevel == 3
+            && (draft.getPactBoon() == null || draft.getPactBoon().isBlank());
+        result.put("needsPactBoon",           needsPactBoon);
+        result.put("allCantripsForTome",      needsPactBoon
+            ? spellRepository.getAllSpells().stream().filter(sp -> sp.getLevel() == 0)
+                .sorted(Comparator.comparing(SpellDefinition::getName)).toList()
+            : List.of());
+
+        // Eldritch Invocations (Warlock)
+        int newInvocationsCount = "warlock".equals(classId)
+            ? (newLevel == 2 ? 2 : List.of(5, 7, 9, 12, 15, 18).contains(newLevel) ? 1 : 0) : 0;
+        result.put("needsInvocations",        newInvocationsCount > 0);
+        result.put("newInvocationsCount",     newInvocationsCount);
+        result.put("availableInvocations",    newInvocationsCount > 0
+            ? ELDRITCH_INVOCATIONS.stream()
+                .filter(inv -> Integer.parseInt(inv.get("minLevel")) <= newLevel)
+                .filter(inv -> !draft.getEldritchInvocations().contains(inv.get("id")))
+                .filter(inv -> { String req = inv.get("requiresPact"); return req.isBlank() || req.equals(draft.getPactBoon()); })
+                .toList()
+            : List.<Map<String, String>>of());
+
+        // Metamagic (Sorcerer L3/10/17)
+        int newMetamagicCount = "sorcerer".equals(classId)
+            ? (newLevel == 3 ? 2 : (newLevel == 10 || newLevel == 17) ? 1 : 0) : 0;
+        result.put("needsMetamagic",          newMetamagicCount > 0);
+        result.put("newMetamagicCount",       newMetamagicCount);
+        result.put("availableMetamagic",      newMetamagicCount > 0
+            ? METAMAGIC_OPTIONS.stream().filter(m -> !draft.getMetamagicOptions().contains(m.get("id"))).toList()
+            : List.<Map<String, String>>of());
+
+        // Ranger choices
+        boolean needsFavoredEnemy    = "ranger".equals(classId) && (newLevel == 6 || newLevel == 14);
+        boolean needsNaturalExplorer = "ranger".equals(classId) && (newLevel == 6 || newLevel == 10 || newLevel == 14);
+        result.put("needsFavoredEnemy",       needsFavoredEnemy);
+        result.put("needsNaturalExplorer",    needsNaturalExplorer);
+        result.put("favoredEnemyTypes",       needsFavoredEnemy    ? FAVORED_ENEMY_TYPES       : List.of());
+        result.put("naturalExplorerTerrains", needsNaturalExplorer ? NATURAL_EXPLORER_TERRAINS : List.of());
+
+        // Prepared caster spell level unlock
+        boolean isPreparedCaster = sc != null && sc.isPrepareSpells();
+        int preparedSpellsGain = (isPreparedCaster && !"half".equals(sc.getType())) ? 1 : 0;
+        int curMax = 0, newMax = 0;
+        if (isPreparedCaster && !"half".equals(sc.getType())) {
+            int[] curSlots = ClassRepository.fullCasterSlots(currentLevel);
+            int[] newSlots = ClassRepository.fullCasterSlots(newLevel);
+            for (int i = 8; i >= 0; i--) {
+                if (curSlots[i] > 0 && curMax == 0) curMax = i + 1;
+                if (newSlots[i] > 0 && newMax == 0) newMax = i + 1;
+            }
+        } else if (sc != null && "half".equals(sc.getType())) {
+            curMax = ClassRepository.maxSpellLevel(classId, currentLevel);
+            newMax = ClassRepository.maxSpellLevel(classId, newLevel);
+        }
+        result.put("preparedSpellsGain",      preparedSpellsGain);
+        result.put("unlocksNewSpellLevel",    newMax > curMax);
+        result.put("newUnlockedSpellLevel",   newMax > curMax ? newMax : 0);
+
+        // Warlock Mystic Arcanum (L11=6th, L13=7th, L15=8th, L17=9th)
+        int mysticArcanumLevel = "warlock".equals(classId) ? switch (newLevel) {
+            case 11 -> 6; case 13 -> 7; case 15 -> 8; case 17 -> 9; default -> 0;
+        } : 0;
+        int finalMysticLevel = mysticArcanumLevel;
+        result.put("needsMysticArcanum",      mysticArcanumLevel > 0);
+        result.put("mysticArcanumLevel",      mysticArcanumLevel);
+        result.put("availableMysticArcanum",  mysticArcanumLevel > 0
+            ? spellRepository.findByClass("warlock", finalMysticLevel).stream()
+                .filter(sp -> !draft.getChosenSpells().contains(sp.getId())).toList()
+            : List.of());
     }
 
     private String buildSlotSummary(int[] slots) {

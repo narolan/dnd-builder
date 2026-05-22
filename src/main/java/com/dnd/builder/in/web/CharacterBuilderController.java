@@ -467,165 +467,116 @@ public class CharacterBuilderController {
                 var derived = calculator.calculate(draft);
                 model.addAttribute("currentStats", derived.getFinalScores());
             }
-            case 7 -> {
-                var cd = classRepository.findById(draft.getCharacterClass());
-                if (cd != null && cd.getSpellcasting() != null) {
-                    var sc = cd.getSpellcasting();
-                    String classId = draft.getCharacterClass();
-                    int level = draft.getLevel();
-                    int maxSpellLvl = ClassRepository.maxSpellLevel(classId, level);
-
-                    model.addAttribute("spellcasting", sc);
-                    model.addAttribute("cantrips", spellRepository.findCantripsForClass(classId));
-                    model.addAttribute("maxSpellLevel", maxSpellLvl);
-
-                    // Fetch spells grouped by level (null = all levels, filtered below)
-                    var allSpells = spellRepository.findByClass(classId, null);
-                    var spellsByLevel = new LinkedHashMap<Integer, List<SpellDefinition>>();
-                    for (int lvl = 1; lvl <= maxSpellLvl; lvl++) {
-                        final int spellLvl = lvl;
-                        var spellsAtLevel = allSpells.stream()
-                                .filter(s -> s.getLevel() == spellLvl)
-                                .collect(Collectors.toList());
-                        if (!spellsAtLevel.isEmpty()) {
-                            spellsByLevel.put(lvl, spellsAtLevel);
-                        }
-                    }
-                    model.addAttribute("spellsByLevel", spellsByLevel);
-
-                    // Scaling limits
-                    int cantripsLimit = ClassRepository.cantripsKnown(classId, level);
-                    model.addAttribute("cantripsLimit", cantripsLimit);
-
-                    boolean isKnownCaster = !sc.isPrepareSpells();
-                    boolean isWizard = "wizard".equals(classId);
-                    // Paladins/Rangers have isPrepareSpells=true but maxSpellLvl=0 at level 1
-                    // Don't show the prepared caster section when no spells are accessible yet
-                    boolean isPreparedCaster = sc.isPrepareSpells() && !isWizard && maxSpellLvl > 0;
-                    model.addAttribute("isWizard", isWizard);
-                    model.addAttribute("isPreparedCaster", isPreparedCaster);
-                    model.addAttribute("isKnownCaster", isKnownCaster && !isWizard);
-                    // Flag for level-1 prepared casters with no spells yet (Paladin/Ranger)
-                    model.addAttribute("isPreparedCasterNoSpells", sc.isPrepareSpells() && !isWizard && maxSpellLvl == 0);
-
-                    if (isKnownCaster && !isWizard) {
-                        int spellsKnown = ClassRepository.spellsKnown(classId, level);
-                        model.addAttribute("spellsKnownLimit", spellsKnown);
-                    }
-
-                    if (sc.isPrepareSpells() && !isWizard) {
-                        var derived = calculator.calculate(draft);
-                        int abilityMod = derived.getModifiers().get(sc.getAbility());
-                        int maxPrepared = ClassRepository.maxPrepared(classId, level, abilityMod);
-                        model.addAttribute("maxPrepared", maxPrepared);
-                    }
-
-                    if (isWizard) {
-                        // Wizard spellbook: 6 at L1, +2 per wizard level
-                        int spellbookSize = 6 + (level - 1) * 2;
-                        model.addAttribute("spellbookSize", spellbookSize);
-                    }
-                }
-                var classDef = classRepository.findById(draft.getCharacterClass());
-                model.addAttribute("isSpellcaster", classDef != null && classDef.getSpellcasting() != null);
-            }
+            case 7 -> populateSpellStep(model, draft);
             case 8 -> {
                 var slots = equipmentRepository.findByClass(draft.getCharacterClass());
                 model.addAttribute("equipmentSlots", slots);
             }
-            case 9 -> {
-                model.addAttribute("allSkills",   CharacterCalculator.SKILL_ABILITY);
-                var cd  = classRepository.findById(draft.getCharacterClass());
-                var bg  = backgroundRepository.findById(draft.getBackground());
-                var race = raceRepository.findById(draft.getRaceId());
-                model.addAttribute("classDef",   cd);
-                model.addAttribute("bgDef",      bg);
-                model.addAttribute("raceDef",    race);
+            case 9 -> populateReviewStep(model, draft);
+        }
+    }
 
-                // Class features up to current level
-                if (cd != null && cd.getFeatures() != null) {
-                    var features = cd.getFeatures().stream()
-                        .filter(f -> f.level() <= draft.getLevel())
-                        .toList();
-                    model.addAttribute("classFeatures", features);
-                }
+    private void populateSpellStep(Model model, CharacterDraft draft) {
+        var cd = classRepository.findById(draft.getCharacterClass());
+        model.addAttribute("isSpellcaster", cd != null && cd.getSpellcasting() != null);
+        if (cd == null || cd.getSpellcasting() == null) return;
 
-                // Subclass features if applicable
-                if (cd != null && cd.getSubclasses() != null && !draft.getSubclassId().isEmpty()) {
-                    var subclass = cd.getSubclasses().stream()
-                        .filter(s -> s.id().equals(draft.getSubclassId()))
-                        .findFirst().orElse(null);
-                    model.addAttribute("subclassDef", subclass);
-                    if (subclass != null && subclass.features() != null) {
-                        var subFeatures = subclass.features().stream()
-                            .filter(f -> f.level() <= draft.getLevel())
-                            .toList();
-                        model.addAttribute("subclassFeatures", subFeatures);
-                    }
-                }
-                // Chosen spells display - with full spell objects for tooltips
-                var chosenSpells = new ArrayList<SpellDefinition>();
-                for (var id : draft.getChosenCantrips()) {
-                    var sp = spellRepository.findById(id);
-                    if (sp != null) chosenSpells.add(sp);
-                }
-                for (var id : draft.getChosenSpells()) {
-                    var sp = spellRepository.findById(id);
-                    if (sp != null) chosenSpells.add(sp);
-                }
-                for (var id : draft.getSpellbookSpells()) {
-                    var sp = spellRepository.findById(id);
-                    if (sp != null) chosenSpells.add(sp);
-                }
-                model.addAttribute("chosenSpells", chosenSpells);
+        var sc = cd.getSpellcasting();
+        String classId = draft.getCharacterClass();
+        int level = draft.getLevel();
+        int maxSpellLvl = ClassRepository.maxSpellLevel(classId, level);
+        boolean isWizard = "wizard".equals(classId);
+        boolean isKnownCaster = !sc.isPrepareSpells();
 
-                // Legacy spellNames for backwards compat
-                var spellNames = new ArrayList<String>();
-                for (var sp : chosenSpells) {
-                    String lvl = sp.getLevel() == 0 ? "cantrip" : ordinal(sp.getLevel());
-                    spellNames.add(sp.getName() + " (" + lvl + ")");
-                }
-                model.addAttribute("spellNames", spellNames);
+        model.addAttribute("spellcasting", sc);
+        model.addAttribute("cantrips", spellRepository.findCantripsForClass(classId));
+        model.addAttribute("maxSpellLevel", maxSpellLvl);
+        model.addAttribute("cantripsLimit", ClassRepository.cantripsKnown(classId, level));
+        model.addAttribute("isWizard", isWizard);
+        model.addAttribute("isPreparedCaster", sc.isPrepareSpells() && !isWizard && maxSpellLvl > 0);
+        model.addAttribute("isKnownCaster", isKnownCaster && !isWizard);
+        // Paladin/Ranger at level 1 have isPrepareSpells=true but no slots yet
+        model.addAttribute("isPreparedCasterNoSpells", sc.isPrepareSpells() && !isWizard && maxSpellLvl == 0);
 
-                // Chosen feat name (Variant Human)
-                if (!draft.getChosenFeatId().isBlank()) {
-                    var feat = featRepository.findById(draft.getChosenFeatId());
-                    model.addAttribute("featName", feat != null ? feat.getName() : draft.getChosenFeatId());
-                    model.addAttribute("featDescription", feat != null ? feat.getDescription() : "");
-                }
+        var allSpells = spellRepository.findByClass(classId, null);
+        var spellsByLevel = new LinkedHashMap<Integer, List<SpellDefinition>>();
+        for (int lvl = 1; lvl <= maxSpellLvl; lvl++) {
+            final int spellLvl = lvl;
+            var atLevel = allSpells.stream().filter(s -> s.getLevel() == spellLvl).collect(Collectors.toList());
+            if (!atLevel.isEmpty()) spellsByLevel.put(lvl, atLevel);
+        }
+        model.addAttribute("spellsByLevel", spellsByLevel);
 
-                // ASI summary for review
-                var asiSummary = new ArrayList<java.util.Map<String, String>>();
-                if (draft.getAsiChoices() != null) {
-                    for (var choice : draft.getAsiChoices()) {
-                        if ("feat".equals(choice.type())) {
-                            var feat = featRepository.findById(choice.featId());
-                            String featName = feat != null ? feat.getName() : choice.featId();
-                            String featDesc = feat != null && feat.getDescription() != null ? feat.getDescription() : "";
-                            asiSummary.add(Map.of(
-                                "label", "Level " + choice.level() + ": " + featName + " (Feat)",
-                                "description", featDesc
-                            ));
-                        } else if (choice.statIncreases() != null && !choice.statIncreases().isEmpty()) {
-                            var parts = new ArrayList<String>();
-                            choice.statIncreases().forEach((stat, bonus) ->
-                                parts.add(stat + " +" + bonus));
-                            asiSummary.add(Map.of(
-                                "label", "Level " + choice.level() + ": " + String.join(", ", parts),
-                                "description", ""
-                            ));
-                        } else {
-                            // ASI saved with no stat chosen — make the gap visible
-                            asiSummary.add(Map.of(
-                                "label", "Level " + choice.level() + ": ASI — no stat chosen",
-                                "description", "Return to ASI/Feats step to complete this choice."
-                            ));
-                        }
-                    }
-                }
-                model.addAttribute("asiSummary", asiSummary);
+        if (isKnownCaster && !isWizard) {
+            model.addAttribute("spellsKnownLimit", ClassRepository.spellsKnown(classId, level));
+        }
+        if (sc.isPrepareSpells() && !isWizard) {
+            int abilityMod = calculator.calculate(draft).getModifiers().get(sc.getAbility());
+            model.addAttribute("maxPrepared", ClassRepository.maxPrepared(classId, level, abilityMod));
+        }
+        if (isWizard) {
+            model.addAttribute("spellbookSize", 6 + (level - 1) * 2);
+        }
+    }
+
+    private void populateReviewStep(Model model, CharacterDraft draft) {
+        model.addAttribute("allSkills", CharacterCalculator.SKILL_ABILITY);
+        var cd   = classRepository.findById(draft.getCharacterClass());
+        var bg   = backgroundRepository.findById(draft.getBackground());
+        var race = raceRepository.findById(draft.getRaceId());
+        model.addAttribute("classDef", cd);
+        model.addAttribute("bgDef", bg);
+        model.addAttribute("raceDef", race);
+
+        if (cd != null && cd.getFeatures() != null) {
+            model.addAttribute("classFeatures",
+                cd.getFeatures().stream().filter(f -> f.level() <= draft.getLevel()).toList());
+        }
+        if (cd != null && cd.getSubclasses() != null && !draft.getSubclassId().isEmpty()) {
+            var subclass = cd.getSubclasses().stream()
+                .filter(s -> s.id().equals(draft.getSubclassId())).findFirst().orElse(null);
+            model.addAttribute("subclassDef", subclass);
+            if (subclass != null && subclass.features() != null) {
+                model.addAttribute("subclassFeatures",
+                    subclass.features().stream().filter(f -> f.level() <= draft.getLevel()).toList());
             }
         }
+
+        var chosenSpells = new ArrayList<SpellDefinition>();
+        for (var id : draft.getChosenCantrips()) { var sp = spellRepository.findById(id); if (sp != null) chosenSpells.add(sp); }
+        for (var id : draft.getChosenSpells())   { var sp = spellRepository.findById(id); if (sp != null) chosenSpells.add(sp); }
+        for (var id : draft.getSpellbookSpells()) { var sp = spellRepository.findById(id); if (sp != null) chosenSpells.add(sp); }
+        model.addAttribute("chosenSpells", chosenSpells);
+
+        var spellNames = new ArrayList<String>();
+        for (var sp : chosenSpells) spellNames.add(sp.getName() + " (" + (sp.getLevel() == 0 ? "cantrip" : ordinal(sp.getLevel())) + ")");
+        model.addAttribute("spellNames", spellNames);
+
+        if (!draft.getChosenFeatId().isBlank()) {
+            var feat = featRepository.findById(draft.getChosenFeatId());
+            model.addAttribute("featName", feat != null ? feat.getName() : draft.getChosenFeatId());
+            model.addAttribute("featDescription", feat != null ? feat.getDescription() : "");
+        }
+
+        var asiSummary = new ArrayList<java.util.Map<String, String>>();
+        if (draft.getAsiChoices() != null) {
+            for (var choice : draft.getAsiChoices()) {
+                if ("feat".equals(choice.type())) {
+                    var feat = featRepository.findById(choice.featId());
+                    asiSummary.add(Map.of(
+                        "label", "Level " + choice.level() + ": " + (feat != null ? feat.getName() : choice.featId()) + " (Feat)",
+                        "description", feat != null && feat.getDescription() != null ? feat.getDescription() : ""));
+                } else if (choice.statIncreases() != null && !choice.statIncreases().isEmpty()) {
+                    var parts = new ArrayList<String>();
+                    choice.statIncreases().forEach((stat, bonus) -> parts.add(stat + " +" + bonus));
+                    asiSummary.add(Map.of("label", "Level " + choice.level() + ": " + String.join(", ", parts), "description", ""));
+                } else {
+                    asiSummary.add(Map.of("label", "Level " + choice.level() + ": ASI — no stat chosen",
+                        "description", "Return to ASI/Feats step to complete this choice."));
+                }
+            }
+        }
+        model.addAttribute("asiSummary", asiSummary);
     }
 
     // ── Session helpers ───────────────────────────────────────────────────────
