@@ -283,7 +283,7 @@ function addItem() {
 
     if (!item.name) { alert('Please enter an item name'); return; }
 
-    fetch('/play/inventory/add', {
+    securedFetch('/play/inventory/add', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(item)
@@ -295,7 +295,7 @@ function addItem() {
 function toggleEquip(btn, equip) {
     const card = btn.closest('.item-card');
     const itemId = card.dataset.id;
-    fetch('/play/inventory/equip', {
+    securedFetch('/play/inventory/equip', {
         method: 'POST',
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: 'itemId=' + itemId + '&equipped=' + equip
@@ -307,7 +307,7 @@ function toggleAttune(btn) {
     const card = btn.closest('.item-card');
     const itemId = card.dataset.id;
     const currentlyAttuned = btn.classList.contains('active');
-    fetch('/play/inventory/attune', {
+    securedFetch('/play/inventory/attune', {
         method: 'POST',
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: 'itemId=' + itemId + '&attuned=' + !currentlyAttuned
@@ -323,7 +323,7 @@ function removeItem(btn) {
     if (!confirm('Drop this item?')) return;
     const card = btn.closest('.item-card');
     const itemId = card.dataset.id;
-    fetch('/play/inventory/remove', {
+    securedFetch('/play/inventory/remove', {
         method: 'POST',
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: 'itemId=' + itemId
@@ -343,7 +343,7 @@ function editCurrency() {
     const cp = prompt('Copper:', document.querySelector('.currency-icon.cp').nextElementSibling.textContent);
     if (cp === null) return;
 
-    fetch('/play/currency/update', {
+    securedFetch('/play/currency/update', {
         method: 'POST',
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: `platinum=${pp}&gold=${gp}&electrum=${ep}&silver=${sp}&copper=${cp}`
@@ -355,5 +355,6 @@ function editCurrency() {
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 document.getElementById('add-item-modal').addEventListener('click', e => { if (e.target.classList.contains('modal-overlay')) closeModal(); });
 </script>
+<script src="/js/utils.js"></script>
 </body>
 </html>

@@ -601,7 +601,7 @@ const maxHp = /*[[${derived.maxHitPoints}]]*/ 10;
 function heal() {
     const amount = prompt('Heal how much?', '1');
     if (amount && !isNaN(amount)) {
-        fetch('/play/hp/heal', { method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body: 'amount=' + amount })
+        securedFetch('/play/hp/heal', { method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body: 'amount=' + amount })
             .then(r => r.json())
             .then(data => updateHpDisplay(data.currentHp));
     }
@@ -610,7 +610,7 @@ function heal() {
 function damage() {
     const amount = prompt('Take how much damage?', '1');
     if (amount && !isNaN(amount)) {
-        fetch('/play/hp/damage', { method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body: 'amount=' + amount })
+        securedFetch('/play/hp/damage', { method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body: 'amount=' + amount })
             .then(r => r.json())
             .then(data => {
                 updateHpDisplay(data.currentHp);
@@ -630,21 +630,21 @@ function damage() {
 function setTempHp() {
     const amount = prompt('Set temporary HP to:', '0');
     if (amount && !isNaN(amount)) {
-        fetch('/play/hp/temp', { method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body: 'temp=' + amount })
+        securedFetch('/play/hp/temp', { method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body: 'temp=' + amount })
             .then(r => r.json())
             .then(data => location.reload());
     }
 }
 
 function useHitDie() {
-    fetch('/play/hitdice/use', { method: 'POST' })
+    securedFetch('/play/hitdice/use', { method: 'POST' })
         .then(r => r.json())
         .then(data => {
             if (data.success) {
                 const roll = Math.floor(Math.random() * data.hitDie) + 1;
                 const healing = Math.max(1, roll + data.conMod);
                 alert(`Hit Die: ${roll} + ${data.conMod} CON = ${healing} HP healed\n${data.remaining} hit dice remaining`);
-                fetch('/play/hp/heal', { method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body: 'amount=' + healing })
+                securedFetch('/play/hp/heal', { method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body: 'amount=' + healing })
                     .then(r => r.json())
                     .then(d => updateHpDisplay(d.currentHp));
             } else {
@@ -671,7 +671,7 @@ function toggleSlot(el) {
 
 function shortRest() {
     if (confirm('Take a short rest?')) {
-        fetch('/play/rest/short', { method: 'POST' })
+        securedFetch('/play/rest/short', { method: 'POST' })
             .then(r => r.json())
             .then(data => { alert(data.message); location.reload(); });
     }
@@ -679,7 +679,7 @@ function shortRest() {
 
 function longRest() {
     if (confirm('Take a long rest? This will restore HP and spell slots.')) {
-        fetch('/play/rest/long', { method: 'POST' })
+        securedFetch('/play/rest/long', { method: 'POST' })
             .then(r => r.json())
             .then(data => { alert(data.message); location.reload(); });
     }
@@ -811,7 +811,7 @@ function deathSave(type, target) {
 }
 
 function resetDeathSaves() {
-    fetch('/play/deathsaves/reset', { method: 'POST' })
+    securedFetch('/play/deathsaves/reset', { method: 'POST' })
         .then(() => {
             document.querySelectorAll('.save-pip').forEach(pip => pip.classList.remove('filled'));
         });
@@ -824,7 +824,7 @@ function addCondition() {
     if (!name) return;
     const rounds = parseInt(document.getElementById('condition-rounds').value) || -1;
 
-    fetch('/play/conditions/add', {
+    securedFetch('/play/conditions/add', {
         method: 'POST',
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: `name=${encodeURIComponent(name)}&rounds=${rounds}`
@@ -839,7 +839,7 @@ function addCondition() {
 }
 
 function removeCondition(conditionId) {
-    fetch('/play/conditions/remove', {
+    securedFetch('/play/conditions/remove', {
         method: 'POST',
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: 'conditionId=' + conditionId
@@ -856,7 +856,7 @@ function removeCondition(conditionId) {
 }
 
 function tickConditions() {
-    fetch('/play/conditions/tick', { method: 'POST' })
+    securedFetch('/play/conditions/tick', { method: 'POST' })
         .then(r => r.json())
         .then(data => {
             if (data.expired.length > 0) {
@@ -871,7 +871,7 @@ function setConcentration() {
     const spell = document.getElementById('concentration-spell').value;
     if (!spell) return;
 
-    fetch('/play/concentration/set', {
+    securedFetch('/play/concentration/set', {
         method: 'POST',
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: 'spell=' + encodeURIComponent(spell)
@@ -884,7 +884,7 @@ function setConcentration() {
 
 function breakConcentration() {
     if (!confirm('Break concentration?')) return;
-    fetch('/play/concentration/break', { method: 'POST' })
+    securedFetch('/play/concentration/break', { method: 'POST' })
         .then(r => r.json())
         .then(data => {
             if (data.success) location.reload();
@@ -912,7 +912,7 @@ function checkConcentration(damage) {
 
 // ── Class Resources ────────────────────────────────────────────────────────
 function useResource(resource) {
-    fetch('/play/resource/use', {
+    securedFetch('/play/resource/use', {
         method: 'POST',
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: 'resource=' + encodeURIComponent(resource)
@@ -924,7 +924,7 @@ function useResource(resource) {
 function restoreResource(resource, amount) {
     let body = 'resource=' + encodeURIComponent(resource);
     if (amount !== undefined) body += '&amount=' + amount;
-    fetch('/play/resource/restore', {
+    securedFetch('/play/resource/restore', {
         method: 'POST',
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body
@@ -945,7 +945,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('[data-resource]').forEach(row => {
         const resource = row.dataset.resource;
         // Fetch current value by doing a 0-amount restore (returns current state)
-        fetch('/play/resource/restore', {
+        securedFetch('/play/resource/restore', {
             method: 'POST',
             headers: {'Content-Type': 'application/x-www-form-urlencoded'},
             body: 'resource=' + encodeURIComponent(resource) + '&amount=0'
@@ -955,24 +955,25 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
+const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
+
 // ── Save Character ─────────────────────────────────────────────────────────
 async function saveCharacter() {
     const btn = document.getElementById('save-char-btn');
     try {
-        const resp = await fetch('/play/draft');
+        const resp = await securedFetch('/play/draft');
         const draft = await resp.json();
         const characters = JSON.parse(localStorage.getItem('characterForge_characters') || '[]');
         const idx = characters.findIndex(c => c.draft &&
             c.draft.characterName === draft.characterName &&
             c.draft.characterClass === draft.characterClass);
-        const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
         const entry = {
             characterName: draft.characterName || 'Unnamed',
-            raceName: cap(draft.raceId) || '',
-            className: cap(draft.characterClass) || '',
+            raceName: cap(draft.raceId),
+            className: cap(draft.characterClass),
             level: draft.level || 1,
             draft,
-            savedAt: new Date().toISOString()
+            savedAt: idx >= 0 ? characters[idx].savedAt : new Date().toISOString()
         };
         if (idx >= 0) characters[idx] = entry;
         else characters.push(entry);
@@ -991,6 +992,7 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js').catch(() => {});
 }
 </script>
+<script src="/js/utils.js"></script>
 <script src="/js/levelup.js"></script>
 <script src="/js/dice-roller.js"></script>
 </body>

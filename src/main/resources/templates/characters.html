@@ -84,10 +84,16 @@
 
 <script>
 const STORAGE_KEY = 'characterForge_characters';
+const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
 function loadCharacters() {
-    const data = localStorage.getItem(STORAGE_KEY);
-    return data ? JSON.parse(data) : [];
+    try {
+        const data = localStorage.getItem(STORAGE_KEY);
+        return data ? JSON.parse(data) : [];
+    } catch {
+        return [];
+    }
 }
 
 function saveCharacters(characters) {
@@ -109,21 +115,20 @@ function renderCharacters() {
     empty.style.display = 'none';
 
     list.innerHTML = characters.map((char, index) => {
-        const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
         const name      = char.characterName || char.name || char.draft?.characterName || 'Unnamed';
-        const raceName  = char.raceName  || cap(char.draft?.raceId)         || '';
-        const className = char.className || cap(char.draft?.characterClass)  || '';
+        const raceName  = char.raceName  || cap(char.draft?.raceId);
+        const className = char.className || cap(char.draft?.characterClass);
         const level     = char.level     || char.draft?.level                || 1;
-        const initials  = name.substring(0, 2).toUpperCase() || 'C';
-        const parts     = [raceName || 'Unknown Race', className || 'Unknown Class', 'Level ' + level];
+        const initials  = name.substring(0, 2).toUpperCase();
+        const parts     = [esc(raceName) || 'Unknown Race', esc(className) || 'Unknown Class', 'Level ' + level];
         const details   = parts.join(' • ');
         const saved = char.savedAt ? new Date(char.savedAt).toLocaleDateString() : 'Unknown';
 
         return `
             <div class="character-card" data-index="${index}">
-                <div class="character-avatar">${initials}</div>
+                <div class="character-avatar">${esc(initials)}</div>
                 <div class="character-info" onclick="loadCharacter(${index})">
-                    <div class="character-name">${name}</div>
+                    <div class="character-name">${esc(name)}</div>
                     <div class="character-details">${details}</div>
                     <div class="character-meta">Saved: ${saved}</div>
                 </div>
@@ -144,7 +149,7 @@ function loadCharacter(index) {
     if (!char) return;
 
     // POST to server to load into session
-    fetch('/characters/load', {
+    securedFetch('/characters/load', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(char.draft)
@@ -269,6 +274,7 @@ window.CharacterStorage = {
 // Initial render
 renderCharacters();
 </script>
+<script src="/js/utils.js"></script>
 <script src="/js/levelup.js"></script>
 </body>
 </html>
