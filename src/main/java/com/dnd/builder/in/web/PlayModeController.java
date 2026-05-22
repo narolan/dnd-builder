@@ -17,6 +17,7 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static com.dnd.builder.in.web.CharacterBuilderController.DRAFT_KEY;
 
@@ -152,7 +153,26 @@ public class PlayModeController {
             model.addAttribute("usedSlots", draft.getUsedSpellSlots());
         }
 
+        // Resolve known spells for the casting UI
+        List<SpellDefinition> knownCantrips = resolveSpells(draft.getChosenCantrips());
+        List<SpellDefinition> knownLeveled  = resolveSpells(draft.getChosenSpells());
+        model.addAttribute("knownCantrips", knownCantrips);
+        model.addAttribute("knownSpells",
+            knownLeveled.stream().collect(
+                Collectors.groupingBy(SpellDefinition::getLevel, LinkedHashMap::new, Collectors.toList())));
+        model.addAttribute("allKnownSpells", knownLeveled);
+
         return "play/dashboard";
+    }
+
+    private List<SpellDefinition> resolveSpells(List<String> ids) {
+        List<SpellDefinition> out = new ArrayList<>();
+        if (ids == null) return out;
+        for (var id : ids) {
+            var sp = spellRepository.findById(id);
+            if (sp != null) out.add(sp);
+        }
+        return out;
     }
 
     // ── HP Tracking ───────────────────────────────────────────────────────────
@@ -711,6 +731,8 @@ public class PlayModeController {
         }
 
         int newLevel = draft.getLevel() + 1;
+        int oldCurrentHp = draft.getCurrentHp();
+        int oldMaxHp     = calculator.calculate(draft).getMaxHitPoints();
         draft.setLevel(newLevel);
 
         // ASI / Feat
@@ -794,6 +816,16 @@ public class PlayModeController {
         }
 
         var derived = calculator.calculate(draft);
+
+        // Carry HP gain into current HP (D&D 5e: current HP rises by the same amount as max HP)
+        int newMaxHp = derived.getMaxHitPoints();
+        int hpGain   = newMaxHp - oldMaxHp;
+        if (oldCurrentHp < 0 || oldCurrentHp >= oldMaxHp) {
+            draft.setCurrentHp(newMaxHp);   // was at full HP — stay at full
+        } else {
+            draft.setCurrentHp(Math.min(newMaxHp, oldCurrentHp + hpGain));
+        }
+
         var result  = new LinkedHashMap<String, Object>();
         result.put("success",  true);
         result.put("newLevel", newLevel);

@@ -56,7 +56,7 @@
                 i == 7 ? 'Spells' : i == 8 ? 'Equipment' : 'Review'}">
     </a>
   </th:block>
-  <form method="post" action="/new" style="display:inline">
+  <form method="post" th:action="@{/new}" style="display:inline">
     <button type="submit" class="nav-link" style="background:none;cursor:pointer;border-color:var(--red);">↺ New</button>
   </form>
 </div>
@@ -84,6 +84,7 @@
 <!-- ══════════════════════════════════════════════════════════════════════════ -->
 <!-- JAVASCRIPT                                                                 -->
 <!-- ══════════════════════════════════════════════════════════════════════════ -->
+<script src="/js/utils.js"></script>
 <script th:inline="javascript">
 /*<![CDATA[*/
 

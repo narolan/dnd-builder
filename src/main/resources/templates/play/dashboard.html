@@ -113,6 +113,16 @@
 .concentration-spell { font-family: 'Cinzel', serif; color: #c0a0f0; display: flex; justify-content: space-between; align-items: center; }
 .concentration-break { cursor: pointer; font-size: .8rem; color: #e05050; }
 
+/* Spell List */
+.spell-section-label { font-size: .75rem; color: var(--gold-dim); text-transform: uppercase; letter-spacing: .05em; margin: 10px 0 6px; }
+.spell-row { display: flex; align-items: center; gap: 6px; padding: 4px 0; border-bottom: 1px solid rgba(201,164,64,.08); }
+.spell-row:last-child { border-bottom: none; }
+.spell-name { font-family: 'Crimson Text', serif; font-size: .95rem; color: var(--cream); flex: 1; }
+.spell-meta { font-size: .75rem; color: var(--cream-dim); white-space: nowrap; }
+.spell-cast-btn { padding: 3px 8px; border: 1px solid var(--border); background: rgba(0,0,0,.3); color: var(--cream-dim); border-radius: 3px; font-size: .75rem; cursor: pointer; transition: all .2s; white-space: nowrap; }
+.spell-cast-btn:hover { border-color: #8060c0; color: #c0a0f0; background: rgba(128,96,192,.15); }
+.spell-stats-bar { font-size: .78rem; color: var(--cream-dim); margin-bottom: 8px; }
+
 /* Navigation */
 .play-nav { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
 .play-nav a { padding: 8px 16px; border: 1px solid var(--border); background: rgba(0,0,0,.3); color: var(--cream); border-radius: 4px; text-decoration: none; font-family: 'Cinzel', serif; font-size: .85rem; transition: all .2s; }
@@ -295,8 +305,8 @@
       <div style="display:flex;gap:8px">
         <select id="concentration-spell" style="flex:1;padding:6px 10px;border:1px solid var(--border);background:rgba(0,0,0,.3);color:var(--cream);border-radius:4px;font-family:'Crimson Text',serif">
           <option value="">Select spell...</option>
-          <th:block th:each="spell : ${draft.chosenSpells}">
-            <option th:value="${spell}" th:text="${spell}">Spell</option>
+          <th:block th:each="spell : ${allKnownSpells}">
+            <option th:value="${spell.name}" th:text="${spell.name}">Spell</option>
           </th:block>
         </select>
         <button class="hp-btn" onclick="setConcentration()">Set</button>
@@ -321,6 +331,39 @@
             </div>
           </div>
         </th:block>
+      </div>
+    </div>
+
+    <!-- Known Spells -->
+    <div class="play-card" th:if="${derived.spellcaster and (!knownCantrips.isEmpty() or !knownSpells.isEmpty())}">
+      <div class="play-card-title">Spells
+        <span class="spell-stats-bar" style="float:right"
+              th:if="${derived.spellAttackBonus != 0 or derived.spellSaveDC != 8}"
+              th:text="'Atk +' + ${derived.spellAttackBonus} + ' | DC ' + ${derived.spellSaveDC}"></span>
+      </div>
+      <!-- Cantrips -->
+      <div th:if="${!knownCantrips.isEmpty()}">
+        <div class="spell-section-label">Cantrips (at will)</div>
+        <div th:each="spell : ${knownCantrips}" class="spell-row">
+          <span class="spell-name" th:text="${spell.name}">Spell</span>
+          <span class="spell-meta" th:text="${spell.castingTime}">1 action</span>
+          <button class="spell-cast-btn" th:data-name="${spell.name}" onclick="castCantrip(this)">Cast</button>
+        </div>
+      </div>
+      <!-- Leveled spells by slot level -->
+      <div th:if="${!knownSpells.isEmpty()}">
+        <div th:each="entry : ${knownSpells}">
+          <div class="spell-section-label" th:text="'Level ' + ${entry.key}"></div>
+          <div th:each="spell : ${entry.value}" class="spell-row">
+            <span class="spell-name" th:text="${spell.name}">Spell</span>
+            <span class="spell-meta" th:text="${spell.castingTime}">1 action</span>
+            <button class="spell-cast-btn"
+                    th:data-name="${spell.name}"
+                    th:data-level="${spell.level}"
+                    th:data-concentration="${spell.concentration}"
+                    onclick="castSpell(this)">Cast</button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -889,6 +932,34 @@ function breakConcentration() {
         .then(data => {
             if (data.success) location.reload();
         });
+}
+
+// ── Spell Casting ──────────────────────────────────────────────────────────
+function castCantrip(btn) {
+    alert(`You cast ${btn.dataset.name}!`);
+}
+
+function castSpell(btn) {
+    const name     = btn.dataset.name;
+    const minLevel = parseInt(btn.dataset.level);
+    const isConc   = btn.dataset.concentration === 'true';
+
+    for (let l = minLevel; l <= 9; l++) {
+        const pip = document.querySelector(`.slot-pip[data-level="${l}"].available`);
+        if (pip) {
+            if (isConc) {
+                securedFetch('/play/concentration/set', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body: 'spell=' + encodeURIComponent(name)
+                }).then(() => toggleSlot(pip));
+            } else {
+                toggleSlot(pip);
+            }
+            return;
+        }
+    }
+    alert(`No spell slots available to cast ${name}!`);
 }
 
 function checkConcentration(damage) {

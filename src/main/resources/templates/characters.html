@@ -268,8 +268,8 @@ window.CharacterStorage = {
     render: renderCharacters
 };
 
-// Initial render
-renderCharacters();
+// Initial render - deferred so utils.js is already loaded
+document.addEventListener('DOMContentLoaded', renderCharacters);
 </script>
 <script src="/js/utils.js"></script>
 <script src="/js/levelup.js"></script>

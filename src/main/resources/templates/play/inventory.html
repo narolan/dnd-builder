@@ -86,7 +86,7 @@
 
 <div class="inv-container">
   <div class="inv-header">
-    <div class="inv-title" th:text="${draft.characterName != null and !draft.characterName.isEmpty()} ? ${draft.characterName} + '''s Inventory' : 'Inventory'">Inventory</div>
+    <div class="inv-title" th:text="${draft.characterName != null and !draft.characterName.isEmpty()} ? |${draft.characterName}'s Inventory| : 'Inventory'">Inventory</div>
     <div class="inv-nav">
       <button onclick="showAddItemModal()">+ Add Item</button>
       <a href="/play">Dashboard</a>
@@ -146,10 +146,29 @@
             <span th:if="${item.acBonus != 0}" th:text="'AC +' + ${item.acBonus}">AC +1</span>
             <span th:if="${item.attackBonus != 0}" th:text="'Attack +' + ${item.attackBonus}">Atk +1</span>
             <span th:if="${item.damageBonus != 0}" th:text="'Damage +' + ${item.damageBonus}">Dmg +1</span>
+            <span th:if="${item.damage != null and !item.damage.isEmpty()}" th:text="${item.damage}" style="color:var(--cream);font-style:italic"></span>
           </div>
           <div class="item-actions">
             <button class="item-btn active" onclick="toggleEquip(this, false)">Unequip</button>
             <button th:if="${item.requiresAttunement}" class="item-btn" th:classappend="${item.attuned} ? 'active' : ''" onclick="toggleAttune(this)" th:text="${item.attuned} ? 'Attuned' : 'Attune'">Attune</button>
+            <th:block th:if="${item.category == 'weapon' and item.damage != null and !item.damage.isEmpty()}">
+              <button class="item-btn"
+                      th:data-name="${item.name}"
+                      th:data-damage="${item.damage}"
+                      th:data-attack-bonus="${item.attackBonus}"
+                      th:data-damage-bonus="${item.damageBonus}"
+                      th:data-prof="${derived.proficiencyBonus}"
+                      th:data-str="${derived.modifiers.get('STR')}"
+                      th:data-dex="${derived.modifiers.get('DEX')}"
+                      onclick="rollWeaponAttack(this)">Roll Attack</button>
+              <button class="item-btn"
+                      th:data-name="${item.name}"
+                      th:data-damage="${item.damage}"
+                      th:data-damage-bonus="${item.damageBonus}"
+                      th:data-str="${derived.modifiers.get('STR')}"
+                      th:data-dex="${derived.modifiers.get('DEX')}"
+                      onclick="rollWeaponDamage(this)">Roll Damage</button>
+            </th:block>
             <button class="item-btn" onclick="removeItem(this)">Drop</button>
           </div>
         </div>
@@ -246,6 +265,10 @@
         <input type="number" class="form-input" id="item-qty" value="1" min="1">
       </div>
     </div>
+    <div class="form-group" id="damage-dice-group" style="display:none">
+      <label class="form-label">Damage Dice (e.g. 1d8 slashing)</label>
+      <input type="text" class="form-input" id="item-damage-dice" placeholder="1d8 slashing">
+    </div>
     <div class="form-group">
       <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
         <input type="checkbox" id="item-attunement">
@@ -268,17 +291,24 @@ function closeModal() {
     document.getElementById('add-item-modal').classList.remove('active');
 }
 
+document.getElementById('item-category').addEventListener('change', function() {
+    document.getElementById('damage-dice-group').style.display = this.value === 'weapon' ? 'block' : 'none';
+});
+
 function addItem() {
+    const category = document.getElementById('item-category').value;
+    const damageDice = document.getElementById('item-damage-dice').value.trim();
     const item = {
         name: document.getElementById('item-name').value,
-        category: document.getElementById('item-category').value,
+        category,
         rarity: document.getElementById('item-rarity').value,
         description: document.getElementById('item-desc').value,
         acBonus: parseInt(document.getElementById('item-ac').value) || 0,
         attackBonus: parseInt(document.getElementById('item-attack').value) || 0,
         damageBonus: parseInt(document.getElementById('item-damage').value) || 0,
         quantity: parseInt(document.getElementById('item-qty').value) || 1,
-        requiresAttunement: document.getElementById('item-attunement').checked
+        requiresAttunement: document.getElementById('item-attunement').checked,
+        damage: category === 'weapon' && damageDice ? damageDice : null
     };
 
     if (!item.name) { alert('Please enter an item name'); return; }
@@ -354,7 +384,39 @@ function editCurrency() {
 // Close modal on escape or click outside
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 document.getElementById('add-item-modal').addEventListener('click', e => { if (e.target.classList.contains('modal-overlay')) closeModal(); });
+
+// ── Weapon Rolls ───────────────────────────────────────────────────────────
+function parseDamage(damageStr) {
+    const m = damageStr.match(/^(\d+)d(\d+)([+-]\d+)?/);
+    if (!m) return { count: 1, sides: 6, bonus: 0 };
+    return {
+        count: parseInt(m[1]),
+        sides: parseInt(m[2]),
+        bonus: m[3] ? parseInt(m[3]) : 0
+    };
+}
+
+function rollWeaponAttack(btn) {
+    const name        = btn.dataset.name;
+    const magicBonus  = parseInt(btn.dataset.attackBonus) || 0;
+    const prof        = parseInt(btn.dataset.prof) || 0;
+    const strMod      = parseInt(btn.dataset.str) || 0;
+    const dexMod      = parseInt(btn.dataset.dex) || 0;
+    const abilityMod  = Math.max(strMod, dexMod);
+    DiceRoller.roll(20, 1, prof + abilityMod + magicBonus, `Attack — ${name}`);
+}
+
+function rollWeaponDamage(btn) {
+    const name        = btn.dataset.name;
+    const dmgBonus    = parseInt(btn.dataset.damageBonus) || 0;
+    const strMod      = parseInt(btn.dataset.str) || 0;
+    const dexMod      = parseInt(btn.dataset.dex) || 0;
+    const abilityMod  = Math.max(strMod, dexMod);
+    const { count, sides, bonus } = parseDamage(btn.dataset.damage);
+    DiceRoller.roll(sides, count, bonus + abilityMod + dmgBonus, `Damage — ${name}`);
+}
 </script>
 <script src="/js/utils.js"></script>
+<script src="/js/dice-roller.js"></script>
 </body>
 </html>

@@ -298,11 +298,11 @@
         <a href="/export" class="btn btn-export" style="text-decoration:none;display:inline-block;padding:10px 28px">
           ↓ Export JSON
         </a>
-        <form method="post" action="/import" enctype="multipart/form-data" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <form method="post" th:action="@{/import}" enctype="multipart/form-data" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
           <input type="file" name="file" accept=".json" style="color:var(--cream-dim);font-size:.85rem"/>
           <button type="submit" class="btn btn-prev">↑ Import JSON</button>
         </form>
-        <form method="post" action="/new">
+        <form method="post" th:action="@{/new}">
           <button type="submit" class="btn btn-danger">↺ Start Over</button>
         </form>
       </div>
