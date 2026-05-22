@@ -87,6 +87,8 @@
 <script th:inline="javascript">
 /*<![CDATA[*/
 
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
 // ─── Race step (step 1) ────────────────────────────────────────────────────
 const RACES_DATA = /*[[${racesJson}]]*/ '[]';
 const RACES = typeof RACES_DATA === 'string' ? JSON.parse(RACES_DATA) : (RACES_DATA || []);
@@ -172,12 +174,12 @@ function bgChanged(bgId) {
         : '';
 
     inner.innerHTML = `
-        <span class="feature-name">${bg.featureName}</span>
-        <span>${bg.featureDesc}</span>
+        <span class="feature-name">${esc(bg.featureName)}</span>
+        <span>${esc(bg.featureDesc)}</span>
         <div style="margin-top:8px;font-size:.8rem;color:var(--cream-dim)">
             Starting gold: <strong>${bg.gold} gp</strong>
-            &nbsp;·&nbsp; Languages: <strong>${langs}</strong>
-            ${tools ? `&nbsp;·&nbsp; Tools: <strong>${tools}</strong>` : ''}
+            &nbsp;·&nbsp; Languages: <strong>${esc(langs)}</strong>
+            ${tools ? `&nbsp;·&nbsp; Tools: <strong>${esc(tools)}</strong>` : ''}
         </div>`;
     box.style.display = 'block';
     const nextBtn = document.getElementById('btn-next');
@@ -227,11 +229,11 @@ function classChanged(classId) {
 
     grid.innerHTML = cls.subclasses.map(sub => `
         <div class="subclass-opt">
-          <input type="radio" name="subclassId" value="${sub.id}" id="sub_${sub.id}"
+          <input type="radio" name="subclassId" value="${esc(sub.id)}" id="sub_${esc(sub.id)}"
                  ${sub.id === prevSubclass ? 'checked' : ''} onchange="_validateClassNext()"/>
-          <label for="sub_${sub.id}">
-            <span class="subclass-name">${sub.name}</span>
-            <span class="subclass-desc">${sub.description}</span>
+          <label for="sub_${esc(sub.id)}">
+            <span class="subclass-name">${esc(sub.name)}</span>
+            <span class="subclass-desc">${esc(sub.description)}</span>
           </label>
         </div>`).join('');
 
@@ -594,7 +596,7 @@ const SpellTooltip = {
         `;
         document.body.appendChild(this.tooltip);
     },
-    show(el, e) {
+    show(el) {
         this.init();
         const name = el.dataset.spellName || 'Unknown';
         const level = el.dataset.spellLevel;
@@ -614,18 +616,18 @@ const SpellTooltip = {
 
         this.tooltip.innerHTML = `
             <div class="tt-header">
-                <span class="tt-name">${name}</span>
-                <span class="tt-level">${levelText}</span>
+                <span class="tt-name">${esc(name)}</span>
+                <span class="tt-level">${esc(levelText)}</span>
             </div>
-            <div class="tt-school">${school}</div>
+            <div class="tt-school">${esc(school)}</div>
             ${tags.length ? '<div class="tt-tags">' + tags.join('') + '</div>' : ''}
             <div class="tt-stats">
-                <div><strong>Casting Time:</strong> ${time}</div>
-                <div><strong>Range:</strong> ${range}</div>
-                <div><strong>Duration:</strong> ${duration}</div>
-                <div><strong>Components:</strong> ${components}</div>
+                <div><strong>Casting Time:</strong> ${esc(time)}</div>
+                <div><strong>Range:</strong> ${esc(range)}</div>
+                <div><strong>Duration:</strong> ${esc(duration)}</div>
+                <div><strong>Components:</strong> ${esc(components)}</div>
             </div>
-            <div class="tt-desc">${desc}</div>
+            <div class="tt-desc">${esc(desc)}</div>
         `;
 
         // Position tooltip
@@ -651,11 +653,11 @@ const SpellTooltip = {
 // Attach tooltip events to spell chips
 document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.spell-chip').forEach(chip => {
-        chip.addEventListener('mouseenter', (e) => SpellTooltip.show(chip, e));
+        chip.addEventListener('mouseenter', () => SpellTooltip.show(chip));
         chip.addEventListener('mouseleave', () => SpellTooltip.hide());
         chip.addEventListener('click', (e) => {
             e.preventDefault();
-            SpellTooltip.show(chip, e);
+            SpellTooltip.show(chip);
             setTimeout(() => SpellTooltip.hide(), 5000);
         });
     });
@@ -816,9 +818,7 @@ document.querySelectorAll('.step-dot').forEach((dot, i) => {
 // Register service worker for PWA
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
-            .then(reg => console.log('SW registered:', reg.scope))
-            .catch(err => console.log('SW registration failed:', err));
+        navigator.serviceWorker.register('/sw.js').catch(() => {});
     });
 }
 </script>

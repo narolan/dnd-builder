@@ -19,26 +19,28 @@ public class CharacterCalculator {
     private final EquipmentRepository  equipmentRepository;
 
     // All skills and their governing ability
-    public static final Map<String, String> SKILL_ABILITY = new LinkedHashMap<>();
+    public static final Map<String, String> SKILL_ABILITY;
     static {
-        SKILL_ABILITY.put("Acrobatics",     "DEX");
-        SKILL_ABILITY.put("Animal Handling","WIS");
-        SKILL_ABILITY.put("Arcana",         "INT");
-        SKILL_ABILITY.put("Athletics",      "STR");
-        SKILL_ABILITY.put("Deception",      "CHA");
-        SKILL_ABILITY.put("History",        "INT");
-        SKILL_ABILITY.put("Insight",        "WIS");
-        SKILL_ABILITY.put("Intimidation",   "CHA");
-        SKILL_ABILITY.put("Investigation",  "INT");
-        SKILL_ABILITY.put("Medicine",       "WIS");
-        SKILL_ABILITY.put("Nature",         "INT");
-        SKILL_ABILITY.put("Perception",     "WIS");
-        SKILL_ABILITY.put("Performance",    "CHA");
-        SKILL_ABILITY.put("Persuasion",     "CHA");
-        SKILL_ABILITY.put("Religion",       "INT");
-        SKILL_ABILITY.put("Sleight of Hand","DEX");
-        SKILL_ABILITY.put("Stealth",        "DEX");
-        SKILL_ABILITY.put("Survival",       "WIS");
+        var m = new LinkedHashMap<String, String>();
+        m.put("Acrobatics",     "DEX");
+        m.put("Animal Handling","WIS");
+        m.put("Arcana",         "INT");
+        m.put("Athletics",      "STR");
+        m.put("Deception",      "CHA");
+        m.put("History",        "INT");
+        m.put("Insight",        "WIS");
+        m.put("Intimidation",   "CHA");
+        m.put("Investigation",  "INT");
+        m.put("Medicine",       "WIS");
+        m.put("Nature",         "INT");
+        m.put("Perception",     "WIS");
+        m.put("Performance",    "CHA");
+        m.put("Persuasion",     "CHA");
+        m.put("Religion",       "INT");
+        m.put("Sleight of Hand","DEX");
+        m.put("Stealth",        "DEX");
+        m.put("Survival",       "WIS");
+        SKILL_ABILITY = Collections.unmodifiableMap(m);
     }
 
     // Race speed overrides (defaults to 30)
