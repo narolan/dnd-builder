@@ -155,7 +155,8 @@ public class ExportController {
 
     private String sanitize(String s, int maxLen) {
         if (s == null) return "";
-        return s.replaceAll("[<>\"']", "").substring(0, Math.min(s.length(), maxLen));
+        String sanitized = s.replaceAll("[<>\"']", "");
+        return sanitized.substring(0, Math.min(sanitized.length(), maxLen));
     }
 
     private CharacterDraft getDraft(HttpSession session) {
