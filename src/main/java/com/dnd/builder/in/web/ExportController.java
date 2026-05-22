@@ -129,17 +129,33 @@ public class ExportController {
             ra.addFlashAttribute("importError", "No file selected.");
             return "redirect:/step/9";
         }
-        try {
-            CharacterDraft imported = objectMapper.readValue(file.getInputStream(), CharacterDraft.class);
-            // Ensure highestStepReached allows full review
-            imported.setHighestStepReached(10);
-            session.setAttribute(CharacterBuilderController.DRAFT_KEY, imported);
-            ra.addFlashAttribute("importSuccess", "Character \"" + safeLabel(imported.getCharacterName()) + "\" imported successfully.");
-            return "redirect:/step/9";
-        } catch (IOException e) {
-            ra.addFlashAttribute("importError", "Could not parse file: " + e.getMessage());
+        String ct = file.getContentType();
+        if (ct == null || (!ct.contains("json") && !ct.equals("application/octet-stream"))) {
+            ra.addFlashAttribute("importError", "Only JSON files are accepted.");
             return "redirect:/step/9";
         }
+        try {
+            CharacterDraft imported = objectMapper.readValue(file.getInputStream(), CharacterDraft.class);
+            imported.setLevel(Math.max(1, Math.min(20, imported.getLevel())));
+            imported.setCurrentHp(Math.max(-1, Math.min(9999, imported.getCurrentHp())));
+            imported.setTempHp(Math.max(0, Math.min(9999, imported.getTempHp())));
+            imported.setCharacterName(sanitize(imported.getCharacterName(), 80));
+            imported.setAlignment(sanitize(imported.getAlignment(), 40));
+            imported.setConcentratingOn(sanitize(imported.getConcentratingOn(), 100));
+            imported.setHighestStepReached(10);
+            session.setAttribute(CharacterBuilderController.DRAFT_KEY, imported);
+            ra.addFlashAttribute("importSuccess",
+                "Character \"" + safeLabel(imported.getCharacterName()) + "\" imported successfully.");
+            return "redirect:/step/9";
+        } catch (IOException e) {
+            ra.addFlashAttribute("importError", "Could not parse file: invalid character data format.");
+            return "redirect:/step/9";
+        }
+    }
+
+    private String sanitize(String s, int maxLen) {
+        if (s == null) return "";
+        return s.replaceAll("[<>\"']", "").substring(0, Math.min(s.length(), maxLen));
     }
 
     private CharacterDraft getDraft(HttpSession session) {
