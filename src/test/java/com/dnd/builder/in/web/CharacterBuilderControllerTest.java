@@ -80,7 +80,7 @@ class CharacterBuilderControllerTest {
         @Test
         @DisplayName("loadCharacter() stores draft in session and returns success")
         void loadCharacterStoresInSession() {
-            CharacterDraft draft = new CharacterDraft();
+            CharacterDraft draft = CharacterDraft.fresh();
             draft.setCharacterName("Aria");
             draft.setLevel(5);
 

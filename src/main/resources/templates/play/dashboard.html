@@ -665,7 +665,7 @@ function toggleSlot(el) {
     const level = el.dataset.level;
     const isAvailable = el.classList.contains('available');
     const endpoint = isAvailable ? '/play/slots/use' : '/play/slots/restore';
-    fetch(endpoint, { method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body: 'level=' + level })
+    securedFetch(endpoint, { method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body: 'level=' + level })
         .then(() => location.reload());
 }
 
@@ -795,7 +795,7 @@ function rollSkill(el) {
 // ── Death Saves ────────────────────────────────────────────────────────────
 function deathSave(type, target) {
     const endpoint = type === 'success' ? '/play/deathsaves/success' : '/play/deathsaves/failure';
-    fetch(endpoint, { method: 'POST' })
+    securedFetch(endpoint, { method: 'POST' })
         .then(r => r.json())
         .then(data => {
             // Update pips
@@ -954,8 +954,6 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(data => updateResourceDisplay(data));
     });
 });
-
-const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
 
 // ── Save Character ─────────────────────────────────────────────────────────
 async function saveCharacter() {

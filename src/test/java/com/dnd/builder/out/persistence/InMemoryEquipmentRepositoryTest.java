@@ -62,13 +62,6 @@ class InMemoryEquipmentRepositoryTest {
     @DisplayName("All choice IDs within a class are unique")
     void choiceIdsUniqueWithinClass() {
         var slots = repository.findByClass("rogue");
-        long totalChoices = slots.stream().mapToLong(s -> s.choices().size()).sum();
-        long distinctIds = slots.stream()
-                .flatMap(s -> s.choices().stream())
-                .map(c -> c.optionId())
-                .distinct().count();
-        // each slot uses a/b/c, so we expect each slot's choices to have distinct ids
-        // (they repeat across slots, but within slot they're distinct)
         for (var slot : slots) {
             long distinctSlotIds = slot.choices().stream().map(c -> c.optionId()).distinct().count();
             assertEquals(slot.choices().size(), distinctSlotIds,

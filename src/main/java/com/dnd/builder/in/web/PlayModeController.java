@@ -691,8 +691,7 @@ public class PlayModeController {
                                             ? classDef.getSubclasses() : List.of());
 
         buildSpellGainInfo(classId, draft, sc, derived, currentLevel, newLevel, result);
-        buildClassSpecificChoices(classId, draft, derived, sc, currentLevel, newLevel,
-                (int) result.get("maxNewSpellLevel"), result);
+        buildClassSpecificChoices(classId, draft, derived, sc, currentLevel, newLevel, result);
         return result;
     }
 
@@ -827,10 +826,9 @@ public class PlayModeController {
                 .filter(s -> !draft.getChosenCantrips().contains(s.getId())).toList()
             : List.of();
 
-        int maxLvl = maxNewSpellLevel;
         var availableSpells = (newSpellsCount > 0 || wizardSpellbookGain > 0)
             ? spellRepository.findByClass(classId, null).stream()
-                .filter(s -> s.getLevel() > 0 && s.getLevel() <= maxLvl)
+                .filter(s -> s.getLevel() > 0 && s.getLevel() <= maxNewSpellLevel)
                 .filter(s -> !draft.getChosenSpells().contains(s.getId()) && !draft.getSpellbookSpells().contains(s.getId()))
                 .sorted(Comparator.comparingInt(SpellDefinition::getLevel).thenComparing(SpellDefinition::getName))
                 .toList()
@@ -848,8 +846,9 @@ public class PlayModeController {
 
     private void buildClassSpecificChoices(String classId, CharacterDraft draft, DerivedStats derived,
                                            ClassDefinition.SpellcastingInfo sc,
-                                           int currentLevel, int newLevel, int maxNewSpellLevel,
+                                           int currentLevel, int newLevel,
                                            Map<String, Object> result) {
+        int maxNewSpellLevel = ClassRepository.maxSpellLevel(classId, newLevel);
         // Expertise (Bard L3/10, Rogue L6)
         boolean needsExpertise = ("bard".equals(classId) && (newLevel == 3 || newLevel == 10))
                               || ("rogue".equals(classId) && newLevel == 6);
@@ -933,11 +932,10 @@ public class PlayModeController {
         int mysticArcanumLevel = "warlock".equals(classId) ? switch (newLevel) {
             case 11 -> 6; case 13 -> 7; case 15 -> 8; case 17 -> 9; default -> 0;
         } : 0;
-        int finalMysticLevel = mysticArcanumLevel;
         result.put("needsMysticArcanum",      mysticArcanumLevel > 0);
         result.put("mysticArcanumLevel",      mysticArcanumLevel);
         result.put("availableMysticArcanum",  mysticArcanumLevel > 0
-            ? spellRepository.findByClass("warlock", finalMysticLevel).stream()
+            ? spellRepository.findByClass("warlock", mysticArcanumLevel).stream()
                 .filter(sp -> !draft.getChosenSpells().contains(sp.getId())).toList()
             : List.of());
     }

@@ -498,13 +498,9 @@ public class CharacterBuilderController {
         // Paladin/Ranger at level 1 have isPrepareSpells=true but no slots yet
         model.addAttribute("isPreparedCasterNoSpells", sc.isPrepareSpells() && !isWizard && maxSpellLvl == 0);
 
-        var allSpells = spellRepository.findByClass(classId, null);
-        var spellsByLevel = new LinkedHashMap<Integer, List<SpellDefinition>>();
-        for (int lvl = 1; lvl <= maxSpellLvl; lvl++) {
-            final int spellLvl = lvl;
-            var atLevel = allSpells.stream().filter(s -> s.getLevel() == spellLvl).collect(Collectors.toList());
-            if (!atLevel.isEmpty()) spellsByLevel.put(lvl, atLevel);
-        }
+        var spellsByLevel = spellRepository.findByClass(classId, null).stream()
+            .filter(s -> s.getLevel() > 0 && s.getLevel() <= maxSpellLvl)
+            .collect(Collectors.groupingBy(SpellDefinition::getLevel, LinkedHashMap::new, Collectors.toList()));
         model.addAttribute("spellsByLevel", spellsByLevel);
 
         if (isKnownCaster && !isWizard) {
@@ -543,9 +539,9 @@ public class CharacterBuilderController {
         }
 
         var chosenSpells = new ArrayList<SpellDefinition>();
-        for (var id : draft.getChosenCantrips()) { var sp = spellRepository.findById(id); if (sp != null) chosenSpells.add(sp); }
-        for (var id : draft.getChosenSpells())   { var sp = spellRepository.findById(id); if (sp != null) chosenSpells.add(sp); }
-        for (var id : draft.getSpellbookSpells()) { var sp = spellRepository.findById(id); if (sp != null) chosenSpells.add(sp); }
+        resolveSpells(draft.getChosenCantrips(), chosenSpells);
+        resolveSpells(draft.getChosenSpells(), chosenSpells);
+        resolveSpells(draft.getSpellbookSpells(), chosenSpells);
         model.addAttribute("chosenSpells", chosenSpells);
 
         var spellNames = new ArrayList<String>();
@@ -577,6 +573,13 @@ public class CharacterBuilderController {
             }
         }
         model.addAttribute("asiSummary", asiSummary);
+    }
+
+    private void resolveSpells(List<String> ids, List<SpellDefinition> out) {
+        for (var id : ids) {
+            var sp = spellRepository.findById(id);
+            if (sp != null) out.add(sp);
+        }
     }
 
     // ── Session helpers ───────────────────────────────────────────────────────

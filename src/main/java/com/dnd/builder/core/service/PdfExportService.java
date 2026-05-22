@@ -25,9 +25,9 @@ public class PdfExportService {
                               List<String> spellNames, List<ClassFeature> features) throws Exception {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         Document document = new Document(PageSize.LETTER, 36, 36, 36, 36);
+        try {
         PdfWriter.getInstance(document, baos);
         document.open();
-        try {
 
         // Fonts
         Font titleFont = new Font(Font.HELVETICA, 24, Font.BOLD, GOLD);

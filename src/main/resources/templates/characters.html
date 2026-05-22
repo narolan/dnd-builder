@@ -84,9 +84,6 @@
 
 <script>
 const STORAGE_KEY = 'characterForge_characters';
-const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
-const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-
 function loadCharacters() {
     try {
         const data = localStorage.getItem(STORAGE_KEY);

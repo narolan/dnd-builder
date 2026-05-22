@@ -148,8 +148,9 @@ class InMemorySpellRepositoryTest {
         @Test
         @DisplayName("Non-ritual spells are marked correctly")
         void nonRitualSpells() {
-            assertNotNull(repository.findById("fireball"));
-            assertFalse(repository.findById("fireball").isRitual());
+            var fireball = repository.findById("fireball");
+            assertNotNull(fireball);
+            assertFalse(fireball.isRitual());
             assertFalse(repository.findById("magic_missile").isRitual());
             assertFalse(repository.findById("cure_wounds").isRitual());
         }

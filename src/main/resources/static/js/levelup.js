@@ -20,7 +20,7 @@ const LevelUp = (() => {
       const char = characters[_charIndex];
       if (!char) { alert('Character not found.'); return; }
 
-      const loadResp = await fetch('/characters/load', {
+      const loadResp = await securedFetch('/characters/load', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(char.draft)
@@ -455,7 +455,7 @@ const LevelUp = (() => {
     if (confirmBtn) { confirmBtn.disabled = true; confirmBtn.textContent = 'Levelling up...'; }
 
     try {
-      const resp = await fetch('/play/levelup', {
+      const resp = await securedFetch('/play/levelup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)

@@ -87,8 +87,6 @@
 <script th:inline="javascript">
 /*<![CDATA[*/
 
-const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-
 // ─── Race step (step 1) ────────────────────────────────────────────────────
 const RACES_DATA = /*[[${racesJson}]]*/ '[]';
 const RACES = typeof RACES_DATA === 'string' ? JSON.parse(RACES_DATA) : (RACES_DATA || []);
