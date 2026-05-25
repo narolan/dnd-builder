@@ -27,7 +27,6 @@ class CharacterCalculatorTest {
             new InMemoryRaceRepository(),
             new InMemoryClassRepository(),
             new InMemoryBackgroundRepository(),
-            new InMemorySpellRepository(),
             new InMemoryEquipmentRepository()
         );
     }

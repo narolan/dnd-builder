@@ -30,7 +30,7 @@ class CharacterBuilderControllerTest {
         var spellRepo = new InMemorySpellRepository();
         var eqRepo = new InMemoryEquipmentRepository();
         var featRepo = new InMemoryFeatRepository();
-        calculator = new CharacterCalculator(raceRepo, classRepo, bgRepo, spellRepo, eqRepo);
+        calculator = new CharacterCalculator(raceRepo, classRepo, bgRepo, eqRepo);
         controller = new CharacterBuilderController(
                 raceRepo, classRepo, bgRepo, spellRepo, eqRepo, featRepo,
                 calculator, new ObjectMapper()

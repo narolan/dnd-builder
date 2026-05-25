@@ -41,7 +41,6 @@ class PlayModeControllerTest {
                 new InMemoryRaceRepository(),
                 (InMemoryClassRepository) classRepository,
                 new InMemoryBackgroundRepository(),
-                new InMemorySpellRepository(),
                 new InMemoryEquipmentRepository()
         );
         controller = new PlayModeController(

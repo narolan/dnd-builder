@@ -35,7 +35,7 @@ class ExportControllerTest {
         var bgRepo = new InMemoryBackgroundRepository();
         var spellRepo = new InMemorySpellRepository();
         var eqRepo = new InMemoryEquipmentRepository();
-        calculator = new CharacterCalculator(raceRepo, classRepo, bgRepo, spellRepo, eqRepo);
+        calculator = new CharacterCalculator(raceRepo, classRepo, bgRepo, eqRepo);
 
         controller = new ExportController(
                 objectMapper, calculator, new PdfExportService(),

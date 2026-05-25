@@ -13,51 +13,16 @@ import java.util.*;
 @Service
 public class CharacterCalculator {
 
-    private final RaceRepository       raceRepository;
-    private final ClassRepository      classRepository;
+    private final RaceRepository raceRepository;
+    private final ClassRepository classRepository;
     private final BackgroundRepository backgroundRepository;
-    private final EquipmentRepository  equipmentRepository;
+    private final EquipmentRepository equipmentRepository;
 
-    // All skills and their governing ability
-    public static final Map<String, String> SKILL_ABILITY;
-    static {
-        var m = new LinkedHashMap<String, String>();
-        m.put("Acrobatics",     "DEX");
-        m.put("Animal Handling","WIS");
-        m.put("Arcana",         "INT");
-        m.put("Athletics",      "STR");
-        m.put("Deception",      "CHA");
-        m.put("History",        "INT");
-        m.put("Insight",        "WIS");
-        m.put("Intimidation",   "CHA");
-        m.put("Investigation",  "INT");
-        m.put("Medicine",       "WIS");
-        m.put("Nature",         "INT");
-        m.put("Perception",     "WIS");
-        m.put("Performance",    "CHA");
-        m.put("Persuasion",     "CHA");
-        m.put("Religion",       "INT");
-        m.put("Sleight of Hand","DEX");
-        m.put("Stealth",        "DEX");
-        m.put("Survival",       "WIS");
-        SKILL_ABILITY = Collections.unmodifiableMap(m);
-    }
-
-    // Race speed overrides (defaults to 30)
-    private static final Map<String, Integer> RACE_SPEED = Map.ofEntries(
-        Map.entry("dwarf_hill",25), Map.entry("dwarf_mountain",25), Map.entry("dwarf_duergar",25),
-        Map.entry("halfling_lightfoot",25), Map.entry("halfling_stout",25), Map.entry("halfling_ghostwise",25),
-        Map.entry("gnome_forest",25), Map.entry("gnome_rock",25), Map.entry("gnome_deep",25),
-        Map.entry("goblin",25),
-        Map.entry("elf_wood",35)
-    );
-
-    public CharacterCalculator(RaceRepository r, ClassRepository c, BackgroundRepository b,
-                                SpellRepository sp, EquipmentRepository eq) {
-        this.raceRepository       = r;
-        this.classRepository      = c;
+    public CharacterCalculator(RaceRepository r, ClassRepository c, BackgroundRepository b, EquipmentRepository eq) {
+        this.raceRepository = r;
+        this.classRepository = c;
         this.backgroundRepository = b;
-        this.equipmentRepository  = eq;
+        this.equipmentRepository = eq;
     }
 
     public DerivedStats calculate(CharacterDraft draft) {
@@ -68,6 +33,50 @@ public class CharacterCalculator {
             .filter(InventoryItem::isEquipped).toList();
 
         // ── 1. Final scores ──────────────────────────────────────────────────
+        var finalScores = calculateFinalScores(draft, equippedItems);
+        ds.setFinalScores(finalScores);
+
+        // ── 2. Modifiers ─────────────────────────────────────────────────────
+        var mods = calculateModifiers(finalScores);
+        ds.setModifiers(mods);
+
+        // ── 3. Proficiency bonus ─────────────────────────────────────────────
+        int pb = ClassRepository.proficiencyBonus(draft.getLevel());
+        ds.setProficiencyBonus(pb);
+
+        // ── 4. Basic stats ───────────────────────────────────────────────────
+        calculateBasicStats(ds, mods, draft, equippedItems);
+
+        // ── 5. HP ────────────────────────────────────────────────────────
+        calculateHP(ds, draft, mods);
+
+        // ── 6. Armor Class ───────────────────────────────────────────────────
+        calculateArmorClass(ds, draft, mods, equippedItems);
+
+        // ── 7. Saving throws ─────────────────────────────────────────────────
+        calculateSavingThrows(ds, draft, mods, pb);
+
+        // ── 8. Skills ────────────────────────────────────────────────────────
+        calculateSkills(ds, draft, mods, pb);
+
+        // ── 9. Passive Perception ────────────────────────────────────────────
+        ds.setPassivePerception(10 + ds.getSkillBonuses().get("Perception"));
+
+        // ── 10. Spellcasting ─────────────────────────────────────────────────
+        calculateSpellcasting(ds, draft, mods, pb, equippedItems);
+
+        // ── 11. Proficiency lists ─────────────────────────────────────────────
+        calculateProficiencyLists(ds, draft);
+
+        // ── 12. Equipment summary ─────────────────────────────────────────────
+        calculateEquipmentSummary(ds, draft);
+
+        return ds;
+    }
+
+    // ── Helper Methods ───────────────────────────────────────────────────────────
+
+    private Map<String, Integer> calculateFinalScores(CharacterDraft draft, List<InventoryItem> equippedItems) {
         var finalScores = new LinkedHashMap<String, Integer>();
         for (var entry : draft.getBaseScores().entrySet()) {
             int base = entry.getValue();
@@ -82,26 +91,25 @@ public class CharacterCalculator {
                     finalScores.computeIfPresent(stat, (k, v) -> v + bonus));
             }
         }
-        ds.setFinalScores(finalScores);
+        return finalScores;
+    }
 
-        // ── 2. Modifiers ─────────────────────────────────────────────────────
+    private Map<String, Integer> calculateModifiers(Map<String, Integer> finalScores) {
         var mods = new LinkedHashMap<String, Integer>();
         finalScores.forEach((k, v) -> mods.put(k, modifier(v)));
-        ds.setModifiers(mods);
+        return mods;
+    }
 
-        // ── 3. Proficiency bonus ─────────────────────────────────────────────
-        int pb = ClassRepository.proficiencyBonus(draft.getLevel());
-        ds.setProficiencyBonus(pb);
-
-        // ── 4. Basic stats ───────────────────────────────────────────────────
+    private void calculateBasicStats(DerivedStats ds, Map<String, Integer> mods, CharacterDraft draft, List<InventoryItem> equippedItems) {
         ds.setInitiative(mods.get("DEX"));
         int raceSpeed = RACE_SPEED.getOrDefault(draft.getRaceId(), 30);
         int itemSpeedBonus = equippedItems.stream().mapToInt(InventoryItem::getSpeedBonus).sum();
         ds.setSpeed(raceSpeed + itemSpeedBonus);
+    }
 
-        // ── 5. HP ────────────────────────────────────────────────────────────
+    private void calculateHP(DerivedStats ds, CharacterDraft draft, Map<String, Integer> mods) {
         var classDef = classRepository.findById(draft.getCharacterClass());
-        int conMod   = mods.get("CON");
+        int conMod = mods.get("CON");
         if (classDef != null) {
             int hitDie = classDef.getHitDie();
             // Level 1: max hit die + CON mod. Further levels: avg + CON mod.
@@ -112,10 +120,9 @@ public class CharacterCalculator {
             ds.setMaxHitPoints(8 + conMod);
             ds.setHitDice(8);
         }
+    }
 
-        // ── 6. Armor Class ───────────────────────────────────────────────────
-        // Default unarmored: 10 + DEX. Equipment step may upgrade this.
-        // Barbarian unarmored defense: 10 + DEX + CON
+    private void calculateArmorClass(DerivedStats ds, CharacterDraft draft, Map<String, Integer> mods, List<InventoryItem> equippedItems) {
         int dexMod = mods.get("DEX");
         if ("barbarian".equals(draft.getCharacterClass())) {
             ds.setArmorClass(10 + dexMod + mods.get("CON"));
@@ -130,8 +137,10 @@ public class CharacterCalculator {
         // Apply AC bonuses from equipped items (rings, cloaks, etc.)
         int itemAcBonus = equippedItems.stream().mapToInt(InventoryItem::getAcBonus).sum();
         if (itemAcBonus != 0) ds.setArmorClass(ds.getArmorClass() + itemAcBonus);
+    }
 
-        // ── 7. Saving throws ─────────────────────────────────────────────────
+    private void calculateSavingThrows(DerivedStats ds, CharacterDraft draft, Map<String, Integer> mods, int pb) {
+        var classDef = classRepository.findById(draft.getCharacterClass());
         var saveProfs = classDef != null ? classDef.getSavingThrows() : List.<String>of();
         ds.setSavingThrowProficiencies(saveProfs);
         var saves = new LinkedHashMap<String, Integer>();
@@ -140,8 +149,9 @@ public class CharacterCalculator {
             saves.put(stat, bonus);
         }
         ds.setSavingThrows(saves);
+    }
 
-        // ── 8. Skills ────────────────────────────────────────────────────────
+    private void calculateSkills(DerivedStats ds, CharacterDraft draft, Map<String, Integer> mods, int pb) {
         Set<String> allProfs = new LinkedHashSet<>(draft.getSkillProficiencies());
         // Background fixed skills
         var bg = backgroundRepository.findById(draft.getBackground());
@@ -152,18 +162,17 @@ public class CharacterCalculator {
 
         var skillBonuses = new LinkedHashMap<String, Integer>();
         SKILL_ABILITY.forEach((skill, ability) -> {
-            int mod  = mods.get(ability);
+            int mod = mods.get(ability);
             int bonus = mod + (allProfs.contains(skill) ? pb : 0);
             skillBonuses.put(skill, bonus);
         });
         ds.setSkillBonuses(skillBonuses);
+    }
 
-        // ── 9. Passive Perception ────────────────────────────────────────────
-        ds.setPassivePerception(10 + skillBonuses.get("Perception"));
-
-        // ── 10. Spellcasting ─────────────────────────────────────────────────
+    private void calculateSpellcasting(DerivedStats ds, CharacterDraft draft, Map<String, Integer> mods, int pb, List<InventoryItem> equippedItems) {
+        var classDef = classRepository.findById(draft.getCharacterClass());
         if (classDef != null && classDef.getSpellcasting() != null) {
-            var sc     = classDef.getSpellcasting();
+            var sc = classDef.getSpellcasting();
             boolean isHalf = "half".equals(sc.getType());
             ds.setSpellcaster(!isHalf || draft.getLevel() >= 2);
             ds.setSpellcastingAbility(sc.getAbility());
@@ -190,12 +199,15 @@ public class CharacterCalculator {
         } else {
             ds.setSpellcaster(false);
         }
+    }
 
-        // ── 11. Proficiency lists ─────────────────────────────────────────────
+    private void calculateProficiencyLists(DerivedStats ds, CharacterDraft draft) {
+        var classDef = classRepository.findById(draft.getCharacterClass());
         if (classDef != null) {
             ds.setArmorProficiencies(classDef.getArmorProficiencies());
             ds.setWeaponProficiencies(classDef.getWeaponProficiencies());
             var tools = new ArrayList<>(classDef.getToolProficiencies());
+            var bg = backgroundRepository.findById(draft.getBackground());
             if (bg != null) tools.addAll(bg.getToolProficiencies());
             ds.setToolProficiencies(tools);
         }
@@ -204,15 +216,18 @@ public class CharacterCalculator {
         var languages = new ArrayList<String>();
         languages.add("Common");
         addRaceLanguages(draft, languages);
+        var bg = backgroundRepository.findById(draft.getBackground());
         if (bg != null && bg.getBonusLanguages() > 0) {
             for (int i = 0; i < bg.getBonusLanguages(); i++) {
                 languages.add("(choose language " + (i+1) + ")");
             }
         }
         ds.setLanguages(languages);
+    }
 
-        // ── 12. Equipment summary ─────────────────────────────────────────────
+    private void calculateEquipmentSummary(DerivedStats ds, CharacterDraft draft) {
         var eqSummary = new ArrayList<String>();
+        var classDef = classRepository.findById(draft.getCharacterClass());
         var slots = classDef != null ? equipmentRepository.findByClass(classDef.getId()) : List.<EquipmentSlot>of();
         for (var slot : slots) {
             String chosen = draft.getEquipmentChoices().get(slot.slotId());
@@ -225,12 +240,47 @@ public class CharacterCalculator {
             }
         }
         ds.setEquipmentSummary(eqSummary);
+        var bg = backgroundRepository.findById(draft.getBackground());
         if (bg != null) ds.setBackgroundEquipment(bg.getEquipment());
-
-        return ds;
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
+    // ── Constants ───────────────────────────────────────────────────────────
+
+    // All skills and their governing ability
+    public static final Map<String, String> SKILL_ABILITY;
+    static {
+        var m = new LinkedHashMap<String, String>();
+        m.put("Acrobatics", "DEX");
+        m.put("Animal Handling", "WIS");
+        m.put("Arcana", "INT");
+        m.put("Athletics", "STR");
+        m.put("Deception", "CHA");
+        m.put("History", "INT");
+        m.put("Insight", "WIS");
+        m.put("Intimidation", "CHA");
+        m.put("Investigation", "INT");
+        m.put("Medicine", "WIS");
+        m.put("Nature", "INT");
+        m.put("Perception", "WIS");
+        m.put("Performance", "CHA");
+        m.put("Persuasion", "CHA");
+        m.put("Religion", "INT");
+        m.put("Sleight of Hand", "DEX");
+        m.put("Stealth", "DEX");
+        m.put("Survival", "WIS");
+        SKILL_ABILITY = Collections.unmodifiableMap(m);
+    }
+
+    // Race speed overrides (defaults to 30)
+    private static final Map<String, Integer> RACE_SPEED = Map.ofEntries(
+        Map.entry("dwarf_hill",25), Map.entry("dwarf_mountain",25), Map.entry("dwarf_duergar",25),
+        Map.entry("halfling_lightfoot",25), Map.entry("halfling_stout",25), Map.entry("halfling_ghostwise",25),
+        Map.entry("gnome_forest",25), Map.entry("gnome_rock",25), Map.entry("gnome_deep",25),
+        Map.entry("goblin",25),
+        Map.entry("elf_wood",35)
+    );
+
+    // ── Helper Methods ───────────────────────────────────────────────────────────
 
     public int getRacialBonus(CharacterDraft draft, String statKey) {
         var race = raceRepository.findById(draft.getRaceId());
