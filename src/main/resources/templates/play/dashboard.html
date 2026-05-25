@@ -427,6 +427,36 @@
       <button class="roll-execute-btn" onclick="executeRoll()">Roll</button>
     </div>
 
+    <!-- Equipped Weapons -->
+    <div class="play-card" th:if="${!equippedWeapons.isEmpty()}">
+      <div class="play-card-title">Weapons</div>
+      <th:block>
+        <div th:each="item : ${equippedWeapons}" style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid rgba(201,164,64,.1)">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+            <span style="font-family:'Cinzel',serif;font-size:.9rem;color:var(--cream)" th:text="${item.name}">Weapon</span>
+            <span style="font-size:.75rem;color:var(--gold-dim)" th:text="${item.damage}">1d8</span>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="hp-btn"
+                    th:data-name="${item.name}"
+                    th:data-attack-bonus="${item.attackBonus}"
+                    th:data-damage-bonus="${item.damageBonus}"
+                    th:data-prof="${derived.proficiencyBonus}"
+                    th:data-str="${derived.modifiers.get('STR')}"
+                    th:data-dex="${derived.modifiers.get('DEX')}"
+                    onclick="rollWeaponAttack(this)">Roll Attack</button>
+            <button class="hp-btn"
+                    th:data-name="${item.name}"
+                    th:data-damage="${item.damage}"
+                    th:data-damage-bonus="${item.damageBonus}"
+                    th:data-str="${derived.modifiers.get('STR')}"
+                    th:data-dex="${derived.modifiers.get('DEX')}"
+                    onclick="rollWeaponDamage(this)">Roll Damage</button>
+          </div>
+        </div>
+      </th:block>
+    </div>
+
     <!-- Core Stats Reference -->
     <div class="play-card">
       <div class="play-card-title">Combat Stats</div>
@@ -1054,6 +1084,29 @@ async function saveCharacter() {
         btn.textContent = 'Error!';
         setTimeout(() => btn.textContent = 'Save', 1500);
     }
+}
+
+// ── Weapon Rolls ───────────────────────────────────────────────────────────
+function parseDamage(damageStr) {
+    const m = damageStr.match(/^(\d+)d(\d+)([+-]\d+)?/);
+    if (!m) return { count: 1, sides: 6, bonus: 0 };
+    return { count: parseInt(m[1]), sides: parseInt(m[2]), bonus: m[3] ? parseInt(m[3]) : 0 };
+}
+
+function rollWeaponAttack(btn) {
+    const magicBonus = parseInt(btn.dataset.attackBonus) || 0;
+    const prof       = parseInt(btn.dataset.prof) || 0;
+    const strMod     = parseInt(btn.dataset.str) || 0;
+    const dexMod     = parseInt(btn.dataset.dex) || 0;
+    DiceRoller.roll(20, 1, prof + Math.max(strMod, dexMod) + magicBonus, `Attack — ${btn.dataset.name}`);
+}
+
+function rollWeaponDamage(btn) {
+    const dmgBonus   = parseInt(btn.dataset.damageBonus) || 0;
+    const strMod     = parseInt(btn.dataset.str) || 0;
+    const dexMod     = parseInt(btn.dataset.dex) || 0;
+    const { count, sides, bonus } = parseDamage(btn.dataset.damage);
+    DiceRoller.roll(sides, count, bonus + Math.max(strMod, dexMod) + dmgBonus, `Damage — ${btn.dataset.name}`);
 }
 
 // Register service worker

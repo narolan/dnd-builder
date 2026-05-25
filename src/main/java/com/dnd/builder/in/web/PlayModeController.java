@@ -162,6 +162,15 @@ public class PlayModeController {
                 Collectors.groupingBy(SpellDefinition::getLevel, LinkedHashMap::new, Collectors.toList())));
         model.addAttribute("allKnownSpells", knownLeveled);
 
+        // Equipped weapons for the dashboard attack/damage roll UI
+        var equippedWeapons = draft.getInventory().stream()
+            .filter(i -> i.isEquipped()
+                      && "weapon".equals(i.getCategory())
+                      && i.getDamage() != null
+                      && !i.getDamage().isEmpty())
+            .toList();
+        model.addAttribute("equippedWeapons", equippedWeapons);
+
         return "play/dashboard";
     }
 

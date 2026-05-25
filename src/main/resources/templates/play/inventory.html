@@ -265,7 +265,7 @@
         <input type="number" class="form-input" id="item-qty" value="1" min="1">
       </div>
     </div>
-    <div class="form-group" id="damage-dice-group" style="display:none">
+    <div class="form-group" id="damage-dice-group">
       <label class="form-label">Damage Dice (e.g. 1d8 slashing)</label>
       <input type="text" class="form-input" id="item-damage-dice" placeholder="1d8 slashing">
     </div>
@@ -285,6 +285,8 @@
 <script>
 function showAddItemModal() {
     document.getElementById('add-item-modal').classList.add('active');
+    const cat = document.getElementById('item-category').value;
+    document.getElementById('damage-dice-group').style.display = cat === 'weapon' ? 'block' : 'none';
 }
 
 function closeModal() {
