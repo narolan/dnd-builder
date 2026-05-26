@@ -490,6 +490,30 @@ class PlayModeControllerTest {
             assertEquals(0, result.get("successes"));
             assertEquals(0, result.get("failures"));
         }
+
+        @Test
+        @DisplayName("Nat-20 death save revives at 1 HP and resets saves (PHB p. 197)")
+        void criticalSuccessRevives() {
+            draft.setDeathSaveSuccesses(1);
+            draft.setDeathSaveFailures(2);
+
+            Map<String, Object> result = controller.deathSaveCriticalSuccess(session);
+
+            assertEquals(true, result.get("revived"));
+            assertEquals(1, draft.getCurrentHp());
+            assertEquals(0, draft.getDeathSaveSuccesses());
+            assertEquals(0, draft.getDeathSaveFailures());
+        }
+
+        @Test
+        @DisplayName("Two consecutive failures accumulate 2 failures (models nat-1 double-failure, PHB p. 197)")
+        void twoFailuresFromTwoCalls() {
+            controller.deathSaveFailure(session);
+            Map<String, Object> result = controller.deathSaveFailure(session);
+
+            assertEquals(2, result.get("failures"));
+            assertEquals(false, result.get("dead"));
+        }
     }
 
     @Nested

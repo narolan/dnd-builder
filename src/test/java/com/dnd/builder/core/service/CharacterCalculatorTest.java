@@ -2,6 +2,7 @@ package com.dnd.builder.core.service;
 
 import com.dnd.builder.core.model.CharacterDraft;
 import com.dnd.builder.core.model.DerivedStats;
+import com.dnd.builder.core.model.InventoryItem;
 import com.dnd.builder.out.persistence.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -171,6 +172,31 @@ class CharacterCalculatorTest {
             // 10 + DEX (+3) + WIS (+3) = 16
             assertEquals(16, stats.getArmorClass());
         }
+
+        @Test
+        @DisplayName("Barbarian wearing armor does not use Unarmored Defense (PHB p. 48)")
+        void barbarianArmorSuppressesUnarmoredDefense() {
+            CharacterDraft draft = CharacterDraft.fresh();
+            draft.setCharacterClass("barbarian");
+            draft.setRaceId("human_standard");
+            draft.setLevel(1);
+            // DEX 14 + human +1 = 15 (+2 mod), CON 16 + human +1 = 17 (+3 mod)
+            // Unarmored Defense would be 10 + 2 + 3 = 15
+            draft.setBaseScores(Map.of("STR", 16, "DEX", 14, "CON", 16, "INT", 8, "WIS", 10, "CHA", 10));
+
+            InventoryItem chainMail = new InventoryItem();
+            chainMail.setName("Chain Mail");
+            chainMail.setCategory("armor");
+            chainMail.setBaseAc(16);
+            chainMail.setEquipped(true);
+            draft.addItem(chainMail);
+
+            DerivedStats stats = calculator.calculate(draft);
+            // CON mod must NOT be added — Unarmored Defense is suppressed by armor
+            int unarmoredDefenseResult = 10 + 2 + 3; // 15
+            assertNotEquals(unarmoredDefenseResult, stats.getArmorClass(),
+                "Barbarian wearing armor must not use Unarmored Defense formula");
+        }
     }
 
     @Nested
@@ -269,6 +295,53 @@ class CharacterCalculatorTest {
             // Athletics (STR, no prof): +0
             assertEquals(0, stats.getSkillBonuses().get("Athletics"));
         }
+
+        @Test
+        @DisplayName("Expertise doubles proficiency bonus (PHB p. 96)")
+        void expertiseDoublesProficiency() {
+            CharacterDraft draft = CharacterDraft.fresh();
+            draft.setCharacterClass("rogue");
+            draft.setRaceId("human_standard");
+            draft.setLevel(5); // PB = 3
+            // DEX 16 + human +1 = 17, mod = +3
+            draft.setBaseScores(Map.of("STR", 10, "DEX", 16, "CON", 12, "INT", 14, "WIS", 12, "CHA", 14));
+            draft.getSkillProficiencies().add("Stealth");
+            draft.getExpertiseSkills().add("Stealth");
+
+            DerivedStats stats = calculator.calculate(draft);
+            // Stealth: DEX mod (+3) + PB*2 (3*2=6) = 9
+            assertEquals(9, stats.getSkillBonuses().get("Stealth"));
+        }
+
+        @Test
+        @DisplayName("Jack of All Trades adds half PB to non-proficient skills for Bard level 2+")
+        void jackOfAllTrades() {
+            CharacterDraft draft = CharacterDraft.fresh();
+            draft.setCharacterClass("bard");
+            draft.setRaceId("human_standard");
+            draft.setLevel(2); // PB = 2; JoaT activates
+            // STR 10 + human +1 = 11, mod = 0
+            draft.setBaseScores(Map.of("STR", 10, "DEX", 14, "CON", 12, "INT", 10, "WIS", 10, "CHA", 16));
+            // Athletics is NOT in proficiencies
+
+            DerivedStats stats = calculator.calculate(draft);
+            // Athletics (STR): mod 0 + floor(2/2) = 1
+            assertEquals(1, stats.getSkillBonuses().get("Athletics"));
+        }
+
+        @Test
+        @DisplayName("Jack of All Trades does not apply at Bard level 1")
+        void jackOfAllTradesRequiresLevel2() {
+            CharacterDraft draft = CharacterDraft.fresh();
+            draft.setCharacterClass("bard");
+            draft.setRaceId("human_standard");
+            draft.setLevel(1);
+            draft.setBaseScores(Map.of("STR", 10, "DEX", 14, "CON", 12, "INT", 10, "WIS", 10, "CHA", 16));
+
+            DerivedStats stats = calculator.calculate(draft);
+            // Athletics (STR): mod 0, no prof, no JoaT yet = 0
+            assertEquals(0, stats.getSkillBonuses().get("Athletics"));
+        }
     }
 
     @Nested
@@ -364,6 +437,39 @@ class CharacterCalculatorTest {
 
             DerivedStats stats = calculator.calculate(draft);
             assertFalse(stats.isSpellcaster());
+        }
+
+        @Test
+        @DisplayName("Half-caster (Paladin) has no spellcasting at level 1 (PHB p. 84)")
+        void halfCasterNotSpellcasterAtLevel1() {
+            CharacterDraft draft = CharacterDraft.fresh();
+            draft.setCharacterClass("paladin");
+            draft.setRaceId("human_standard");
+            draft.setLevel(1);
+            draft.setBaseScores(Map.of("STR", 16, "DEX", 10, "CON", 14, "INT", 10, "WIS", 12, "CHA", 14));
+
+            DerivedStats stats = calculator.calculate(draft);
+            assertFalse(stats.isSpellcaster(),
+                "Paladin level 1 has no spell slots and should not be marked as a spellcaster");
+        }
+
+        @Test
+        @DisplayName("Half-caster (Paladin) gains spellcasting at level 2 (PHB p. 84)")
+        void halfCasterIsSpellcasterAtLevel2() {
+            CharacterDraft draft = CharacterDraft.fresh();
+            draft.setCharacterClass("paladin");
+            draft.setRaceId("human_standard");
+            draft.setLevel(2); // PB = 2
+            // CHA 14 + human +1 = 15, mod = +2
+            draft.setBaseScores(Map.of("STR", 16, "DEX", 10, "CON", 14, "INT", 10, "WIS", 12, "CHA", 14));
+
+            DerivedStats stats = calculator.calculate(draft);
+            assertTrue(stats.isSpellcaster());
+            assertEquals("CHA", stats.getSpellcastingAbility());
+            // DC = 8 + PB(2) + CHA mod(+2) = 12
+            assertEquals(12, stats.getSpellSaveDC());
+            // Attack = PB(2) + CHA mod(+2) = 4
+            assertEquals(4, stats.getSpellAttackBonus());
         }
     }
 
