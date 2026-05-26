@@ -160,6 +160,8 @@
                       th:data-prof="${derived.proficiencyBonus}"
                       th:data-str="${derived.modifiers.get('STR')}"
                       th:data-dex="${derived.modifiers.get('DEX')}"
+                      th:data-finesse="${item.finesse}"
+                      th:data-ranged="${item.ranged}"
                       onclick="rollWeaponAttack(this)">Roll Attack</button>
               <button class="item-btn"
                       th:data-name="${item.name}"
@@ -167,6 +169,8 @@
                       th:data-damage-bonus="${item.damageBonus}"
                       th:data-str="${derived.modifiers.get('STR')}"
                       th:data-dex="${derived.modifiers.get('DEX')}"
+                      th:data-finesse="${item.finesse}"
+                      th:data-ranged="${item.ranged}"
                       onclick="rollWeaponDamage(this)">Roll Damage</button>
             </th:block>
             <button class="item-btn" onclick="removeItem(this)">Drop</button>
@@ -269,6 +273,20 @@
       <label class="form-label">Damage Dice (e.g. 1d8 slashing)</label>
       <input type="text" class="form-input" id="item-damage-dice" placeholder="1d8 slashing">
     </div>
+    <div class="form-row" id="weapon-props-group">
+      <div class="form-group">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+          <input type="checkbox" id="item-finesse">
+          <span class="form-label" style="margin:0">Finesse (STR or DEX)</span>
+        </label>
+      </div>
+      <div class="form-group">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+          <input type="checkbox" id="item-ranged">
+          <span class="form-label" style="margin:0">Ranged weapon</span>
+        </label>
+      </div>
+    </div>
     <div class="form-group">
       <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
         <input type="checkbox" id="item-attunement">
@@ -286,7 +304,9 @@
 function showAddItemModal() {
     document.getElementById('add-item-modal').classList.add('active');
     const cat = document.getElementById('item-category').value;
-    document.getElementById('damage-dice-group').style.display = cat === 'weapon' ? 'block' : 'none';
+    const isWeapon = cat === 'weapon';
+    document.getElementById('damage-dice-group').style.display  = isWeapon ? 'block' : 'none';
+    document.getElementById('weapon-props-group').style.display = isWeapon ? 'grid' : 'none';
 }
 
 function closeModal() {
@@ -294,12 +314,15 @@ function closeModal() {
 }
 
 document.getElementById('item-category').addEventListener('change', function() {
-    document.getElementById('damage-dice-group').style.display = this.value === 'weapon' ? 'block' : 'none';
+    const isWeapon = this.value === 'weapon';
+    document.getElementById('damage-dice-group').style.display  = isWeapon ? 'block' : 'none';
+    document.getElementById('weapon-props-group').style.display = isWeapon ? 'grid' : 'none';
 });
 
 function addItem() {
     const category = document.getElementById('item-category').value;
     const damageDice = document.getElementById('item-damage-dice').value.trim();
+    const isWeapon = category === 'weapon';
     const item = {
         name: document.getElementById('item-name').value,
         category,
@@ -310,7 +333,9 @@ function addItem() {
         damageBonus: parseInt(document.getElementById('item-damage').value) || 0,
         quantity: parseInt(document.getElementById('item-qty').value) || 1,
         requiresAttunement: document.getElementById('item-attunement').checked,
-        damage: category === 'weapon' && damageDice ? damageDice : null
+        damage: isWeapon && damageDice ? damageDice : null,
+        finesse: isWeapon && document.getElementById('item-finesse').checked,
+        ranged:  isWeapon && document.getElementById('item-ranged').checked
     };
 
     if (!item.name) { alert('Please enter an item name'); return; }
@@ -398,24 +423,26 @@ function parseDamage(damageStr) {
     };
 }
 
+function weaponAbilityMod(btn) {
+    const strMod  = parseInt(btn.dataset.str) || 0;
+    const dexMod  = parseInt(btn.dataset.dex) || 0;
+    const finesse = btn.dataset.finesse === 'true';
+    const ranged  = btn.dataset.ranged  === 'true';
+    if (finesse) return Math.max(strMod, dexMod);
+    if (ranged)  return dexMod;
+    return strMod;
+}
+
 function rollWeaponAttack(btn) {
-    const name        = btn.dataset.name;
-    const magicBonus  = parseInt(btn.dataset.attackBonus) || 0;
-    const prof        = parseInt(btn.dataset.prof) || 0;
-    const strMod      = parseInt(btn.dataset.str) || 0;
-    const dexMod      = parseInt(btn.dataset.dex) || 0;
-    const abilityMod  = Math.max(strMod, dexMod);
-    DiceRoller.roll(20, 1, prof + abilityMod + magicBonus, `Attack — ${name}`);
+    const magicBonus = parseInt(btn.dataset.attackBonus) || 0;
+    const prof       = parseInt(btn.dataset.prof) || 0;
+    DiceRoller.roll(20, 1, prof + weaponAbilityMod(btn) + magicBonus, `Attack — ${btn.dataset.name}`);
 }
 
 function rollWeaponDamage(btn) {
-    const name        = btn.dataset.name;
-    const dmgBonus    = parseInt(btn.dataset.damageBonus) || 0;
-    const strMod      = parseInt(btn.dataset.str) || 0;
-    const dexMod      = parseInt(btn.dataset.dex) || 0;
-    const abilityMod  = Math.max(strMod, dexMod);
+    const dmgBonus = parseInt(btn.dataset.damageBonus) || 0;
     const { count, sides, bonus } = parseDamage(btn.dataset.damage);
-    DiceRoller.roll(sides, count, bonus + abilityMod + dmgBonus, `Damage — ${name}`);
+    DiceRoller.roll(sides, count, bonus + weaponAbilityMod(btn) + dmgBonus, `Damage — ${btn.dataset.name}`);
 }
 </script>
 <script src="/js/utils.js"></script>

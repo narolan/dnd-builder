@@ -488,15 +488,28 @@ public class PlayModeController {
     // DEATH SAVES
     // ══════════════════════════════════════════════════════════════════════════
 
+    // PHB p. 197: rolling a natural 20 on a death save immediately restores the character to 1 HP.
+    @PostMapping("/deathsaves/criticalSuccess")
+    @ResponseBody
+    public Map<String, Object> deathSaveCriticalSuccess(HttpSession session) {
+        CharacterDraft draft = getDraft(session);
+        draft.setCurrentHp(1);
+        draft.resetDeathSaves();
+        return Map.of(
+            "successes", 0,
+            "failures", 0,
+            "stable", false,
+            "dead", false,
+            "revived", true
+        );
+    }
+
     @PostMapping("/deathsaves/success")
     @ResponseBody
     public Map<String, Object> deathSaveSuccess(HttpSession session) {
         CharacterDraft draft = getDraft(session);
         draft.setDeathSaveSuccesses(draft.getDeathSaveSuccesses() + 1);
         boolean stable = draft.isStable();
-        if (stable) {
-            // Stabilized - regain 1 HP after 1d4 hours, but for gameplay we just mark as stable
-        }
         return Map.of(
             "successes", draft.getDeathSaveSuccesses(),
             "failures", draft.getDeathSaveFailures(),

@@ -668,7 +668,8 @@ class InMemoryClassRepositoryTest {
             var rogue = repository.findById("rogue");
             var asiLevels = rogue.getAsiLevels();
             assertTrue(asiLevels.contains(10), "Rogue should have ASI at level 10");
-            assertEquals(6, asiLevels.size(), "Rogue should have 6 ASI levels");
+            assertTrue(asiLevels.contains(18), "Rogue should have ASI at level 18 (PHB p. 96)");
+            assertEquals(7, asiLevels.size(), "Rogue should have 7 ASI levels (PHB p. 96: 4,8,10,12,16,18,19)");
         }
     }
 }

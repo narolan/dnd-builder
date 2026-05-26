@@ -38,6 +38,8 @@ public class InventoryItem {
     private String damage;      // e.g., "1d8+1 slashing"
     private int baseAc;         // for armor, e.g., 14
     private int maxDexBonus;    // -1 for no limit, 0 for no dex, 2 for medium armor
+    private boolean finesse;    // can use STR or DEX for attack/damage (PHB p. 147)
+    private boolean ranged;     // ranged weapon — uses DEX unless thrown with STR
 
     public InventoryItem() {}
 
@@ -60,6 +62,8 @@ public class InventoryItem {
     public InventoryItem withBaseAc(int ac) { this.baseAc = ac; return this; }
     public InventoryItem withMaxDexBonus(int max) { this.maxDexBonus = max; return this; }
     public InventoryItem withDamage(String dmg) { this.damage = dmg; return this; }
+    public InventoryItem withFinesse(boolean f) { this.finesse = f; return this; }
+    public InventoryItem withRanged(boolean r) { this.ranged = r; return this; }
 
     // Standard getters and setters
     public String getId() { return id; }
@@ -98,4 +102,8 @@ public class InventoryItem {
     public void setBaseAc(int baseAc) { this.baseAc = baseAc; }
     public int getMaxDexBonus() { return maxDexBonus; }
     public void setMaxDexBonus(int maxDexBonus) { this.maxDexBonus = maxDexBonus; }
+    public boolean isFinesse() { return finesse; }
+    public void setFinesse(boolean finesse) { this.finesse = finesse; }
+    public boolean isRanged() { return ranged; }
+    public void setRanged(boolean ranged) { this.ranged = ranged; }
 }

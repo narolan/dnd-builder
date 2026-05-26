@@ -77,7 +77,7 @@ public class InMemoryClassRepository implements com.dnd.builder.core.port.out.Cl
     // Standard ASI levels for most classes
     private static final List<Integer> STANDARD_ASI = List.of(4, 8, 12, 16, 19);
     private static final List<Integer> FIGHTER_ASI = List.of(4, 6, 8, 12, 14, 16, 19);
-    private static final List<Integer> ROGUE_ASI = List.of(4, 8, 10, 12, 16, 19);
+    private static final List<Integer> ROGUE_ASI = List.of(4, 8, 10, 12, 16, 18, 19);
 
     // ── Build all classes ─────────────────────────────────────────────────────
     private List<ClassDefinition> buildClasses() {

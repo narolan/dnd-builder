@@ -124,12 +124,14 @@ public class CharacterCalculator {
 
     private void calculateArmorClass(DerivedStats ds, CharacterDraft draft, Map<String, Integer> mods, List<InventoryItem> equippedItems) {
         int dexMod = mods.get("DEX");
-        if ("barbarian".equals(draft.getCharacterClass())) {
+        // PHB: Unarmored Defense only applies while NOT wearing armor.
+        boolean wearingArmor = equippedItems.stream()
+            .anyMatch(i -> "armor".equalsIgnoreCase(i.getCategory()) && i.getBaseAc() > 0);
+        if (!wearingArmor && "barbarian".equals(draft.getCharacterClass())) {
             ds.setArmorClass(10 + dexMod + mods.get("CON"));
-        } else if ("monk".equals(draft.getCharacterClass())) {
+        } else if (!wearingArmor && "monk".equals(draft.getCharacterClass())) {
             ds.setArmorClass(10 + dexMod + mods.get("WIS"));
         } else {
-            // Check if they chose any armor in equipment
             int ac = 10 + dexMod;
             ac = resolveArmorAC(draft, dexMod, ac);
             ds.setArmorClass(ac);
@@ -160,10 +162,22 @@ public class CharacterCalculator {
         }
         ds.setAllSkillProficiencies(new ArrayList<>(allProfs));
 
+        Set<String> expertise = new java.util.HashSet<>(draft.getExpertiseSkills());
+        // PHB: Bard level 2+ adds half proficiency bonus to non-proficient ability checks (Jack of All Trades)
+        boolean jackOfAllTrades = "bard".equals(draft.getCharacterClass()) && draft.getLevel() >= 2;
+        int halfPb = Math.floorDiv(pb, 2);
+
         var skillBonuses = new LinkedHashMap<String, Integer>();
         SKILL_ABILITY.forEach((skill, ability) -> {
             int mod = mods.get(ability);
-            int bonus = mod + (allProfs.contains(skill) ? pb : 0);
+            int bonus;
+            if (allProfs.contains(skill)) {
+                // Expertise: double proficiency bonus (PHB p. 96/117)
+                bonus = mod + (expertise.contains(skill) ? pb * 2 : pb);
+            } else {
+                // Jack of All Trades: half proficiency on non-proficient checks (PHB p. 54)
+                bonus = mod + (jackOfAllTrades ? halfPb : 0);
+            }
             skillBonuses.put(skill, bonus);
         });
         ds.setSkillBonuses(skillBonuses);
@@ -174,13 +188,17 @@ public class CharacterCalculator {
         if (classDef != null && classDef.getSpellcasting() != null) {
             var sc = classDef.getSpellcasting();
             boolean isHalf = "half".equals(sc.getType());
-            ds.setSpellcaster(!isHalf || draft.getLevel() >= 2);
+            boolean isSpellcaster = !isHalf || draft.getLevel() >= 2;
+            ds.setSpellcaster(isSpellcaster);
             ds.setSpellcastingAbility(sc.getAbility());
 
-            int abilityMod = mods.get(sc.getAbility());
-            int itemSaveDcBonus = equippedItems.stream().mapToInt(InventoryItem::getSaveDcBonus).sum();
-            ds.setSpellSaveDC(8 + pb + abilityMod + itemSaveDcBonus);
-            ds.setSpellAttackBonus(pb + abilityMod);
+            // Only compute DC/attack when the character actually has spell slots (PHB half-casters get none at level 1)
+            if (isSpellcaster) {
+                int abilityMod = mods.get(sc.getAbility());
+                int itemSaveDcBonus = equippedItems.stream().mapToInt(InventoryItem::getSaveDcBonus).sum();
+                ds.setSpellSaveDC(8 + pb + abilityMod + itemSaveDcBonus);
+                ds.setSpellAttackBonus(pb + abilityMod);
+            }
 
             // Spell slot summary
             if ("warlock".equals(draft.getCharacterClass())) {

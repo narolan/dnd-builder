@@ -277,7 +277,7 @@ public class InMemorySpellRepository implements com.dnd.builder.core.port.out.Sp
         list.add(s("guiding_bolt","Guiding Bolt",1,"Evocation","1 action","120 ft","1 round",false,false,"V,S",
             "Ranged spell attack; 4d6 radiant damage. Next attack against target has advantage.",
             "cleric"));
-        list.add(s("healing_word","Healing Word",1,"Evocation","1 bonus action","60 ft","Instantaneous",false,false,"V",
+        list.add(s("healing_word","Healing Word",1,"Conjuration","1 bonus action","60 ft","Instantaneous",false,false,"V",
             "Restore 1d4 + spellcasting ability modifier HP at range.",
             "bard","cleric","druid"));
         list.add(s("hellish_rebuke","Hellish Rebuke",1,"Evocation","1 reaction","60 ft","Instantaneous",false,false,"V,S",
@@ -312,7 +312,7 @@ public class InMemorySpellRepository implements com.dnd.builder.core.port.out.Sp
             "sorcerer","wizard"));
         list.add(s("protection_evil_good","Protection from Evil and Good",1,"Abjuration","1 action","Touch","Up to 10 min",true,false,"V,S,M",
             "Protected creature can't be charmed/frightened/possessed by: aberrations, celestials, elementals, fey, fiends, undead.",
-            "cleric","paladin","warlock","wizard"));
+            "cleric","paladin","wizard"));
         list.add(s("ray_of_sickness","Ray of Sickness",1,"Necromancy","1 action","60 ft","Instantaneous",false,false,"V,S",
             "Ranged spell attack; 2d8 poison damage. CON save or poisoned until end of your next turn.",
             "sorcerer","wizard"));
@@ -349,7 +349,7 @@ public class InMemorySpellRepository implements com.dnd.builder.core.port.out.Sp
         list.add(s("wrathful_smite","Wrathful Smite",1,"Evocation","1 bonus action","Self","Up to 1 min",true,false,"V",
             "Next hit deals extra 1d6 psychic; WIS save or frightened.",
             "paladin"));
-        list.add(s("thunderous_smite","Thunderous Smite",1,"Transmutation","1 bonus action","Self","Up to 1 min",true,false,"V",
+        list.add(s("thunderous_smite","Thunderous Smite",1,"Evocation","1 bonus action","Self","Up to 1 min",true,false,"V",
             "Next melee weapon hit deals extra 2d6 thunder damage and pushes target 10 ft (STR save or prone).",
             "paladin"));
         list.add(s("searing_smite","Searing Smite",1,"Evocation","1 bonus action","Self","Up to 1 min",true,false,"V",

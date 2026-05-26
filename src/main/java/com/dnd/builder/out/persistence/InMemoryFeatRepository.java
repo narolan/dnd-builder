@@ -72,9 +72,9 @@ public class InMemoryFeatRepository implements com.dnd.builder.core.port.out.Fea
         list.add(f("resilient",     "Resilient",        "",
             "+1 to chosen ability score. Gain proficiency in saving throws with that ability.",
             null, 1, null)); // special: 1 chosen ASI
-        list.add(f("ritual_caster","Ritual Caster",     "",
-            "Acquire a ritual book with two rituals. Add rituals of your level or lower. Use INT, WIS, or CHA as spellcasting ability. Prereq: INT or WIS 13.",
-            null, 0, Map.of("INT",13)));
+        list.add(f("ritual_caster","Ritual Caster",     "Requires INT or WIS 13",
+            "Acquire a ritual book with two rituals. Add rituals of your level or lower. Use INT, WIS, or CHA as spellcasting ability.",
+            null, 0, null));
         list.add(f("savage_attacker","Savage Attacker", "",
             "Once per turn when rolling melee damage dice, roll them twice and use the higher result.",
             null, 0, null));

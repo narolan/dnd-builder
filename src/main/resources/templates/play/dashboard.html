@@ -245,7 +245,8 @@
       </div>
       <div class="death-status stable" th:if="${draft.stable}">Stabilized!</div>
       <div class="death-status dead" th:if="${draft.dead}">Dead</div>
-      <div style="text-align:center;margin-top:12px">
+      <div style="text-align:center;margin-top:12px;display:flex;gap:8px;justify-content:center">
+        <button class="hp-btn" onclick="rollDeathSave()">Roll Death Save</button>
         <button class="hp-btn" onclick="resetDeathSaves()">Reset</button>
       </div>
     </div>
@@ -444,6 +445,8 @@
                     th:data-prof="${derived.proficiencyBonus}"
                     th:data-str="${derived.modifiers.get('STR')}"
                     th:data-dex="${derived.modifiers.get('DEX')}"
+                    th:data-finesse="${item.finesse}"
+                    th:data-ranged="${item.ranged}"
                     onclick="rollWeaponAttack(this)">Roll Attack</button>
             <button class="hp-btn"
                     th:data-name="${item.name}"
@@ -451,6 +454,8 @@
                     th:data-damage-bonus="${item.damageBonus}"
                     th:data-str="${derived.modifiers.get('STR')}"
                     th:data-dex="${derived.modifiers.get('DEX')}"
+                    th:data-finesse="${item.finesse}"
+                    th:data-ranged="${item.ranged}"
                     onclick="rollWeaponDamage(this)">Roll Damage</button>
           </div>
         </div>
@@ -866,21 +871,51 @@ function rollSkill(el) {
 }
 
 // ── Death Saves ────────────────────────────────────────────────────────────
+function _applyDeathSaveResult(data) {
+    document.querySelectorAll('.save-pip.success').forEach((pip, i) => {
+        pip.classList.toggle('filled', i < data.successes);
+    });
+    document.querySelectorAll('.save-pip.failure').forEach((pip, i) => {
+        pip.classList.toggle('filled', i < data.failures);
+    });
+    if (data.stable) alert('Stabilized! You regain consciousness.');
+    if (data.dead)   alert('Your character has died.');
+    if (data.revived) {
+        alert('Natural 20! You regain 1 HP and regain consciousness.');
+        location.reload();
+    }
+}
+
+// Manual pip click (legacy fallback — no die roll)
 function deathSave(type, target) {
     const endpoint = type === 'success' ? '/play/deathsaves/success' : '/play/deathsaves/failure';
     securedFetch(endpoint, { method: 'POST' })
         .then(r => r.json())
-        .then(data => {
-            // Update pips
-            document.querySelectorAll('.save-pip.success').forEach((pip, i) => {
-                pip.classList.toggle('filled', i < data.successes);
-            });
-            document.querySelectorAll('.save-pip.failure').forEach((pip, i) => {
-                pip.classList.toggle('filled', i < data.failures);
-            });
-            if (data.stable) alert('You are stabilized!');
-            if (data.dead) alert('Your character has died.');
-        });
+        .then(_applyDeathSaveResult);
+}
+
+// PHB p. 197: Roll d20. Nat 20 → regain 1 HP. Nat 1 → 2 failures. 10+ → success. 2–9 → failure.
+function rollDeathSave() {
+    DiceRoller.roll(20, 1, 0, 'Death Saving Throw').then(roll => {
+        if (roll === 20) {
+            // Critical success: regain 1 HP and end death saves
+            securedFetch('/play/deathsaves/criticalSuccess', { method: 'POST' })
+                .then(r => r.json()).then(_applyDeathSaveResult);
+        } else if (roll === 1) {
+            // Nat 1 counts as 2 failures (PHB p. 197)
+            securedFetch('/play/deathsaves/failure', { method: 'POST' })
+                .then(r => r.json())
+                .then(() => securedFetch('/play/deathsaves/failure', { method: 'POST' }))
+                .then(r => r.json())
+                .then(_applyDeathSaveResult);
+        } else if (roll >= 10) {
+            securedFetch('/play/deathsaves/success', { method: 'POST' })
+                .then(r => r.json()).then(_applyDeathSaveResult);
+        } else {
+            securedFetch('/play/deathsaves/failure', { method: 'POST' })
+                .then(r => r.json()).then(_applyDeathSaveResult);
+        }
+    });
 }
 
 function resetDeathSaves() {
@@ -1093,20 +1128,27 @@ function parseDamage(damageStr) {
     return { count: parseInt(m[1]), sides: parseInt(m[2]), bonus: m[3] ? parseInt(m[3]) : 0 };
 }
 
+// PHB p. 147: Finesse → choose STR or DEX. Ranged → DEX. Melee (non-finesse) → STR.
+function weaponAbilityMod(btn) {
+    const strMod  = parseInt(btn.dataset.str) || 0;
+    const dexMod  = parseInt(btn.dataset.dex) || 0;
+    const finesse = btn.dataset.finesse === 'true';
+    const ranged  = btn.dataset.ranged  === 'true';
+    if (finesse) return Math.max(strMod, dexMod);
+    if (ranged)  return dexMod;
+    return strMod;
+}
+
 function rollWeaponAttack(btn) {
     const magicBonus = parseInt(btn.dataset.attackBonus) || 0;
     const prof       = parseInt(btn.dataset.prof) || 0;
-    const strMod     = parseInt(btn.dataset.str) || 0;
-    const dexMod     = parseInt(btn.dataset.dex) || 0;
-    DiceRoller.roll(20, 1, prof + Math.max(strMod, dexMod) + magicBonus, `Attack — ${btn.dataset.name}`);
+    DiceRoller.roll(20, 1, prof + weaponAbilityMod(btn) + magicBonus, `Attack — ${btn.dataset.name}`);
 }
 
 function rollWeaponDamage(btn) {
-    const dmgBonus   = parseInt(btn.dataset.damageBonus) || 0;
-    const strMod     = parseInt(btn.dataset.str) || 0;
-    const dexMod     = parseInt(btn.dataset.dex) || 0;
+    const dmgBonus = parseInt(btn.dataset.damageBonus) || 0;
     const { count, sides, bonus } = parseDamage(btn.dataset.damage);
-    DiceRoller.roll(sides, count, bonus + Math.max(strMod, dexMod) + dmgBonus, `Damage — ${btn.dataset.name}`);
+    DiceRoller.roll(sides, count, bonus + weaponAbilityMod(btn) + dmgBonus, `Damage — ${btn.dataset.name}`);
 }
 
 // Register service worker

@@ -88,7 +88,7 @@ public class InMemoryBackgroundRepository implements com.dnd.builder.core.port.o
 
             bg("noble",        "Noble",
                List.of("History","Persuasion"),
-               List.of("Gaming set (one type)"), 1,
+               List.of("Gaming set (one type)"), 0,
                "Fine clothes, a signet ring, a scroll of pedigree, a purse with 25 gp",
                "Position of Privilege",
                "You are welcome in high society and people assume you have the right to be wherever you are. Common folk accommodate you.",

@@ -101,15 +101,17 @@ class InMemorySpellRepositoryTest {
         }
 
         @Test
-        @DisplayName("Protection from Evil and Good should NOT include Druid")
+        @DisplayName("Protection from Evil and Good: Cleric/Paladin/Wizard only (PHB p. 270)")
         void protectionEvilGoodNotDruid() {
             SpellDefinition peg = repository.findById("protection_evil_good");
             assertNotNull(peg);
             assertFalse(peg.getClasses().contains("druid"),
                 "Protection from Evil and Good is not on Druid spell list in PHB");
+            // Warlock does NOT have this spell natively in 2014 PHB
+            assertFalse(peg.getClasses().contains("warlock"),
+                "Protection from Evil and Good is not on Warlock spell list in 2014 PHB");
             assertTrue(peg.getClasses().contains("cleric"));
             assertTrue(peg.getClasses().contains("paladin"));
-            assertTrue(peg.getClasses().contains("warlock"));
             assertTrue(peg.getClasses().contains("wizard"));
         }
     }
@@ -161,10 +163,12 @@ class InMemorySpellRepositoryTest {
     class SpellSchools {
 
         @Test
-        @DisplayName("Healing spells are Evocation")
+        @DisplayName("Healing spells have correct schools per PHB")
         void healingSchool() {
+            // Cure Wounds — PHB p. 230: Evocation
             assertEquals("Evocation", repository.findById("cure_wounds").getSchool());
-            assertEquals("Evocation", repository.findById("healing_word").getSchool());
+            // Healing Word — PHB p. 250: Conjuration (not Evocation)
+            assertEquals("Conjuration", repository.findById("healing_word").getSchool());
         }
 
         @Test
